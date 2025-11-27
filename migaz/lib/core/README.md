@@ -1,0 +1,1 @@
+cosas globales y configuracion
