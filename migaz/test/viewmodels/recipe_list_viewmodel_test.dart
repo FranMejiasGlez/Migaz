@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:migaz/viewmodels/recipe_list_viewmodel.dart';
-import 'package:migaz/models/recipe.dart';
+import 'package:migaz/data/models/recipe.dart';
 
 void main() {
   group('RecipeListViewModel Tests', () {

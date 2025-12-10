@@ -1,4 +1,4 @@
-import 'package:migaz/models/recipe.dart';
+import 'package:migaz/data/models/recipe.dart';
 import 'package:flutter/material.dart';
 
 class DialogoCrearReceta extends StatefulWidget {
@@ -106,7 +106,7 @@ class _DialogoCrearRecetaState extends State<DialogoCrearReceta> {
       tiempo: tiempo,
       pasos: List<String>.from(_pasos),
       ingredientes: List<String>.from(_ingredientes),
-      id: '',
+      comentarios: [],
       valoracion: 0,
       /*  youtubeUrl: _youtubeController.text.trim().isEmpty
           ? null

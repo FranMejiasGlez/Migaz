@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:migaz/models/recipe.dart';
+import 'package:migaz/data/models/recipe.dart';
 
 Future<bool> saveRecipeToServer(Recipe recipe) async {
   final uri = Uri.parse(

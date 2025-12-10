@@ -1,4 +1,4 @@
-import 'package:migaz/models/recipe.dart';
+import 'package:migaz/data/models/recipe.dart';
 import 'package:migaz/viewmodels/base_viewmodel.dart';
 
 /// ViewModel para la lista de recetas

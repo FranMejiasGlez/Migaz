@@ -1,27 +1,21 @@
 import 'package:migaz/config/routes.dart';
-import 'package:migaz/models/recipe.dart';
-import 'package:migaz/widgets/recipe/user_avatar.dart';
-
+import 'package:migaz/data/models/recipe.dart';
+import 'package:migaz/ui/widgets/recipe/user_avatar.dart';
+import 'package:migaz/core/utils/app_theme.dart';
 import 'package:flutter/material.dart';
-import 'package:migaz/widgets/recipe/recipe_card.dart';
+import 'package:migaz/ui/widgets/recipe/recipe_card.dart';
 import '../widgets/recipe/recipe_filter_dropdown.dart';
 import '../widgets/recipe/recipe_search_bar.dart';
 
-import 'package:migaz/utils/app_theme.dart';
-
-class PantallaMisRecetas extends StatefulWidget {
-  final List<Recipe>? lista;
-  const PantallaMisRecetas({
-    Key? key,
-    this.lista, // Recibe la nueva receta
-  }) : super(key: key);
+class PantallaGuardados extends StatefulWidget {
+  const PantallaGuardados({Key? key}) : super(key: key);
 
   @override
-  State<PantallaMisRecetas> createState() => _PantallaMisRecetasState();
+  State<PantallaGuardados> createState() => _PantallaGuardadosState();
 }
 
-class _PantallaMisRecetasState extends State<PantallaMisRecetas> {
-  List<Recipe> _recetasGuardadas = [];
+class _PantallaGuardadosState extends State<PantallaGuardados> {
+  bool _dialogoAbiertoGuardados = false;
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
   String _filtroSeleccionado = 'Todos';
@@ -32,6 +26,81 @@ class _PantallaMisRecetasState extends State<PantallaMisRecetas> {
     'Italiana',
     'Japonesa',
     'Mexicana',
+  ];
+
+  final List<Recipe> _recetasGuardadas = [
+    Recipe(
+      nombre: 'Paella Valenciana',
+      categoria: 'Española',
+      descripcion: 'Deliciosa paella tradicional valenciana',
+      dificultad: 'Medio',
+      tiempo: '45 min',
+      servings: 4,
+      pasos: ['Paso 1', 'Paso 2', 'Paso 3'],
+      ingredientes: ['Arroz', 'Azafrán', 'Pollo'],
+      comentarios: [],
+      valoracion: 0,
+    ),
+    Recipe(
+      nombre: 'Tortilla de Patatas',
+      categoria: 'Española',
+      descripcion: 'Tortilla española clásica',
+      dificultad: 'Fácil',
+      tiempo: '20 min',
+      servings: 3,
+      pasos: ['Paso 1', 'Paso 2'],
+      ingredientes: ['Patatas', 'Huevos', 'Cebolla'],
+      comentarios: [],
+      valoracion: 0,
+    ),
+    Recipe(
+      nombre: 'Pizza Margarita',
+      categoria: 'Italiana',
+      descripcion: 'Pizza italiana auténtica',
+      dificultad: 'Medio',
+      tiempo: '30 min',
+      servings: 2,
+      pasos: ['Paso 1', 'Paso 2', 'Paso 3'],
+      ingredientes: ['Harina', 'Tomate', 'Mozzarella'],
+      comentarios: [],
+      valoracion: 0,
+    ),
+    Recipe(
+      nombre: 'Sushi Roll',
+      categoria: 'Japonesa',
+      descripcion: 'Sushi roll casero',
+      dificultad: 'Difícil',
+      tiempo: '40 min',
+      servings: 2,
+      pasos: ['Paso 1', 'Paso 2', 'Paso 3', 'Paso 4'],
+      ingredientes: ['Arroz', 'Nori', 'Pepino', 'Aguacate'],
+      comentarios: [],
+      valoracion: 0,
+    ),
+    Recipe(
+      nombre: 'Tacos al Pastor',
+      categoria: 'Mexicana',
+      descripcion: 'Tacos mexicanos tradicionales',
+      dificultad: 'Medio',
+      tiempo: '35 min',
+      servings: 4,
+      pasos: ['Paso 1', 'Paso 2', 'Paso 3'],
+      ingredientes: ['Carne', 'Tortillas', 'Cebolla'],
+      comentarios: [],
+      valoracion: 0,
+    ),
+    Recipe(
+      nombre: 'Lasaña Boloñesa',
+      categoria: 'Italiana',
+      descripcion: 'Lasaña casera con salsa boloñesa',
+      dificultad: 'Medio',
+      tiempo: '50 min',
+      servings: 6,
+      pasos: ['Paso 1', 'Paso 2', 'Paso 3', 'Paso 4'],
+      ingredientes: ['Pasta', 'Carne molida', 'Tomate', 'Queso'],
+      comentarios: [],
+      valoracion: 0,
+    ),
   ];
 
   List<Recipe> get _recetasFiltradas {
@@ -68,7 +137,9 @@ class _PantallaMisRecetasState extends State<PantallaMisRecetas> {
                         child: Container(
                           width: 250,
                           height: 200,
-                          color: Colors.lightBlue[300],
+                          child: Image.network(
+                            "https://assets.tmecosys.com/image/upload/t_web_rdp_recipe_584x480_1_5x/img/recipe/ras/Assets/4ADF5D92-29D0-4EB7-8C8B-5C7DAA0DA74A/Derivates/E5E1004A-1FF0-448B-87AF-31393870B653.jpg",
+                          ),
                         ),
                       ),
                     )
@@ -76,7 +147,9 @@ class _PantallaMisRecetasState extends State<PantallaMisRecetas> {
                     Container(
                       width: 250,
                       height: 200,
-                      color: Colors.lightBlue[300],
+                      child: Image.network(
+                        "https://assets.tmecosys.com/image/upload/t_web_rdp_recipe_584x480_1_5x/img/recipe/ras/Assets/4ADF5D92-29D0-4EB7-8C8B-5C7DAA0DA74A/Derivates/E5E1004A-1FF0-448B-87AF-31393870B653.jpg",
+                      ),
                     ),
                   const SizedBox(height: 16),
                   Text(
@@ -268,18 +341,22 @@ class _PantallaMisRecetasState extends State<PantallaMisRecetas> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-
-    // Leer argumentos de la ruta SIEMPRE (quitar la condición isEmpty)
     final args = ModalRoute.of(context)?.settings.arguments;
 
-    if (args is List<Recipe> && args.isNotEmpty) {
-      setState(() {
-        _recetasGuardadas = List<Recipe>.from(args);
-      });
-    } else if (widget.lista != null && widget.lista!.isNotEmpty) {
-      setState(() {
-        _recetasGuardadas = List<Recipe>.from(widget.lista!);
-      });
+    // CASO 1: Nueva lógica (Viene un nombre para abrir)
+    if (args is String && !_dialogoAbiertoGuardados) {
+      // Buscamos la receta por nombre en tu lista local _recetasGuardadas
+      try {
+        final recetaAbrevar = _recetasGuardadas.firstWhere(
+          (r) => r.nombre == args,
+        );
+        _dialogoAbiertoGuardados = true;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _mostrarDetallesReceta(recetaAbrevar);
+        });
+      } catch (e) {
+        // Si no se encuentra por nombre, no hacemos nada (solo se muestra la lista)
+      }
     }
   }
 
@@ -349,7 +426,7 @@ class _PantallaMisRecetasState extends State<PantallaMisRecetas> {
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              'Mis Recetas',
+              'Recetas Guardadas',
               textAlign: TextAlign.center,
               overflow: TextOverflow.ellipsis,
               style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
@@ -412,14 +489,14 @@ class _PantallaMisRecetasState extends State<PantallaMisRecetas> {
     return LayoutBuilder(
       builder: (context, constraints) {
         final screenWidth = constraints.maxWidth;
-        final cardWidth = (screenWidth - 36) / 2;
+        final cardWidth = (screenWidth - 100) / 4;
         final cardHeight = cardWidth * 1.2;
 
         return Padding(
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
           child: GridView.builder(
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
+              crossAxisCount: 4,
               crossAxisSpacing: 12,
               mainAxisSpacing: 12,
               childAspectRatio: cardWidth / cardHeight,
@@ -460,15 +537,14 @@ class _PantallaMisRecetasState extends State<PantallaMisRecetas> {
     return LayoutBuilder(
       builder: (context, constraints) {
         final screenWidth = constraints.maxWidth;
-        final cardWidth =
-            (screenWidth - 36) / 2; // 36 = padding(12*2) + spacing(12)
-        final cardHeight = cardWidth * 1.2; // Proporción 1:1.2 para tarjetas
+        final cardWidth = (screenWidth - 100) / 4;
+        final cardHeight = cardWidth * 1.2;
 
         return Padding(
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
           child: GridView.builder(
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
+              crossAxisCount: 4,
               crossAxisSpacing: 12,
               mainAxisSpacing: 12,
               childAspectRatio: cardWidth / cardHeight,

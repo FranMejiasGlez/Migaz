@@ -21,13 +21,12 @@ class Recipe {
     List<String>? ingredientes,
     this.youtubeUrl,
     this.imageUrl,
-    required String id,
+    List<String>? comentarios,
     required double valoracion,
   }) : pasos = pasos ?? const [],
        ingredientes = ingredientes ?? const [];
 
   factory Recipe.fromJson(Map<String, dynamic> json) => Recipe(
-    id: json['id'] as String,
     nombre: json['nombre'] as String,
     categoria: json['categoria'] as String,
     descripcion: json['descripcion'] as String,
@@ -36,6 +35,7 @@ class Recipe {
     servings: json['servings'] as int,
     pasos: List<String>.from(json['pasos'] ?? []),
     ingredientes: List<String>.from(json['ingredientes'] ?? []),
+    comentarios: List<String>.from(json['comentarios'] ?? []),
     valoracion: 0,
   );
 
@@ -83,7 +83,7 @@ class Recipe {
         : const [],
     youtubeUrl: m['youtubeUrl'] as String?,
     imageUrl: m['imageUrl'] as String?,
-    id: '',
+    comentarios: [],
     valoracion: 0,
   );
 }

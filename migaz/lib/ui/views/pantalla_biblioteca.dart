@@ -1,8 +1,8 @@
 import 'package:migaz/config/routes.dart';
-import 'package:migaz/widgets/recipe/user_avatar.dart';
-import 'package:migaz/models/recipe.dart';
+import 'package:migaz/ui/widgets/recipe/user_avatar.dart';
+import 'package:migaz/data/models/recipe.dart';
 import 'package:flutter/material.dart';
-import 'package:migaz/utils/app_theme.dart';
+import 'package:migaz/core/utils/app_theme.dart';
 import '../widgets/recipe/recipe_filter_dropdown.dart';
 import '../widgets/recipe/recipe_search_bar.dart';
 import '../widgets/recipe/recipe_card.dart';
@@ -45,7 +45,7 @@ class _PantallaBibliotecaState extends State<PantallaBiblioteca> {
       servings: 4,
       pasos: ['Paso 1', 'Paso 2', 'Paso 3'],
       ingredientes: ['Arroz', 'Azafrán', 'Pollo'],
-      id: '',
+      comentarios: [],
       valoracion: 0,
     ),
     Recipe(
@@ -57,7 +57,7 @@ class _PantallaBibliotecaState extends State<PantallaBiblioteca> {
       servings: 3,
       pasos: ['Paso 1', 'Paso 2'],
       ingredientes: ['Patatas', 'Huevos', 'Cebolla'],
-      id: '',
+      comentarios: [],
       valoracion: 0,
     ),
     Recipe(
@@ -69,7 +69,7 @@ class _PantallaBibliotecaState extends State<PantallaBiblioteca> {
       servings: 2,
       pasos: ['Paso 1', 'Paso 2', 'Paso 3'],
       ingredientes: ['Harina', 'Tomate', 'Mozzarella'],
-      id: '',
+      comentarios: [],
       valoracion: 0,
     ),
     Recipe(
@@ -81,7 +81,7 @@ class _PantallaBibliotecaState extends State<PantallaBiblioteca> {
       servings: 2,
       pasos: ['Paso 1', 'Paso 2', 'Paso 3', 'Paso 4'],
       ingredientes: ['Arroz', 'Nori', 'Pepino', 'Aguacate'],
-      id: '',
+      comentarios: [],
       valoracion: 0,
     ),
     Recipe(
@@ -93,7 +93,7 @@ class _PantallaBibliotecaState extends State<PantallaBiblioteca> {
       servings: 4,
       pasos: ['Paso 1', 'Paso 2', 'Paso 3'],
       ingredientes: ['Carne', 'Tortillas', 'Cebolla'],
-      id: '',
+      comentarios: [],
       valoracion: 0,
     ),
     Recipe(
@@ -105,7 +105,7 @@ class _PantallaBibliotecaState extends State<PantallaBiblioteca> {
       servings: 6,
       pasos: ['Paso 1', 'Paso 2', 'Paso 3', 'Paso 4'],
       ingredientes: ['Pasta', 'Carne molida', 'Tomate', 'Queso'],
-      id: '',
+      comentarios: [],
       valoracion: 0,
     ),
   ];

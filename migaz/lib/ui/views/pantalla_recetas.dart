@@ -1,10 +1,10 @@
 import 'package:migaz/config/routes.dart';
-import 'package:migaz/models/recipe.dart';
-import 'package:migaz/utils/network.dart';
-import 'package:migaz/widgets/recipe/user_avatar.dart';
-import 'package:migaz/widgets/recipe/ventana_crear_receta.dart';
+import 'package:migaz/data/models/recipe.dart';
+import 'package:migaz/core/utils/network.dart';
+import 'package:migaz/ui/widgets/recipe/user_avatar.dart';
+import 'package:migaz/ui/widgets/recipe/ventana_crear_receta.dart';
 import 'package:flutter/material.dart';
-import 'package:migaz/utils/app_theme.dart';
+import 'package:migaz/core/utils/app_theme.dart';
 import 'package:migaz/viewmodels/recipe_list_viewmodel.dart';
 import 'package:provider/provider.dart';
 import '../widgets/recipe/recipe_filter_dropdown.dart';
@@ -39,7 +39,8 @@ class _PantallaRecetasViewState extends State<_PantallaRecetasView> {
     _searchController.dispose();
     super.dispose();
   }
-final List<Recipe> _todasLasRecetasCompletas = [
+
+  final List<Recipe> _todasLasRecetasCompletas = [
     Recipe(
       nombre: 'Paella Valenciana',
       categoria: 'Española',
@@ -49,7 +50,7 @@ final List<Recipe> _todasLasRecetasCompletas = [
       servings: 4,
       pasos: ['Paso 1', 'Paso 2', 'Paso 3'],
       ingredientes: ['Arroz', 'Azafrán', 'Pollo'],
-      id: '',
+      comentarios: [],
       valoracion: 0,
     ),
     Recipe(
@@ -61,7 +62,7 @@ final List<Recipe> _todasLasRecetasCompletas = [
       servings: 3,
       pasos: ['Paso 1', 'Paso 2'],
       ingredientes: ['Patatas', 'Huevos', 'Cebolla'],
-      id: '',
+      comentarios: [],
       valoracion: 0,
     ),
     Recipe(
@@ -73,7 +74,7 @@ final List<Recipe> _todasLasRecetasCompletas = [
       servings: 2,
       pasos: ['Paso 1', 'Paso 2', 'Paso 3'],
       ingredientes: ['Harina', 'Tomate', 'Mozzarella'],
-      id: '',
+      comentarios: [],
       valoracion: 0,
     ),
     Recipe(
@@ -85,7 +86,7 @@ final List<Recipe> _todasLasRecetasCompletas = [
       servings: 2,
       pasos: ['Paso 1', 'Paso 2', 'Paso 3', 'Paso 4'],
       ingredientes: ['Arroz', 'Nori', 'Pepino', 'Aguacate'],
-      id: '',
+      comentarios: [],
       valoracion: 0,
     ),
     Recipe(
@@ -97,7 +98,7 @@ final List<Recipe> _todasLasRecetasCompletas = [
       servings: 4,
       pasos: ['Paso 1', 'Paso 2', 'Paso 3'],
       ingredientes: ['Carne', 'Tortillas', 'Cebolla'],
-      id: '',
+      comentarios: [],
       valoracion: 0,
     ),
     Recipe(
@@ -109,7 +110,7 @@ final List<Recipe> _todasLasRecetasCompletas = [
       servings: 6,
       pasos: ['Paso 1', 'Paso 2', 'Paso 3', 'Paso 4'],
       ingredientes: ['Pasta', 'Carne molida', 'Tomate', 'Queso'],
-      id: '',
+      comentarios: [],
       valoracion: 0,
     ),
   ];
@@ -147,7 +148,7 @@ final List<Recipe> _todasLasRecetasCompletas = [
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
           // limitar ancho del botón para que no estire la fila
           SizedBox(
@@ -190,10 +191,6 @@ final List<Recipe> _todasLasRecetasCompletas = [
           SizedBox(
             width: 300,
             child: Container(
-              decoration: BoxDecoration(
-                color: const Color(0xFFEA7317).withOpacity(0.5),
-                borderRadius: BorderRadius.circular(20),
-              ),
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: Text(
                 'Nombre de usuario',
@@ -276,7 +273,7 @@ final List<Recipe> _todasLasRecetasCompletas = [
     );
   }
 
-Widget _buildHomeContent() {
+  Widget _buildHomeContent() {
     return SingleChildScrollView(
       child: Padding(
         padding: const EdgeInsets.all(8),
@@ -285,10 +282,16 @@ Widget _buildHomeContent() {
             // --- CARRUSEL 1: MIS RECETAS ---
             Center(
               child: Container(
-                width: 600,
+                width: 200,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFEA7317).withOpacity(0.5),
-                  borderRadius: BorderRadius.circular(20),
+                  color: const Color.fromARGB(
+                    255,
+                    243,
+                    243,
+                    243,
+                  ).withOpacity(0.5),
+                  borderRadius: BorderRadius.circular(5),
+                  border: BoxBorder.all(),
                 ),
                 padding: const EdgeInsets.symmetric(
                   horizontal: 16,
@@ -304,19 +307,26 @@ Widget _buildHomeContent() {
             const SizedBox(height: 0),
             RecipeCarousel(
               title: '',
-              recipes:List<String>.generate(3, (String nombre) => index * index, growable: true),
-              onRecipeTap: (index) {
-              
-              },
+              recipes: _todasLasRecetasCompletas
+                  .sublist(0, 2)
+                  .map((recipe) => recipe.nombre)
+                  .toList(),
+              onRecipeTap: (index) {},
             ),
 
             // --- CARRUSEL 2: GUARDADOS ---
             Center(
               child: Container(
-                width: 600,
+                width: 200,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFEA7317).withOpacity(0.5),
-                  borderRadius: BorderRadius.circular(20),
+                  color: const Color.fromARGB(
+                    255,
+                    243,
+                    243,
+                    243,
+                  ).withOpacity(0.5),
+                  borderRadius: BorderRadius.circular(5),
+                  border: BoxBorder.all(),
                 ),
                 padding: const EdgeInsets.symmetric(
                   horizontal: 16,
@@ -332,9 +342,14 @@ Widget _buildHomeContent() {
             const SizedBox(height: 0),
             RecipeCarousel(
               title: '',
-              recipes: ,
+              recipes: _todasLasRecetasCompletas
+                  .sublist(0, 2)
+                  .map((recipe) => recipe.nombre)
+                  .toList(),
               onRecipeTap: (index) {
-               
+                print(
+                  'Receta seleccionada: ${_todasLasRecetasCompletas[index].nombre}',
+                );
               },
             ),
           ],
@@ -344,65 +359,110 @@ Widget _buildHomeContent() {
   }
 }
 
-  Widget _buildCreateRecipeButton(
-    BuildContext context,
-    RecipeListViewModel viewModel,
-  ) {
-    return Padding(
-      padding: const EdgeInsets.all(20),
-      child: Align(
-        alignment: Alignment.centerRight,
-        child: ElevatedButton(
-          onPressed: () async {
-            final Recipe? nueva = await showDialog<Recipe>(
-              context: context,
-              builder: (context) => DialogoCrearReceta(
-                categorias: viewModel.categories
-                    .where((c) => c != 'Todos')
-                    .toList(),
-                dificultades: viewModel.difficultyLevels,
-              ),
-            );
-
-            if (nueva == null) return; // usuario canceló
-
-            // opcion A: guardar en servidor y en UI
-            try {
-              await saveRecipeToServer(
-                nueva,
-              ); // import in the header: utils/network.dart
-
-              if (context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Receta guardada en servidor')),
-                );
-              }
-            } catch (e) {
-              if (context.mounted) {
-                ScaffoldMessenger.of(
-                  context,
-                ).showSnackBar(SnackBar(content: Text('Error guardando: $e')));
-              }
-            }
-            viewModel.addRecipe(nueva);
-            print('✅ Receta creada: ${nueva.nombre}'); // Debug
-            print(
-              '📋 Total recetas en lista: ${viewModel.recipes.length}',
-            ); // Debug
-          },
-
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.grey,
-            foregroundColor: Colors.black,
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
+Widget _buildCreateRecipeButton(
+  BuildContext context,
+  RecipeListViewModel viewModel,
+) {
+  return Padding(
+    padding: const EdgeInsets.all(20),
+    child: Align(
+      alignment: Alignment.centerRight,
+      child: ElevatedButton(
+        onPressed: () async {
+          final Recipe? nueva = await showDialog<Recipe>(
+            context: context,
+            builder: (context) => DialogoCrearReceta(
+              categorias: viewModel.categories
+                  .where((c) => c != 'Todos')
+                  .toList(),
+              dificultades: viewModel.difficultyLevels,
             ),
-            elevation: 5,
+          );
+
+          if (nueva == null) return; // usuario canceló
+
+          // opcion A: guardar en servidor y en UI
+          try {
+            await saveRecipeToServer(
+              nueva,
+            ); // import in the header: utils/network.dart
+
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Receta guardada en servidor')),
+              );
+            }
+          } catch (e) {
+            if (context.mounted) {
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(SnackBar(content: Text('Error guardando: $e')));
+            }
+          }
+          viewModel.addRecipe(nueva);
+          print('✅ Receta creada: ${nueva.nombre}'); // Debug
+          print(
+            '📋 Total recetas en lista: ${viewModel.recipes.length}',
+          ); // Debug
+        },
+
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.transparent,
+          foregroundColor: Colors.black,
+          elevation: 0,
+          padding: EdgeInsets.zero,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(30),
           ),
-          child: const Text('Crear Receta'),
+        ),
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(30),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.15),
+                blurRadius: 8,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 50,
+                height: 50,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF25CCAD),
+                  borderRadius: BorderRadius.circular(30),
+                ),
+                child: const Icon(Icons.add, color: Colors.black, size: 28),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFFC107),
+                  borderRadius: const BorderRadius.only(
+                    topRight: Radius.circular(30),
+                    bottomRight: Radius.circular(30),
+                  ),
+                ),
+                child: const Text(
+                  'Crear nueva receta',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
-    );
-  }
+    ),
+  );
 }

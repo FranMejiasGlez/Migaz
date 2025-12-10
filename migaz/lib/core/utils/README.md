@@ -1,1 +1,0 @@
-Funciones de ayuda (ej. validadores de fecha)

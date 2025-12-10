@@ -1,21 +1,27 @@
 import 'package:migaz/config/routes.dart';
-import 'package:migaz/models/recipe.dart';
-import 'package:migaz/widgets/recipe/user_avatar.dart';
-import 'package:migaz/utils/app_theme.dart';
+import 'package:migaz/data/models/recipe.dart';
+import 'package:migaz/ui/widgets/recipe/user_avatar.dart';
+
 import 'package:flutter/material.dart';
-import 'package:migaz/widgets/recipe/recipe_card.dart';
+import 'package:migaz/ui/widgets/recipe/recipe_card.dart';
 import '../widgets/recipe/recipe_filter_dropdown.dart';
 import '../widgets/recipe/recipe_search_bar.dart';
 
-class PantallaGuardados extends StatefulWidget {
-  const PantallaGuardados({Key? key}) : super(key: key);
+import 'package:migaz/core/utils/app_theme.dart';
+
+class PantallaMisRecetas extends StatefulWidget {
+  final List<Recipe>? lista;
+  const PantallaMisRecetas({
+    Key? key,
+    this.lista, // Recibe la nueva receta
+  }) : super(key: key);
 
   @override
-  State<PantallaGuardados> createState() => _PantallaGuardadosState();
+  State<PantallaMisRecetas> createState() => _PantallaMisRecetasState();
 }
 
-class _PantallaGuardadosState extends State<PantallaGuardados> {
-  bool _dialogoAbiertoGuardados = false;
+class _PantallaMisRecetasState extends State<PantallaMisRecetas> {
+  List<Recipe> _recetasGuardadas = [];
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
   String _filtroSeleccionado = 'Todos';
@@ -26,81 +32,6 @@ class _PantallaGuardadosState extends State<PantallaGuardados> {
     'Italiana',
     'Japonesa',
     'Mexicana',
-  ];
-
-  final List<Recipe> _recetasGuardadas = [
-    Recipe(
-      nombre: 'Paella Valenciana',
-      categoria: 'Española',
-      descripcion: 'Deliciosa paella tradicional valenciana',
-      dificultad: 'Medio',
-      tiempo: '45 min',
-      servings: 4,
-      pasos: ['Paso 1', 'Paso 2', 'Paso 3'],
-      ingredientes: ['Arroz', 'Azafrán', 'Pollo'],
-      id: '',
-      valoracion: 0,
-    ),
-    Recipe(
-      nombre: 'Tortilla de Patatas',
-      categoria: 'Española',
-      descripcion: 'Tortilla española clásica',
-      dificultad: 'Fácil',
-      tiempo: '20 min',
-      servings: 3,
-      pasos: ['Paso 1', 'Paso 2'],
-      ingredientes: ['Patatas', 'Huevos', 'Cebolla'],
-      id: '',
-      valoracion: 0,
-    ),
-    Recipe(
-      nombre: 'Pizza Margarita',
-      categoria: 'Italiana',
-      descripcion: 'Pizza italiana auténtica',
-      dificultad: 'Medio',
-      tiempo: '30 min',
-      servings: 2,
-      pasos: ['Paso 1', 'Paso 2', 'Paso 3'],
-      ingredientes: ['Harina', 'Tomate', 'Mozzarella'],
-      id: '',
-      valoracion: 0,
-    ),
-    Recipe(
-      nombre: 'Sushi Roll',
-      categoria: 'Japonesa',
-      descripcion: 'Sushi roll casero',
-      dificultad: 'Difícil',
-      tiempo: '40 min',
-      servings: 2,
-      pasos: ['Paso 1', 'Paso 2', 'Paso 3', 'Paso 4'],
-      ingredientes: ['Arroz', 'Nori', 'Pepino', 'Aguacate'],
-      id: '',
-      valoracion: 0,
-    ),
-    Recipe(
-      nombre: 'Tacos al Pastor',
-      categoria: 'Mexicana',
-      descripcion: 'Tacos mexicanos tradicionales',
-      dificultad: 'Medio',
-      tiempo: '35 min',
-      servings: 4,
-      pasos: ['Paso 1', 'Paso 2', 'Paso 3'],
-      ingredientes: ['Carne', 'Tortillas', 'Cebolla'],
-      id: '',
-      valoracion: 0,
-    ),
-    Recipe(
-      nombre: 'Lasaña Boloñesa',
-      categoria: 'Italiana',
-      descripcion: 'Lasaña casera con salsa boloñesa',
-      dificultad: 'Medio',
-      tiempo: '50 min',
-      servings: 6,
-      pasos: ['Paso 1', 'Paso 2', 'Paso 3', 'Paso 4'],
-      ingredientes: ['Pasta', 'Carne molida', 'Tomate', 'Queso'],
-      id: '',
-      valoracion: 0,
-    ),
   ];
 
   List<Recipe> get _recetasFiltradas {
@@ -137,9 +68,7 @@ class _PantallaGuardadosState extends State<PantallaGuardados> {
                         child: Container(
                           width: 250,
                           height: 200,
-                          child: Image.network(
-                            "https://assets.tmecosys.com/image/upload/t_web_rdp_recipe_584x480_1_5x/img/recipe/ras/Assets/4ADF5D92-29D0-4EB7-8C8B-5C7DAA0DA74A/Derivates/E5E1004A-1FF0-448B-87AF-31393870B653.jpg",
-                          ),
+                          color: Colors.lightBlue[300],
                         ),
                       ),
                     )
@@ -147,9 +76,7 @@ class _PantallaGuardadosState extends State<PantallaGuardados> {
                     Container(
                       width: 250,
                       height: 200,
-                      child: Image.network(
-                        "https://assets.tmecosys.com/image/upload/t_web_rdp_recipe_584x480_1_5x/img/recipe/ras/Assets/4ADF5D92-29D0-4EB7-8C8B-5C7DAA0DA74A/Derivates/E5E1004A-1FF0-448B-87AF-31393870B653.jpg",
-                      ),
+                      color: Colors.lightBlue[300],
                     ),
                   const SizedBox(height: 16),
                   Text(
@@ -341,22 +268,18 @@ class _PantallaGuardadosState extends State<PantallaGuardados> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+
+    // Leer argumentos de la ruta SIEMPRE (quitar la condición isEmpty)
     final args = ModalRoute.of(context)?.settings.arguments;
 
-    // CASO 1: Nueva lógica (Viene un nombre para abrir)
-    if (args is String && !_dialogoAbiertoGuardados) {
-      // Buscamos la receta por nombre en tu lista local _recetasGuardadas
-      try {
-        final recetaAbrevar = _recetasGuardadas.firstWhere(
-          (r) => r.nombre == args,
-        );
-        _dialogoAbiertoGuardados = true;
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          _mostrarDetallesReceta(recetaAbrevar);
-        });
-      } catch (e) {
-        // Si no se encuentra por nombre, no hacemos nada (solo se muestra la lista)
-      }
+    if (args is List<Recipe> && args.isNotEmpty) {
+      setState(() {
+        _recetasGuardadas = List<Recipe>.from(args);
+      });
+    } else if (widget.lista != null && widget.lista!.isNotEmpty) {
+      setState(() {
+        _recetasGuardadas = List<Recipe>.from(widget.lista!);
+      });
     }
   }
 
@@ -426,7 +349,7 @@ class _PantallaGuardadosState extends State<PantallaGuardados> {
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              'Recetas Guardadas',
+              'Mis Recetas',
               textAlign: TextAlign.center,
               overflow: TextOverflow.ellipsis,
               style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),

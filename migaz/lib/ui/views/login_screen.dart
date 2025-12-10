@@ -1,10 +1,10 @@
-import 'package:migaz/widgets/auth/user_credentials.dart';
+import 'package:migaz/ui/widgets/auth/user_credentials.dart';
 import 'package:flutter/material.dart';
 import '../widgets/auth/auth_logo.dart';
 import '../widgets/auth/auth_form_field.dart';
-import '../utils/gradient_scaffold.dart';
-import '../utils/responsive_helper.dart';
-import '../config/routes.dart';
+import '../../core/utils/gradient_scaffold.dart';
+import '../../core/utils/responsive_helper.dart';
+import '../../config/routes.dart';
 import 'package:provider/provider.dart';
 
 class LoginScreen extends StatefulWidget {
