@@ -31,14 +31,14 @@ class Recipe {
     dificultad: json['dificultad'] as String,
     tiempo: json['tiempo'] as String,
     servings: json['servings'] as int,
-    pasos: json['pasos'] as List<String>,
-    ingredientes: json['ingredientes'] as List<String>,
+    pasos: List<String>.from(json['pasos'] ?? []),
+    ingredientes: List<String>.from(json['ingredientes'] ?? []),
   );
 
   Map<String, dynamic> toJson() => {
     'nombre': nombre,
     'categoria': categoria,
-    'description': descripcion,
+    'descripcion': descripcion,
     'dificultad': dificultad,
     'tiempo': tiempo,
     'servings': servings,

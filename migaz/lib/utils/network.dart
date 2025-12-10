@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:js_interop';
 import 'package:http/http.dart' as http;
 import 'package:migaz/models/recipe.dart';
 
@@ -10,7 +9,7 @@ Future<bool> saveRecipeToServer(Recipe recipe) async {
   final resp = await http.post(
     uri,
     headers: {'Content-Type': 'application/json'},
-    body: jsonEncode(recipe.toJSBox),
+    body: jsonEncode(recipe.toMap()),
   );
   if (resp.statusCode == 201) return true;
   throw Exception('Error guardando receta: ${resp.statusCode} ${resp.body}');
