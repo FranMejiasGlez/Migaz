@@ -30,14 +30,22 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-    #Gestion de estado (Motor de MVVM)
-    provider: ^6.1.2
-    #Peticiones (Internet)
-    http: ^1.2.1
-
+  
+  # Gestión de estado (Motor de MVVM)
+  provider: ^6.1.2
+  
+  # Peticiones HTTP
+  http: ^1.2.1
+  
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
+  
+  # Firebase (opcional, según necesidad del proyecto original)
+  # firebase_core: ^4.2.1
+  
+  # Utilidades
+  path_provider: ^2.1.5
 
 dev_dependencies:
   flutter_test:

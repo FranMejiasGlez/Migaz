@@ -1,0 +1,56 @@
+name: Flutter CI
+
+on:
+  push:
+    branches: [ main, copilot/refactormvvm-migration ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    
+    permissions:
+      contents: read
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Setup Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: '3.38.4'
+        channel: 'stable'
+
+    - name: Install dependencies
+      working-directory: ./migaz
+      run: flutter pub get
+
+    - name: Verify formatting
+      working-directory: ./migaz
+      run: dart format --set-exit-if-changed lib/ test/
+
+    - name: Analyze code
+      working-directory: ./migaz
+      run: flutter analyze
+
+    - name: Run tests
+      working-directory: ./migaz
+      run: flutter test --coverage
+
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        files: ./migaz/coverage/lcov.info
+        fail_ci_if_error: false
+
+    - name: Build APK (Android)
+      working-directory: ./migaz
+      run: flutter build apk --release
+
+    - name: Upload APK artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: release-apk
+        path: migaz/build/app/outputs/flutter-apk/app-release.apk
