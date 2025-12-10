@@ -1,9 +1,12 @@
 import 'package:migaz/config/routes.dart';
 import 'package:migaz/data/models/recipe.dart';
+import 'package:migaz/ui/widgets/auth/user_credentials.dart';
+import 'package:migaz/ui/widgets/comentarios/comentarios_popup.dart';
 import 'package:migaz/ui/widgets/recipe/user_avatar.dart';
 import 'package:migaz/core/utils/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:migaz/ui/widgets/recipe/recipe_card.dart';
+import 'package:provider/provider.dart';
 import '../widgets/recipe/recipe_filter_dropdown.dart';
 import '../widgets/recipe/recipe_search_bar.dart';
 
@@ -285,6 +288,29 @@ class _PantallaGuardadosState extends State<PantallaGuardados> {
                       ),
                     ),
                   ],
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      final userCred = Provider.of<comentariosPopup>(
+                        context,
+                        listen: false,
+                      );
+                      final currentUserName =
+                          userCred.currentUserName ?? 'Usuario';
+                      showModalBottomSheet(
+                        context: context,
+                        isScrollControlled: true,
+                        builder: (ctx) => comentariosPopup(
+                          recipe: receta,
+                          currentUserName: currentUserName,
+                          onAddcomentario: (comment) {
+                            // opcional: enviar al servidor o notificar ViewModel
+                          },
+                        ),
+                      );
+                    },
+                    icon: const Icon(Icons.comment),
+                    label: const Text('Comentarios'),
+                  ),
                   const SizedBox(height: 16),
                   SizedBox(
                     width: double.infinity,
