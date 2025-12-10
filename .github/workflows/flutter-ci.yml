@@ -29,7 +29,7 @@ jobs:
 
     - name: Verify formatting
       working-directory: ./migaz
-      run: flutter format --set-exit-if-changed lib/ test/
+      run: dart format --set-exit-if-changed lib/ test/
 
     - name: Analyze code
       working-directory: ./migaz
