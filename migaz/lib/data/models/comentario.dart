@@ -1,22 +1,26 @@
 class Comentario {
-  final String author;
-  final String text;
-  final DateTime createdAt;
+  final String autor;
+  final String texto;
+  final DateTime creadoEn;
 
-  Comentario({required this.author, required this.text, DateTime? createdAt})
-    : createdAt = createdAt ?? DateTime.now();
+  Comentario({required this.autor, required this.texto, DateTime? creadoEn})
+    : creadoEn = creadoEn ?? DateTime.now();
 
   factory Comentario.fromJson(Map<String, dynamic> json) => Comentario(
-    author: json['author'] as String? ?? 'Anónimo',
-    text: json['text'] as String? ?? '',
-    createdAt: json['createdAt'] != null
-        ? DateTime.parse(json['createdAt'] as String)
+    autor: json['autor'] as String? ?? 'Anónimo',
+    texto: json['texto'] as String? ?? '',
+    creadoEn: json['creadoEn'] != null
+        ? DateTime.parse(json['creadoEn'] as String)
         : DateTime.now(),
   );
 
   Map<String, dynamic> toJson() => {
-    'author': author,
-    'text': text,
-    'createdAt': createdAt.toIso8601String(),
+    'autor': autor,
+    'texto': texto,
+    'creadoEn': creadoEn.toIso8601String(),
   };
+
+  @override
+  String toString() =>
+      'Comentario(autor: $autor, texto: $texto, creadoEn: $creadoEn)';
 }

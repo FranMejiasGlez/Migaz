@@ -1,14 +1,15 @@
 import 'package:migaz/config/routes.dart';
+import 'package:migaz/data/models/comentario.dart';
 import 'package:migaz/data/models/recipe.dart';
 import 'package:migaz/ui/widgets/auth/user_credentials.dart';
 import 'package:migaz/ui/widgets/comentarios/comentarios_popup.dart';
+import 'package:migaz/ui/widgets/recipe/recipe_filter_dropdown.dart';
+import 'package:migaz/ui/widgets/recipe/recipe_search_bar.dart';
 import 'package:migaz/ui/widgets/recipe/user_avatar.dart';
 import 'package:migaz/core/utils/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:migaz/ui/widgets/recipe/recipe_card.dart';
 import 'package:provider/provider.dart';
-import '../widgets/recipe/recipe_filter_dropdown.dart';
-import '../widgets/recipe/recipe_search_bar.dart';
 
 class PantallaGuardados extends StatefulWidget {
   const PantallaGuardados({Key? key}) : super(key: key);
@@ -41,8 +42,8 @@ class _PantallaGuardadosState extends State<PantallaGuardados> {
       servings: 4,
       pasos: ['Paso 1', 'Paso 2', 'Paso 3'],
       ingredientes: ['Arroz', 'Azafrán', 'Pollo'],
-      comentarios: [],
-      valoracion: 0,
+      comentarios: <Comentario>[],
+      valoracion: 0.0,
     ),
     Recipe(
       nombre: 'Tortilla de Patatas',
@@ -53,8 +54,8 @@ class _PantallaGuardadosState extends State<PantallaGuardados> {
       servings: 3,
       pasos: ['Paso 1', 'Paso 2'],
       ingredientes: ['Patatas', 'Huevos', 'Cebolla'],
-      comentarios: [],
-      valoracion: 0,
+      comentarios: <Comentario>[],
+      valoracion: 0.0,
     ),
     Recipe(
       nombre: 'Pizza Margarita',
@@ -65,8 +66,8 @@ class _PantallaGuardadosState extends State<PantallaGuardados> {
       servings: 2,
       pasos: ['Paso 1', 'Paso 2', 'Paso 3'],
       ingredientes: ['Harina', 'Tomate', 'Mozzarella'],
-      comentarios: [],
-      valoracion: 0,
+      comentarios: <Comentario>[],
+      valoracion: 0.0,
     ),
     Recipe(
       nombre: 'Sushi Roll',
@@ -77,8 +78,8 @@ class _PantallaGuardadosState extends State<PantallaGuardados> {
       servings: 2,
       pasos: ['Paso 1', 'Paso 2', 'Paso 3', 'Paso 4'],
       ingredientes: ['Arroz', 'Nori', 'Pepino', 'Aguacate'],
-      comentarios: [],
-      valoracion: 0,
+      comentarios: <Comentario>[],
+      valoracion: 0.0,
     ),
     Recipe(
       nombre: 'Tacos al Pastor',
@@ -89,8 +90,8 @@ class _PantallaGuardadosState extends State<PantallaGuardados> {
       servings: 4,
       pasos: ['Paso 1', 'Paso 2', 'Paso 3'],
       ingredientes: ['Carne', 'Tortillas', 'Cebolla'],
-      comentarios: [],
-      valoracion: 0,
+      comentarios: <Comentario>[],
+      valoracion: 0.0,
     ),
     Recipe(
       nombre: 'Lasaña Boloñesa',
@@ -101,8 +102,8 @@ class _PantallaGuardadosState extends State<PantallaGuardados> {
       servings: 6,
       pasos: ['Paso 1', 'Paso 2', 'Paso 3', 'Paso 4'],
       ingredientes: ['Pasta', 'Carne molida', 'Tomate', 'Queso'],
-      comentarios: [],
-      valoracion: 0,
+      comentarios: <Comentario>[],
+      valoracion: 0.0,
     ),
   ];
 
@@ -290,20 +291,26 @@ class _PantallaGuardadosState extends State<PantallaGuardados> {
                   ],
                   ElevatedButton.icon(
                     onPressed: () {
-                      final userCred = Provider.of<comentariosPopup>(
+                      // Obtener email desde el provider y extraer username
+                      final userCred = Provider.of<UserCredentials>(
                         context,
                         listen: false,
                       );
-                      final currentUserName =
-                          userCred.currentUserName ?? 'Usuario';
+
+                      String currentUserName = 'Usuario';
+
+                      // Extraer la parte antes del @ del email
+                      currentUserName = userCred.email.split('@')[0];
+
                       showModalBottomSheet(
                         context: context,
                         isScrollControlled: true,
-                        builder: (ctx) => comentariosPopup(
+                        builder: (ctx) => ComentariosPopup(
                           recipe: receta,
                           currentUserName: currentUserName,
-                          onAddcomentario: (comment) {
+                          onAddComentario: (comment) {
                             // opcional: enviar al servidor o notificar ViewModel
+                            // ejemplo: print('Comentario agregado: ${comment.text}');
                           },
                         ),
                       );

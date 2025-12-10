@@ -34,22 +34,26 @@ class Recipe {
        comentarios = comentarios ?? const [];
 
   factory Recipe.fromJson(Map<String, dynamic> json) => Recipe(
-    nombre: json['nombre'] as String,
-    categoria: json['categoria'] as String,
+    nombre: json['nombre'] as String? ?? '',
+    categoria: json['categoria'] as String? ?? 'Otros',
     descripcion: json['descripcion'] as String? ?? '',
     dificultad: json['dificultad'] as String? ?? 'Todos los niveles',
     tiempo: json['tiempo'] as String? ?? '',
     servings: (json['servings'] is int)
         ? json['servings'] as int
         : (json['servings'] is num ? (json['servings'] as num).toInt() : 1),
-    pasos: List<String>.from(json['pasos'] ?? []),
-    ingredientes: List<String>.from(json['ingredientes'] ?? []),
+    pasos: (json['pasos'] is List)
+        ? List<String>.from(json['pasos'])
+        : const [],
+    ingredientes: (json['ingredientes'] is List)
+        ? List<String>.from(json['ingredientes'])
+        : const [],
     youtubeUrl: json['youtubeUrl'] as String?,
     imageUrl: json['imageUrl'] as String?,
     comentarios: (json['comentarios'] is List)
-        ? List<Map<String, dynamic>>.from(
-            json['comentarios'],
-          ).map((m) => Comentario.fromJson(m)).toList()
+        ? (json['comentarios'] as List)
+              .map((e) => Comentario.fromJson(Map<String, dynamic>.from(e)))
+              .toList()
         : const [],
     valoracion: (json['valoracion'] is num)
         ? (json['valoracion'] as num).toDouble()
@@ -75,7 +79,7 @@ class Recipe {
 
   @override
   String toString() {
-    return 'Recipe(nombre: $nombre, categoria: $categoria,dificultad: $dificultad,tiempo: $tiempo, servings: $servings, pasos:${pasos.length}, ingredientes: ${ingredientes.length}, youtubeUrl: $youtubeUrl, imageUrl: $imageUrl, comentarios:${comentarios.length}, valoracion:$valoracion)';
+    return 'Recipe(nombre: $nombre, categoria: $categoria, dificultad: $dificultad, tiempo: $tiempo, servings: $servings, pasos:${pasos.length}, ingredientes:${ingredientes.length}, comentarios:${comentarios.length}, valoracion:$valoracion)';
   }
 
   factory Recipe.fromMap(Map<String, dynamic> m) => Recipe.fromJson(m);
