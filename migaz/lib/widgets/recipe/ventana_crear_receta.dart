@@ -106,6 +106,8 @@ class _DialogoCrearRecetaState extends State<DialogoCrearReceta> {
       tiempo: tiempo,
       pasos: List<String>.from(_pasos),
       ingredientes: List<String>.from(_ingredientes),
+      id: '',
+      valoracion: 0,
       /*  youtubeUrl: _youtubeController.text.trim().isEmpty
           ? null
           : _youtubeController.text.trim(),

@@ -13,9 +13,7 @@ import '../widgets/recipe/recipe_card.dart';
 import '../widgets/recipe/recipe_carousel.dart';
 
 class PantallaRecetas extends StatelessWidget {
-  const PantallaRecetas({
-    Key? key,
-  }) : super(key: key);
+  const PantallaRecetas({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -41,7 +39,80 @@ class _PantallaRecetasViewState extends State<_PantallaRecetasView> {
     _searchController.dispose();
     super.dispose();
   }
-
+final List<Recipe> _todasLasRecetasCompletas = [
+    Recipe(
+      nombre: 'Paella Valenciana',
+      categoria: 'Española',
+      descripcion: 'Deliciosa paella tradicional valenciana',
+      dificultad: 'Medio',
+      tiempo: '45 min',
+      servings: 4,
+      pasos: ['Paso 1', 'Paso 2', 'Paso 3'],
+      ingredientes: ['Arroz', 'Azafrán', 'Pollo'],
+      id: '',
+      valoracion: 0,
+    ),
+    Recipe(
+      nombre: 'Tortilla de Patatas',
+      categoria: 'Española',
+      descripcion: 'Tortilla española clásica',
+      dificultad: 'Fácil',
+      tiempo: '20 min',
+      servings: 3,
+      pasos: ['Paso 1', 'Paso 2'],
+      ingredientes: ['Patatas', 'Huevos', 'Cebolla'],
+      id: '',
+      valoracion: 0,
+    ),
+    Recipe(
+      nombre: 'Pizza Margarita',
+      categoria: 'Italiana',
+      descripcion: 'Pizza italiana auténtica',
+      dificultad: 'Medio',
+      tiempo: '30 min',
+      servings: 2,
+      pasos: ['Paso 1', 'Paso 2', 'Paso 3'],
+      ingredientes: ['Harina', 'Tomate', 'Mozzarella'],
+      id: '',
+      valoracion: 0,
+    ),
+    Recipe(
+      nombre: 'Sushi Roll',
+      categoria: 'Japonesa',
+      descripcion: 'Sushi roll casero',
+      dificultad: 'Difícil',
+      tiempo: '40 min',
+      servings: 2,
+      pasos: ['Paso 1', 'Paso 2', 'Paso 3', 'Paso 4'],
+      ingredientes: ['Arroz', 'Nori', 'Pepino', 'Aguacate'],
+      id: '',
+      valoracion: 0,
+    ),
+    Recipe(
+      nombre: 'Tacos al Pastor',
+      categoria: 'Mexicana',
+      descripcion: 'Tacos mexicanos tradicionales',
+      dificultad: 'Medio',
+      tiempo: '35 min',
+      servings: 4,
+      pasos: ['Paso 1', 'Paso 2', 'Paso 3'],
+      ingredientes: ['Carne', 'Tortillas', 'Cebolla'],
+      id: '',
+      valoracion: 0,
+    ),
+    Recipe(
+      nombre: 'Lasaña Boloñesa',
+      categoria: 'Italiana',
+      descripcion: 'Lasaña casera con salsa boloñesa',
+      dificultad: 'Medio',
+      tiempo: '50 min',
+      servings: 6,
+      pasos: ['Paso 1', 'Paso 2', 'Paso 3', 'Paso 4'],
+      ingredientes: ['Pasta', 'Carne molida', 'Tomate', 'Queso'],
+      id: '',
+      valoracion: 0,
+    ),
+  ];
   @override
   Widget build(BuildContext context) {
     return Consumer<RecipeListViewModel>(
@@ -56,7 +127,8 @@ class _PantallaRecetasViewState extends State<_PantallaRecetasView> {
                   _buildSearchSection(viewModel),
                   const SizedBox(height: 16),
                   Expanded(
-                    child: viewModel.searchQuery.isNotEmpty ||
+                    child:
+                        viewModel.searchQuery.isNotEmpty ||
                             viewModel.selectedFilter != 'Todos'
                         ? _buildSearchResults(viewModel)
                         : _buildHomeContent(),
@@ -73,12 +145,12 @@ class _PantallaRecetasViewState extends State<_PantallaRecetasView> {
 
   Widget _buildHeader(BuildContext context, RecipeListViewModel viewModel) {
     return Padding(
-      padding: const EdgeInsets.all(16.0),
+      padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
       child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
           // limitar ancho del botón para que no estire la fila
-          ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 140),
+          SizedBox(
             child: ElevatedButton(
               onPressed: () {
                 print(
@@ -115,15 +187,25 @@ class _PantallaRecetasViewState extends State<_PantallaRecetasView> {
 
           // espacio flexible para el título (centrado y recortado si hace falta)
           const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              'Nombre Usuario',
-              textAlign: TextAlign.center,
-              overflow: TextOverflow.visible,
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          SizedBox(
+            width: 300,
+            child: Container(
+              decoration: BoxDecoration(
+                color: const Color(0xFFEA7317).withOpacity(0.5),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Text(
+                'Nombre de usuario',
+                textAlign: TextAlign.center,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ),
           ),
-          const SizedBox(width: 12),
 
           // avatar con tamaño fijo
           UserAvatar(
@@ -194,24 +276,78 @@ class _PantallaRecetasViewState extends State<_PantallaRecetasView> {
     );
   }
 
-  Widget _buildHomeContent() {
+Widget _buildHomeContent() {
     return SingleChildScrollView(
-      child: Column(
-        children: [
-          RecipeCarousel(
-            title: 'Más valorado',
-            recipes: List.generate(10, (i) => 'Receta $i'),
-          ),
-          RecipeCarousel(
-            title: 'Más nuevo',
-            recipes: List.generate(10, (i) => 'Receta $i'),
-          ),
-        ],
+      child: Padding(
+        padding: const EdgeInsets.all(8),
+        child: Column(
+          children: [
+            // --- CARRUSEL 1: MIS RECETAS ---
+            Center(
+              child: Container(
+                width: 600,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFEA7317).withOpacity(0.5),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
+                child: const Text(
+                  'Mas Valoradas',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                ),
+              ),
+            ),
+            const SizedBox(height: 0),
+            RecipeCarousel(
+              title: '',
+              recipes:List<String>.generate(3, (String nombre) => index * index, growable: true),
+              onRecipeTap: (index) {
+              
+              },
+            ),
+
+            // --- CARRUSEL 2: GUARDADOS ---
+            Center(
+              child: Container(
+                width: 600,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFEA7317).withOpacity(0.5),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
+                child: const Text(
+                  'Nuevas',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                ),
+              ),
+            ),
+            const SizedBox(height: 0),
+            RecipeCarousel(
+              title: '',
+              recipes: ,
+              onRecipeTap: (index) {
+               
+              },
+            ),
+          ],
+        ),
       ),
     );
   }
+}
 
-  Widget _buildCreateRecipeButton(BuildContext context, RecipeListViewModel viewModel) {
+  Widget _buildCreateRecipeButton(
+    BuildContext context,
+    RecipeListViewModel viewModel,
+  ) {
     return Padding(
       padding: const EdgeInsets.all(20),
       child: Align(
@@ -221,7 +357,9 @@ class _PantallaRecetasViewState extends State<_PantallaRecetasView> {
             final Recipe? nueva = await showDialog<Recipe>(
               context: context,
               builder: (context) => DialogoCrearReceta(
-                categorias: viewModel.categories.where((c) => c != 'Todos').toList(),
+                categorias: viewModel.categories
+                    .where((c) => c != 'Todos')
+                    .toList(),
                 dificultades: viewModel.difficultyLevels,
               ),
             );
@@ -248,7 +386,9 @@ class _PantallaRecetasViewState extends State<_PantallaRecetasView> {
             }
             viewModel.addRecipe(nueva);
             print('✅ Receta creada: ${nueva.nombre}'); // Debug
-            print('📋 Total recetas en lista: ${viewModel.recipes.length}'); // Debug
+            print(
+              '📋 Total recetas en lista: ${viewModel.recipes.length}',
+            ); // Debug
           },
 
           style: ElevatedButton.styleFrom(

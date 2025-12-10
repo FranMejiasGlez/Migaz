@@ -45,6 +45,8 @@ class _PantallaBibliotecaState extends State<PantallaBiblioteca> {
       servings: 4,
       pasos: ['Paso 1', 'Paso 2', 'Paso 3'],
       ingredientes: ['Arroz', 'Azafrán', 'Pollo'],
+      id: '',
+      valoracion: 0,
     ),
     Recipe(
       nombre: 'Tortilla de Patatas',
@@ -55,6 +57,8 @@ class _PantallaBibliotecaState extends State<PantallaBiblioteca> {
       servings: 3,
       pasos: ['Paso 1', 'Paso 2'],
       ingredientes: ['Patatas', 'Huevos', 'Cebolla'],
+      id: '',
+      valoracion: 0,
     ),
     Recipe(
       nombre: 'Pizza Margarita',
@@ -65,6 +69,8 @@ class _PantallaBibliotecaState extends State<PantallaBiblioteca> {
       servings: 2,
       pasos: ['Paso 1', 'Paso 2', 'Paso 3'],
       ingredientes: ['Harina', 'Tomate', 'Mozzarella'],
+      id: '',
+      valoracion: 0,
     ),
     Recipe(
       nombre: 'Sushi Roll',
@@ -75,6 +81,8 @@ class _PantallaBibliotecaState extends State<PantallaBiblioteca> {
       servings: 2,
       pasos: ['Paso 1', 'Paso 2', 'Paso 3', 'Paso 4'],
       ingredientes: ['Arroz', 'Nori', 'Pepino', 'Aguacate'],
+      id: '',
+      valoracion: 0,
     ),
     Recipe(
       nombre: 'Tacos al Pastor',
@@ -85,6 +93,8 @@ class _PantallaBibliotecaState extends State<PantallaBiblioteca> {
       servings: 4,
       pasos: ['Paso 1', 'Paso 2', 'Paso 3'],
       ingredientes: ['Carne', 'Tortillas', 'Cebolla'],
+      id: '',
+      valoracion: 0,
     ),
     Recipe(
       nombre: 'Lasaña Boloñesa',
@@ -95,6 +105,8 @@ class _PantallaBibliotecaState extends State<PantallaBiblioteca> {
       servings: 6,
       pasos: ['Paso 1', 'Paso 2', 'Paso 3', 'Paso 4'],
       ingredientes: ['Pasta', 'Carne molida', 'Tomate', 'Queso'],
+      id: '',
+      valoracion: 0,
     ),
   ];
   void _mostrarDetallesReceta(Recipe receta) {
@@ -385,7 +397,7 @@ class _PantallaBibliotecaState extends State<PantallaBiblioteca> {
               _buildHeader(),
               _buildSearchSection(),
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
                   Padding(
                     padding: const EdgeInsets.fromLTRB(0, 10, 0, 0),
@@ -393,10 +405,10 @@ class _PantallaBibliotecaState extends State<PantallaBiblioteca> {
                       onPressed: () {
                         Navigator.pushNamed(context, AppRoutes.guardados);
                       },
-
+                      icon: const Icon(Icons.bookmark),
                       label: const Text('Guardados'),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFFEC601),
+                        backgroundColor: Color(0xFFEA7317).withOpacity(0.5),
                         foregroundColor: Colors.black,
                         padding: const EdgeInsets.symmetric(
                           horizontal: 12,
@@ -405,42 +417,44 @@ class _PantallaBibliotecaState extends State<PantallaBiblioteca> {
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        elevation: 3,
+                        elevation: 0,
                         minimumSize: const Size(80, 36),
                       ),
                     ),
                   ),
                   Padding(
                     padding: const EdgeInsets.fromLTRB(0, 10, 0, 0),
-
-                    child: ElevatedButton.icon(
-                      onPressed: () {
-                        print(
-                          '📖 Navegando a Mis Recetas con ${_recetasLocales?.length ?? 0} recetas',
-                        ); // Debug
-                        Navigator.pushNamed(
-                          context,
-
-                          AppRoutes.misrecetas,
-
-                          arguments: _recetasLocales,
-                        );
-                      },
-
-                      label: const Text('Mis Recetas'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFFEC601),
-                        foregroundColor: Colors.black,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 10,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        ElevatedButton.icon(
+                          onPressed: () {
+                            print(
+                              '📖 Navegando a Mis Recetas con ${_recetasLocales?.length ?? 0} recetas',
+                            );
+                            Navigator.pushNamed(
+                              context,
+                              AppRoutes.misrecetas,
+                              arguments: _recetasLocales,
+                            );
+                          },
+                          icon: const Icon(Icons.edit),
+                          label: const Text('Mis Recetas'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Color(0xFFEA7317).withOpacity(0.5),
+                            foregroundColor: Colors.black,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 10,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            elevation: 0,
+                            minimumSize: const Size(80, 36),
+                          ),
                         ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        elevation: 3,
-                        minimumSize: const Size(80, 36),
-                      ),
+                      ],
                     ),
                   ),
                 ],
@@ -460,44 +474,40 @@ class _PantallaBibliotecaState extends State<PantallaBiblioteca> {
 
   Widget _buildHeader() {
     return Padding(
-      padding: const EdgeInsets.all(16.0),
+      padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
       child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 140),
-            child: ElevatedButton(
+          SizedBox(
+            child: IconButton(
+              icon: const Icon(Icons.arrow_back),
               onPressed: () {
-                Navigator.pop(context);
+                Navigator.pushNamed(context, AppRoutes.home);
               },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFFEC601),
-                foregroundColor: Colors.black,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 10,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                elevation: 5,
-              ),
-              child: const FittedBox(
-                fit: BoxFit.scaleDown,
-                child: Icon(Icons.arrow_back),
-              ),
             ),
           ),
 
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              'Tu biblioteca',
-              textAlign: TextAlign.center,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          const SizedBox(width: 10),
+          SizedBox(
+            width: 300,
+            child: Container(
+              decoration: BoxDecoration(
+                color: const Color(0xFFEA7317).withOpacity(0.5),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Text(
+                'Tu biblioteca',
+                textAlign: TextAlign.center,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 10),
 
           UserAvatar(
             imageUrl:
@@ -587,12 +597,31 @@ class _PantallaBibliotecaState extends State<PantallaBiblioteca> {
   Widget _buildHomeContent() {
     return SingleChildScrollView(
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(8),
         child: Column(
           children: [
             // --- CARRUSEL 1: MIS RECETAS ---
+            Center(
+              child: Container(
+                width: 600,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFEA7317).withOpacity(0.5),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
+                child: const Text(
+                  'Mis Recetas',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                ),
+              ),
+            ),
+            const SizedBox(height: 0),
             RecipeCarousel(
-              title: 'Mis Recetas',
+              title: '',
               recipes: _recetasLocales != null && _recetasLocales!.isNotEmpty
                   ? _recetasLocales!.map((r) => r.nombre).toList()
                   : ['Sin recetas'],
@@ -605,8 +634,27 @@ class _PantallaBibliotecaState extends State<PantallaBiblioteca> {
             ),
 
             // --- CARRUSEL 2: GUARDADOS ---
+            Center(
+              child: Container(
+                width: 600,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFEA7317).withOpacity(0.5),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
+                child: const Text(
+                  'Guardados',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                ),
+              ),
+            ),
+            const SizedBox(height: 0),
             RecipeCarousel(
-              title: 'Guardados',
+              title: '',
               recipes: _todasLasRecetasCompletas.map((r) => r.nombre).toList(),
               onRecipeTap: (index) {
                 print(

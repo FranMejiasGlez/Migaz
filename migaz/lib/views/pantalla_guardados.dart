@@ -38,6 +38,8 @@ class _PantallaGuardadosState extends State<PantallaGuardados> {
       servings: 4,
       pasos: ['Paso 1', 'Paso 2', 'Paso 3'],
       ingredientes: ['Arroz', 'Azafrán', 'Pollo'],
+      id: '',
+      valoracion: 0,
     ),
     Recipe(
       nombre: 'Tortilla de Patatas',
@@ -48,6 +50,8 @@ class _PantallaGuardadosState extends State<PantallaGuardados> {
       servings: 3,
       pasos: ['Paso 1', 'Paso 2'],
       ingredientes: ['Patatas', 'Huevos', 'Cebolla'],
+      id: '',
+      valoracion: 0,
     ),
     Recipe(
       nombre: 'Pizza Margarita',
@@ -58,6 +62,8 @@ class _PantallaGuardadosState extends State<PantallaGuardados> {
       servings: 2,
       pasos: ['Paso 1', 'Paso 2', 'Paso 3'],
       ingredientes: ['Harina', 'Tomate', 'Mozzarella'],
+      id: '',
+      valoracion: 0,
     ),
     Recipe(
       nombre: 'Sushi Roll',
@@ -68,6 +74,8 @@ class _PantallaGuardadosState extends State<PantallaGuardados> {
       servings: 2,
       pasos: ['Paso 1', 'Paso 2', 'Paso 3', 'Paso 4'],
       ingredientes: ['Arroz', 'Nori', 'Pepino', 'Aguacate'],
+      id: '',
+      valoracion: 0,
     ),
     Recipe(
       nombre: 'Tacos al Pastor',
@@ -78,6 +86,8 @@ class _PantallaGuardadosState extends State<PantallaGuardados> {
       servings: 4,
       pasos: ['Paso 1', 'Paso 2', 'Paso 3'],
       ingredientes: ['Carne', 'Tortillas', 'Cebolla'],
+      id: '',
+      valoracion: 0,
     ),
     Recipe(
       nombre: 'Lasaña Boloñesa',
@@ -88,6 +98,8 @@ class _PantallaGuardadosState extends State<PantallaGuardados> {
       servings: 6,
       pasos: ['Paso 1', 'Paso 2', 'Paso 3', 'Paso 4'],
       ingredientes: ['Pasta', 'Carne molida', 'Tomate', 'Queso'],
+      id: '',
+      valoracion: 0,
     ),
   ];
 
