@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
 import 'package:migaz/core/theme/app_theme.dart';
 import 'package:migaz/data/models/recipe.dart'; // ✅ IMPORTAR
+import 'package:migaz/ui/widgets/recipe/recipe_image_widget.dart';
 
 class RecipeCarousel extends StatelessWidget {
   final String title;
@@ -230,12 +231,19 @@ class RecipeCarousel extends StatelessWidget {
     );
   }
 
-  // ✅ NUEVO MÉTODO:  Construir imagen de la receta
+  // ✅ MÉTODO CORREGIDO:  Construir imagen de la receta
   Widget _buildRecipeImage(Recipe recipe) {
     // Si tiene imágenes, usar la primera
     if (recipe.imagenes != null && recipe.imagenes!.isNotEmpty) {
+      // ✅ CORREGIDO: Construir URL completa
+      final imageUrl = recipe.imagenes!.first.startsWith('http')
+          ? recipe
+                .imagenes!
+                .first // Ya tiene URL completa
+          : 'http://localhost:3000/${recipe.imagenes!.first}'; // Añadir prefijo del servidor
+
       return Image.network(
-        recipe.imagenes!.first,
+        imageUrl,
         fit: BoxFit.cover,
         loadingBuilder: (context, child, loadingProgress) {
           if (loadingProgress == null) return child;
@@ -252,29 +260,15 @@ class RecipeCarousel extends StatelessWidget {
           );
         },
         errorBuilder: (context, error, stackTrace) {
-          // Si falla la carga, mostrar placeholder
-          return _buildPlaceholderImage();
+          // ✅ Añadir logging para debugging
+          print('❌ Error cargando imagen: $imageUrl');
+          print('   Error: $error');
+          return _buildRecipeImage(recipe);
         },
       );
     }
 
     // Si no tiene imágenes, mostrar placeholder
-    return _buildPlaceholderImage();
-  }
-
-  // ✅ IMAGEN PLACEHOLDER
-  Widget _buildPlaceholderImage() {
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Colors.grey[300]!, Colors.grey[400]!],
-        ),
-      ),
-      child: Center(
-        child: Icon(Icons.restaurant, size: 80, color: Colors.grey[500]),
-      ),
-    );
+    return _buildEmptyState();
   }
 }

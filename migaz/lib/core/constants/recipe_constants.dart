@@ -23,7 +23,7 @@ class RecipeConstants {
 
   // URL de avatar por defecto
   static const String defaultAvatarUrl =
-      'https://raw.githubusercontent.com/FranMejiasGlez/TallerFlutter/main/sandbox_fran/imperativo/img/Logo. png';
+      'https://raw.githubusercontent.com/FranMejiasGlez/TallerFlutter/main/sandbox_fran/imperativo/img/Logo.png';
 
   // Estilos de botones
   static const double buttonBorderRadius = 12.0;

@@ -15,6 +15,12 @@ class ComentariosPopup extends StatefulWidget {
 
   @override
   State<ComentariosPopup> createState() => _ComentariosPopupState();
+
+  static void show({
+    required BuildContext context,
+    required Recipe recipe,
+    required String currentUserName,
+  }) {}
 }
 
 class _ComentariosPopupState extends State<ComentariosPopup> {

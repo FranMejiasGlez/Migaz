@@ -202,7 +202,9 @@ class _PantallaGuardadosState extends State<PantallaGuardados> {
                 nombre: receta.nombre,
                 categoria: receta.categoria,
                 valoracion: 4.5,
+                cantidadComentarios: receta.comentarios.length,
                 onTap: () => RecipeDetailDialog.show(context, receta),
+                recipe: receta,
               );
             },
           ),
@@ -241,7 +243,9 @@ class _PantallaGuardadosState extends State<PantallaGuardados> {
                 nombre: receta.nombre,
                 categoria: receta.categoria,
                 valoracion: 4.5,
+                cantidadComentarios: receta.cantidadComentarios,
                 onTap: () => RecipeDetailDialog.show(context, receta),
+                recipe: receta,
               );
             },
           ),

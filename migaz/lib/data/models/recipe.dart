@@ -94,7 +94,7 @@ class Recipe {
   }
 
   String get dificultadTexto => dificultadToString(dificultad);
-
+  int get cantidadComentarios => comentarios.length;
   String get dificultadEstrellas {
     return '⭐' * dificultad;
   }

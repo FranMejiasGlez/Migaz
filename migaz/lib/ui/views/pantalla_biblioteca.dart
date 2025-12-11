@@ -243,7 +243,9 @@ class _PantallaBibliotecaState extends State<PantallaBiblioteca> {
                 nombre: receta.nombre,
                 categoria: receta.categoria,
                 valoracion: 4.5,
+                cantidadComentarios: receta.cantidadComentarios,
                 onTap: () => RecipeDetailDialog.show(context, receta),
+                recipe: receta,
               );
             },
           ),

@@ -102,11 +102,12 @@ class _PantallaRecetasViewState extends State<_PantallaRecetasView> {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
           _buildLibraryButton(context, viewModel),
           const SizedBox(width: 12),
           _buildUserNameDisplay(),
+          // ✅ AÑADIR: UserAvatar
           UserAvatar(
             imageUrl: RecipeConstants.defaultAvatarUrl,
             onTap: () => Navigator.pushNamed(context, AppRoutes.perfilUser),
@@ -202,7 +203,9 @@ class _PantallaRecetasViewState extends State<_PantallaRecetasView> {
           nombre: receta.nombre,
           categoria: receta.categoria,
           valoracion: receta.valoracion,
+          cantidadComentarios:receta.cantidadComentarios,
           onTap: () => RecipeDetailDialog.show(context, receta),
+          recipe: receta,
         );
       },
     );

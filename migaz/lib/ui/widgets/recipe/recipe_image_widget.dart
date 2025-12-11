@@ -1,98 +1,103 @@
+// lib/ui/widgets/recipe/recipe_image_widget.dart
 import 'package:flutter/material.dart';
-import 'package:migaz/data/models/recipe.dart';
 
 class RecipeImageWidget extends StatelessWidget {
-  final Recipe recipe;
-  final double width;
-  final double height;
-  final double borderRadius;
+  final String? imageUrl;
   final BoxFit fit;
+  final double? width;
+  final double? height;
+  final BorderRadius? borderRadius;
+  final Widget? placeholder;
+  final Widget? errorWidget;
 
   const RecipeImageWidget({
     Key? key,
-    required this.recipe,
-    this.width = 250,
-    this.height = 200,
-    this.borderRadius = 12,
+    this.imageUrl,
     this.fit = BoxFit.cover,
+    this.width,
+    this.height,
+    this.borderRadius,
+    this.placeholder,
+    this.errorWidget,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    // Si tiene imágenes, usar la primera
-    if (recipe.imagenes != null && recipe.imagenes!.isNotEmpty) {
-      return _buildNetworkImage(recipe.imagenes!.first);
+    // Si no hay URL de imagen, mostrar placeholder
+    if (imageUrl == null || imageUrl!.isEmpty) {
+      return _buildPlaceholder();
     }
 
-    // Si no tiene imagen, mostrar placeholder
-    return _buildPlaceholder();
-  }
+    // ✅ Construir URL completa del servidor
+    final fullUrl = _buildImageUrl(imageUrl!);
 
-  Widget _buildNetworkImage(String imageUrl) {
-    return Center(
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(borderRadius),
-        child: SizedBox(
-          width: width,
-          height: height,
-          child: Image.network(
-            imageUrl,
-            fit: fit,
-            loadingBuilder: (context, child, loadingProgress) {
-              if (loadingProgress == null) return child;
-              return _buildLoadingIndicator(loadingProgress);
-            },
-            errorBuilder: (context, error, stackTrace) {
-              return _buildPlaceholder();
-            },
-          ),
-        ),
+    return ClipRRect(
+      borderRadius: borderRadius ?? BorderRadius.zero,
+      child: Image.network(
+        fullUrl,
+        width: width,
+        height: height,
+        fit: fit,
+        loadingBuilder: (context, child, loadingProgress) {
+          if (loadingProgress == null) return child;
+
+          return Container(
+            width: width,
+            height: height,
+            color: Colors.grey[300],
+            child: Center(
+              child: CircularProgressIndicator(
+                value: loadingProgress.expectedTotalBytes != null
+                    ? loadingProgress.cumulativeBytesLoaded /
+                          loadingProgress.expectedTotalBytes!
+                    : null,
+                strokeWidth: 2,
+              ),
+            ),
+          );
+        },
+        errorBuilder: (context, error, stackTrace) {
+          print('❌ Error cargando imagen: $fullUrl');
+          print('   Error: $error');
+          return errorWidget ?? _buildPlaceholder();
+        },
       ),
     );
   }
 
-  Widget _buildLoadingIndicator(ImageChunkEvent loadingProgress) {
-    return Container(
-      width: width,
-      height: height,
-      color: Colors.grey[300],
-      child: Center(
-        child: CircularProgressIndicator(
-          value: loadingProgress.expectedTotalBytes != null
-              ? loadingProgress.cumulativeBytesLoaded /
-                    loadingProgress.expectedTotalBytes!
-              : null,
-        ),
-      ),
-    );
+  /// ✅ Construir URL completa de la imagen
+  String _buildImageUrl(String imagePath) {
+    // Si ya es una URL completa (http/https), devolverla
+    if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+      return imagePath;
+    }
+
+    // Si es una ruta relativa del servidor, añadir base URL
+    // ⚠️ IMPORTANTE: Cambia 'localhost: 3000' por tu URL de producción cuando despliegues
+    const baseUrl = 'http://localhost:3000';
+
+    // Asegurarse de que no haya doble slash
+    final cleanPath = imagePath.startsWith('/') ? imagePath : '/$imagePath';
+
+    return '$baseUrl$cleanPath';
   }
 
   Widget _buildPlaceholder() {
-    return Center(
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(borderRadius),
-        child: Container(
-          width: width,
-          height: height,
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [Colors.grey[300]!, Colors.grey[400]!],
-            ),
-          ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.restaurant, size: 60, color: Colors.grey[600]),
-              const SizedBox(height: 8),
-              Text(
-                'Sin imagen',
-                style: TextStyle(color: Colors.grey[600], fontSize: 14),
-              ),
-            ],
-          ),
+    if (placeholder != null) return placeholder!;
+
+    return Container(
+      width: width,
+      height: height,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Colors.grey[300]!, Colors.grey[400]!],
         ),
+        borderRadius: borderRadius,
+      ),
+      child: Center(
+        child: Icon(Icons.restaurant_menu, size: 48, color: Colors.grey[500]),
       ),
     );
   }
