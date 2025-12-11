@@ -77,7 +77,7 @@ class RecetaService {
     required String nombre,
     required String categoria,
     required String descripcion,
-    required String dificultad,
+    required int dificultad,
     required String tiempo,
     required int servings,
     required List<String> pasos,
@@ -88,7 +88,7 @@ class RecetaService {
       'nombre': nombre,
       'categoria': categoria,
       'descripcion': descripcion,
-      'dificultad': dificultad,
+      'dificultad': dificultad.toString(),
       'tiempo': tiempo,
       'servings': servings.toString(),
       'pasos': pasos.join(','), // ajusta según tu API

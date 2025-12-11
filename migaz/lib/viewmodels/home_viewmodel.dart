@@ -7,6 +7,7 @@ class HomeViewModel extends BaseViewModel {
 
   List<Recipe> _recetasMasValoradas = [];
   List<Recipe> _recetasMasNuevas = [];
+  List<Recipe> _todasLasRecetas = []; // ✅ NUEVO: Todas las recetas
 
   HomeViewModel({RecetaRepository? recetaRepository})
     : _recetaRepository = recetaRepository ?? RecetaRepository();
@@ -14,9 +15,19 @@ class HomeViewModel extends BaseViewModel {
   // Getters
   List<Recipe> get recetasMasValoradas => _recetasMasValoradas;
   List<Recipe> get recetasMasNuevas => _recetasMasNuevas;
+  List<Recipe> get todasLasRecetas => _todasLasRecetas; // ✅ NUEVO
 
   bool get tieneRecetas =>
-      _recetasMasValoradas.isNotEmpty || _recetasMasNuevas.isNotEmpty;
+      _recetasMasValoradas.isNotEmpty ||
+      _recetasMasNuevas.isNotEmpty ||
+      _todasLasRecetas.isNotEmpty;
+
+  /// ✅ NUEVO: Cargar TODAS las recetas
+  Future<void> cargarTodasLasRecetas() async {
+    await runAsync(() async {
+      _todasLasRecetas = await _recetaRepository.obtenerTodas();
+    }, errorPrefix: 'Error al cargar todas las recetas');
+  }
 
   /// Cargar recetas más valoradas
   Future<void> cargarRecetasMasValoradas({int limit = 10}) async {
@@ -39,15 +50,17 @@ class HomeViewModel extends BaseViewModel {
   /// Cargar todas las secciones de home
   Future<void> cargarHome() async {
     await runAsync(() async {
-      // Cargar ambas listas en paralelo
-      await Future.wait([
-        _recetaRepository
-            .obtenerMasValoradas(limit: 5)
-            .then((recetas) => _recetasMasValoradas = recetas),
-        _recetaRepository
-            .obtenerMasNuevas(limit: 5)
-            .then((recetas) => _recetasMasNuevas = recetas),
-      ]);
+      // ✅ MODIFICADO: Cargar TODAS las recetas de la BD
+      final todasRecetas = await _recetaRepository.obtenerTodas();
+      _todasLasRecetas = todasRecetas;
+
+      // Ordenar localmente para obtener las más valoradas y nuevas
+      _recetasMasValoradas = List.from(todasRecetas)
+        ..sort((a, b) => b.valoracion.compareTo(a.valoracion))
+        ..take(5).toList();
+
+      _recetasMasNuevas = List.from(todasRecetas)
+        ..take(5).toList(); // Las primeras son las más recientes
     }, errorPrefix: 'Error al cargar la pantalla de inicio');
   }
 
@@ -62,13 +75,17 @@ class HomeViewModel extends BaseViewModel {
     final result = await runAsync(() async {
       final recetaValorada = await _recetaRepository.valorar(id, valoracion);
 
-      // Actualizar en la lista de más valoradas si existe
+      // Actualizar en todas las listas
+      final indexTodas = _todasLasRecetas.indexWhere((r) => r.id == id);
+      if (indexTodas != -1) {
+        _todasLasRecetas[indexTodas] = recetaValorada;
+      }
+
       final indexValoradas = _recetasMasValoradas.indexWhere((r) => r.id == id);
       if (indexValoradas != -1) {
         _recetasMasValoradas[indexValoradas] = recetaValorada;
       }
 
-      // Actualizar en la lista de más nuevas si existe
       final indexNuevas = _recetasMasNuevas.indexWhere((r) => r.id == id);
       if (indexNuevas != -1) {
         _recetasMasNuevas[indexNuevas] = recetaValorada;

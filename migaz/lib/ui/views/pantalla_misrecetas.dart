@@ -1,14 +1,15 @@
 import 'package:migaz/core/config/routes.dart';
-import 'package:migaz/data/models/comentario.dart';
 import 'package:migaz/data/models/recipe.dart';
 import 'package:migaz/ui/widgets/auth/user_credentials.dart';
 import 'package:migaz/ui/widgets/comentarios/comentarios_popup.dart';
+import 'package:migaz/ui/widgets/recipe/recipe_carousel.dart';
 import 'package:migaz/ui/widgets/recipe/recipe_filter_dropdown.dart';
 import 'package:migaz/ui/widgets/recipe/recipe_search_bar.dart';
 import 'package:migaz/ui/widgets/recipe/user_avatar.dart';
 import 'package:migaz/core/utils/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:migaz/ui/widgets/recipe/recipe_card.dart';
+import 'package:migaz/viewmodels/home_viewmodel.dart';
 import 'package:provider/provider.dart';
 
 class PantallaMisRecetas extends StatefulWidget {
@@ -61,28 +62,10 @@ class _PantallaMisRecetasState extends State<PantallaMisRecetas> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  if (receta.imagenes != null && receta.imagenes!.isNotEmpty)
-                    Center(
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(12),
-                        child: Container(
-                          width: 250,
-                          height: 200,
-                          child: Image.network(
-                            "https://assets.tmecosys.com/image/upload/t_web_rdp_recipe_584x480_1_5x/img/recipe/ras/Assets/4ADF5D92-29D0-4EB7-8C8B-5C7DAA0DA74A/Derivates/E5E1004A-1FF0-448B-87AF-31393870B653.jpg",
-                          ),
-                        ),
-                      ),
-                    )
-                  else
-                    Container(
-                      width: 250,
-                      height: 200,
-                      child: Image.network(
-                        "https://assets.tmecosys.com/image/upload/t_web_rdp_recipe_584x480_1_5x/img/recipe/ras/Assets/4ADF5D92-29D0-4EB7-8C8B-5C7DAA0DA74A/Derivates/E5E1004A-1FF0-448B-87AF-31393870B653.jpg",
-                      ),
-                    ),
+                  // ✅ IMAGEN REAL DE LA RECETA
+                  _buildRecipeImage(receta),
                   const SizedBox(height: 16),
+
                   Text(
                     receta.nombre,
                     style: const TextStyle(
@@ -91,12 +74,14 @@ class _PantallaMisRecetasState extends State<PantallaMisRecetas> {
                     ),
                   ),
                   const SizedBox(height: 8),
+
                   if (receta.descripcion.isNotEmpty)
                     Text(
                       receta.descripcion,
                       style: TextStyle(fontSize: 14, color: Colors.grey[600]),
                     ),
                   const SizedBox(height: 16),
+
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
@@ -116,7 +101,7 @@ class _PantallaMisRecetasState extends State<PantallaMisRecetas> {
                             _infoItem(
                               icon: Icons.star,
                               label: 'Dificultad',
-                              valor: receta.dificultad,
+                              valor: receta.dificultadTexto, // ✅ MEJORADO
                             ),
                           ],
                         ),
@@ -126,7 +111,7 @@ class _PantallaMisRecetasState extends State<PantallaMisRecetas> {
                           children: [
                             _infoItem(
                               icon: Icons.people,
-                              label: 'Servings',
+                              label: 'Comensales',
                               valor: '${receta.comensales}',
                             ),
                             _infoItem(
@@ -139,6 +124,8 @@ class _PantallaMisRecetasState extends State<PantallaMisRecetas> {
                       ],
                     ),
                   ),
+
+                  // Ingredientes
                   if (receta.ingredientes.isNotEmpty) ...[
                     const SizedBox(height: 16),
                     const Text(
@@ -171,6 +158,8 @@ class _PantallaMisRecetasState extends State<PantallaMisRecetas> {
                           .toList(),
                     ),
                   ],
+
+                  // Pasos
                   if (receta.pasos.isNotEmpty) ...[
                     const SizedBox(height: 16),
                     const Text(
@@ -216,18 +205,22 @@ class _PantallaMisRecetasState extends State<PantallaMisRecetas> {
                       ),
                     ),
                   ],
+
+                  const SizedBox(height: 16),
+
+                  // Botón comentarios
                   ElevatedButton.icon(
                     onPressed: () {
-                      // Obtener email desde el provider y extraer username
                       final userCred = Provider.of<UserCredentials>(
                         context,
                         listen: false,
                       );
 
                       String currentUserName = 'Usuario';
-
-                      // Extraer la parte antes del @ del email
-                      currentUserName = userCred.email.split('@')[0];
+                      if (userCred.email.isNotEmpty &&
+                          userCred.email.contains('@')) {
+                        currentUserName = userCred.email.split('@')[0];
+                      }
 
                       showModalBottomSheet(
                         context: context,
@@ -246,8 +239,14 @@ class _PantallaMisRecetasState extends State<PantallaMisRecetas> {
                     },
                     icon: const Icon(Icons.comment),
                     label: const Text('Comentarios'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue,
+                      foregroundColor: Colors.white,
+                    ),
                   ),
                   const SizedBox(height: 16),
+
+                  // Botón cerrar
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
@@ -268,6 +267,80 @@ class _PantallaMisRecetasState extends State<PantallaMisRecetas> {
           ),
         );
       },
+    );
+  }
+
+  // ✅ AÑADIR ESTE MÉTODO PARA CONSTRUIR LA IMAGEN
+  Widget _buildRecipeImage(Recipe receta) {
+    // Si tiene imágenes, usar la primera
+    if (receta.imagenes != null && receta.imagenes!.isNotEmpty) {
+      return Center(
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(12),
+          child: SizedBox(
+            width: 250,
+            height: 200,
+            child: Image.network(
+              receta.imagenes!.first, // ✅ USAR LA IMAGEN REAL
+              fit: BoxFit.cover,
+              loadingBuilder: (context, child, loadingProgress) {
+                if (loadingProgress == null) return child;
+                return Container(
+                  width: 250,
+                  height: 200,
+                  color: Colors.grey[300],
+                  child: Center(
+                    child: CircularProgressIndicator(
+                      value: loadingProgress.expectedTotalBytes != null
+                          ? loadingProgress.cumulativeBytesLoaded /
+                                loadingProgress.expectedTotalBytes!
+                          : null,
+                    ),
+                  ),
+                );
+              },
+              errorBuilder: (context, error, stackTrace) {
+                // Si falla, mostrar placeholder
+                return _buildPlaceholderImage();
+              },
+            ),
+          ),
+        ),
+      );
+    }
+
+    // Si no tiene imagen, mostrar placeholder
+    return _buildPlaceholderImage();
+  }
+
+  // ✅ AÑADIR ESTE MÉTODO PARA EL PLACEHOLDER
+  Widget _buildPlaceholderImage() {
+    return Center(
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          width: 250,
+          height: 200,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [Colors.grey[300]!, Colors.grey[400]!],
+            ),
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.restaurant, size: 60, color: Colors.grey[600]),
+              const SizedBox(height: 8),
+              Text(
+                'Sin imagen',
+                style: TextStyle(color: Colors.grey[600], fontSize: 14),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
@@ -309,9 +382,7 @@ class _PantallaMisRecetasState extends State<PantallaMisRecetas> {
     if (args is String && !_dialogoAbiertoGuardados) {
       // Buscamos la receta por nombre en tu lista local _misRecetas
       try {
-        final recetaAbrevar = _misRecetas.firstWhere(
-          (r) => r.nombre == args,
-        );
+        final recetaAbrevar = _misRecetas.firstWhere((r) => r.nombre == args);
         _dialogoAbiertoGuardados = true;
         WidgetsBinding.instance.addPostFrameCallback((_) {
           _mostrarDetallesReceta(recetaAbrevar);
@@ -479,51 +550,126 @@ class _PantallaMisRecetasState extends State<PantallaMisRecetas> {
     );
   }
 
+  //Construir contenido de home usando HomeViewModel
   Widget _buildHomeContent() {
-    if (_misRecetas.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.bookmark_outline, size: 64, color: Colors.grey[400]),
-            const SizedBox(height: 16),
-            Text(
-              'No hay recetas guardadas',
-              style: TextStyle(fontSize: 16, color: Colors.grey[600]),
-            ),
-          ],
-        ),
-      );
-    }
+    return Consumer<HomeViewModel>(
+      builder: (context, homeViewModel, child) {
+        // Mostrar loading
+        if (homeViewModel.isLoading) {
+          return const Center(child: CircularProgressIndicator());
+        }
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final screenWidth = constraints.maxWidth;
-        final cardWidth = (screenWidth - 100) / 4;
-        final cardHeight = cardWidth * 1.2;
-
-        return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-          child: GridView.builder(
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 4,
-              crossAxisSpacing: 12,
-              mainAxisSpacing: 12,
-              childAspectRatio: cardWidth / cardHeight,
+        // Mostrar error
+        if (homeViewModel.hasError) {
+          return Center(
+            child: Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.error_outline, size: 64, color: Colors.red),
+                  const SizedBox(height: 16),
+                  Text(
+                    homeViewModel.errorMessage ?? 'Error desconocido',
+                    style: const TextStyle(fontSize: 16, color: Colors.red),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 24),
+                  ElevatedButton.icon(
+                    onPressed: () => homeViewModel.cargarHome(),
+                    icon: const Icon(Icons.refresh),
+                    label: const Text('Reintentar'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppTheme.primaryYellow,
+                      foregroundColor: Colors.black,
+                    ),
+                  ),
+                ],
+              ),
             ),
-            itemCount: _misRecetas.length,
-            itemBuilder: (context, index) {
-              final receta = _misRecetas[index];
-              return RecipeCard(
-                nombre: receta.nombre,
-                categoria: receta.categoria,
-                valoracion: 4.5,
-                onTap: () => _mostrarDetallesReceta(receta),
-              );
-            },
+          );
+        }
+
+        // Mostrar contenido
+        return RefreshIndicator(
+          onRefresh: homeViewModel.refrescarHome,
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            child: Padding(
+              padding: const EdgeInsets.all(8),
+              child: Column(
+                children: [
+                  // ✅ SECCIÓN 1: TODAS LAS RECETAS
+                  _buildSectionTitle('📚 Todas las Recetas'),
+                  const SizedBox(height: 8),
+                  RecipeCarousel(
+                    title: '',
+                    recipes:
+                        homeViewModel.todasLasRecetas, // ✅ PASAR OBJETOS Recipe
+                    emptyMessage: 'No hay recetas en la base de datos',
+                    onRecipeTap: (index) {
+                      final receta = homeViewModel.todasLasRecetas[index];
+                      print('Receta seleccionada:  ${receta.nombre}');
+                      _mostrarDetallesReceta(receta); // ✅ Mostrar detalles
+                    },
+                  ),
+                  const SizedBox(height: 24),
+
+                  // ✅ SECCIÓN 2: MÁS VALORADAS
+                  _buildSectionTitle('⭐ Más Valoradas'),
+                  const SizedBox(height: 8),
+                  RecipeCarousel(
+                    title: '',
+                    recipes: homeViewModel
+                        .recetasMasValoradas, // ✅ PASAR OBJETOS Recipe
+                    emptyMessage: 'No hay recetas valoradas aún',
+                    onRecipeTap: (index) {
+                      final receta = homeViewModel.recetasMasValoradas[index];
+                      print('Receta seleccionada: ${receta.nombre}');
+                      _mostrarDetallesReceta(receta); // ✅ Mostrar detalles
+                    },
+                  ),
+                  const SizedBox(height: 24),
+
+                  // ✅ SECCIÓN 3: NUEVAS
+                  _buildSectionTitle('🆕 Nuevas'),
+                  const SizedBox(height: 8),
+                  RecipeCarousel(
+                    title: '',
+                    recipes: homeViewModel
+                        .recetasMasNuevas, // ✅ PASAR OBJETOS Recipe
+                    emptyMessage: 'No hay recetas nuevas aún',
+                    onRecipeTap: (index) {
+                      final receta = homeViewModel.recetasMasNuevas[index];
+                      print('Receta seleccionada:  ${receta.nombre}');
+                      _mostrarDetallesReceta(receta); // ✅ Mostrar detalles
+                    },
+                  ),
+                ],
+              ),
+            ),
           ),
         );
       },
+    );
+  }
+
+  Widget _buildSectionTitle(String title) {
+    return Center(
+      child: Container(
+        width: 200,
+        decoration: BoxDecoration(
+          color: const Color.fromARGB(255, 243, 243, 243).withOpacity(0.5),
+          borderRadius: BorderRadius.circular(5),
+          border: Border.all(),
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        child: Text(
+          title,
+          textAlign: TextAlign.center,
+          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+        ),
+      ),
     );
   }
 }

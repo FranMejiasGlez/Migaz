@@ -61,28 +61,10 @@ class _PantallaGuardadosState extends State<PantallaGuardados> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  if (receta.imagenes != null && receta.imagenes!.isNotEmpty)
-                    Center(
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(12),
-                        child: Container(
-                          width: 250,
-                          height: 200,
-                          child: Image.network(
-                            "https://assets.tmecosys.com/image/upload/t_web_rdp_recipe_584x480_1_5x/img/recipe/ras/Assets/4ADF5D92-29D0-4EB7-8C8B-5C7DAA0DA74A/Derivates/E5E1004A-1FF0-448B-87AF-31393870B653.jpg",
-                          ),
-                        ),
-                      ),
-                    )
-                  else
-                    Container(
-                      width: 250,
-                      height: 200,
-                      child: Image.network(
-                        "https://assets.tmecosys.com/image/upload/t_web_rdp_recipe_584x480_1_5x/img/recipe/ras/Assets/4ADF5D92-29D0-4EB7-8C8B-5C7DAA0DA74A/Derivates/E5E1004A-1FF0-448B-87AF-31393870B653.jpg",
-                      ),
-                    ),
+                  // ✅ IMAGEN REAL DE LA RECETA
+                  _buildRecipeImage(receta),
                   const SizedBox(height: 16),
+
                   Text(
                     receta.nombre,
                     style: const TextStyle(
@@ -91,12 +73,14 @@ class _PantallaGuardadosState extends State<PantallaGuardados> {
                     ),
                   ),
                   const SizedBox(height: 8),
+
                   if (receta.descripcion.isNotEmpty)
                     Text(
                       receta.descripcion,
                       style: TextStyle(fontSize: 14, color: Colors.grey[600]),
                     ),
                   const SizedBox(height: 16),
+
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
@@ -116,7 +100,7 @@ class _PantallaGuardadosState extends State<PantallaGuardados> {
                             _infoItem(
                               icon: Icons.star,
                               label: 'Dificultad',
-                              valor: receta.dificultad,
+                              valor: receta.dificultadTexto, // ✅ MEJORADO
                             ),
                           ],
                         ),
@@ -126,7 +110,7 @@ class _PantallaGuardadosState extends State<PantallaGuardados> {
                           children: [
                             _infoItem(
                               icon: Icons.people,
-                              label: 'Servings',
+                              label: 'Comensales',
                               valor: '${receta.comensales}',
                             ),
                             _infoItem(
@@ -139,6 +123,8 @@ class _PantallaGuardadosState extends State<PantallaGuardados> {
                       ],
                     ),
                   ),
+
+                  // Ingredientes
                   if (receta.ingredientes.isNotEmpty) ...[
                     const SizedBox(height: 16),
                     const Text(
@@ -171,6 +157,8 @@ class _PantallaGuardadosState extends State<PantallaGuardados> {
                           .toList(),
                     ),
                   ],
+
+                  // Pasos
                   if (receta.pasos.isNotEmpty) ...[
                     const SizedBox(height: 16),
                     const Text(
@@ -216,18 +204,22 @@ class _PantallaGuardadosState extends State<PantallaGuardados> {
                       ),
                     ),
                   ],
+
+                  const SizedBox(height: 16),
+
+                  // Botón comentarios
                   ElevatedButton.icon(
                     onPressed: () {
-                      // Obtener email desde el provider y extraer username
                       final userCred = Provider.of<UserCredentials>(
                         context,
                         listen: false,
                       );
 
                       String currentUserName = 'Usuario';
-
-                      // Extraer la parte antes del @ del email
-                      currentUserName = userCred.email.split('@')[0];
+                      if (userCred.email.isNotEmpty &&
+                          userCred.email.contains('@')) {
+                        currentUserName = userCred.email.split('@')[0];
+                      }
 
                       showModalBottomSheet(
                         context: context,
@@ -246,8 +238,14 @@ class _PantallaGuardadosState extends State<PantallaGuardados> {
                     },
                     icon: const Icon(Icons.comment),
                     label: const Text('Comentarios'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue,
+                      foregroundColor: Colors.white,
+                    ),
                   ),
                   const SizedBox(height: 16),
+
+                  // Botón cerrar
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
@@ -268,6 +266,80 @@ class _PantallaGuardadosState extends State<PantallaGuardados> {
           ),
         );
       },
+    );
+  }
+
+  // ✅ AÑADIR ESTE MÉTODO PARA CONSTRUIR LA IMAGEN
+  Widget _buildRecipeImage(Recipe receta) {
+    // Si tiene imágenes, usar la primera
+    if (receta.imagenes != null && receta.imagenes!.isNotEmpty) {
+      return Center(
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(12),
+          child: SizedBox(
+            width: 250,
+            height: 200,
+            child: Image.network(
+              receta.imagenes!.first, // ✅ USAR LA IMAGEN REAL
+              fit: BoxFit.cover,
+              loadingBuilder: (context, child, loadingProgress) {
+                if (loadingProgress == null) return child;
+                return Container(
+                  width: 250,
+                  height: 200,
+                  color: Colors.grey[300],
+                  child: Center(
+                    child: CircularProgressIndicator(
+                      value: loadingProgress.expectedTotalBytes != null
+                          ? loadingProgress.cumulativeBytesLoaded /
+                                loadingProgress.expectedTotalBytes!
+                          : null,
+                    ),
+                  ),
+                );
+              },
+              errorBuilder: (context, error, stackTrace) {
+                // Si falla, mostrar placeholder
+                return _buildPlaceholderImage();
+              },
+            ),
+          ),
+        ),
+      );
+    }
+
+    // Si no tiene imagen, mostrar placeholder
+    return _buildPlaceholderImage();
+  }
+
+  // ✅ AÑADIR ESTE MÉTODO PARA EL PLACEHOLDER
+  Widget _buildPlaceholderImage() {
+    return Center(
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          width: 250,
+          height: 200,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [Colors.grey[300]!, Colors.grey[400]!],
+            ),
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.restaurant, size: 60, color: Colors.grey[600]),
+              const SizedBox(height: 8),
+              Text(
+                'Sin imagen',
+                style: TextStyle(color: Colors.grey[600], fontSize: 14),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 

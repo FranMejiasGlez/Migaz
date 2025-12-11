@@ -80,7 +80,7 @@ class RecetaRepository {
         'nombre': receta.nombre,
         'categoria': receta.categoria,
         'descripcion': receta.descripcion,
-        'dificultad': receta.dificultad,
+        'dificultad': receta.dificultad.toString(),
         'tiempo': receta.tiempo,
         'servings': receta.comensales.toString(),
         'pasos': receta.pasos.join(','),

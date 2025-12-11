@@ -1,8 +1,11 @@
 import 'package:migaz/core/config/routes.dart';
+import 'package:migaz/ui/widgets/auth/user_credentials.dart';
+import 'package:migaz/ui/widgets/comentarios/comentarios_popup.dart';
 import 'package:migaz/ui/widgets/recipe/user_avatar.dart';
 import 'package:migaz/data/models/recipe.dart';
 import 'package:flutter/material.dart';
 import 'package:migaz/core/utils/app_theme.dart';
+import 'package:provider/provider.dart';
 import '../widgets/recipe/recipe_filter_dropdown.dart';
 import '../widgets/recipe/recipe_search_bar.dart';
 import '../widgets/recipe/recipe_card.dart';
@@ -51,26 +54,10 @@ class _PantallaBibliotecaState extends State<PantallaBiblioteca> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  if (receta.imagenes != null && receta.imagenes!.isNotEmpty)
-                    Center(
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(12),
-                        child: Container(
-                          width: 250,
-                          height: 200,
-                          color: const Color.fromARGB(255, 247, 79, 233),
-                        ),
-                      ),
-                    )
-                  else
-                    Container(
-                      width: 250,
-                      height: 200,
-                      child: Image.network(
-                        "https://assets.tmecosys.com/image/upload/t_web_rdp_recipe_584x480_1_5x/img/recipe/ras/Assets/4ADF5D92-29D0-4EB7-8C8B-5C7DAA0DA74A/Derivates/E5E1004A-1FF0-448B-87AF-31393870B653.jpg",
-                      ),
-                    ),
+                  // ✅ IMAGEN REAL DE LA RECETA
+                  _buildRecipeImage(receta),
                   const SizedBox(height: 16),
+
                   Text(
                     receta.nombre,
                     style: const TextStyle(
@@ -79,12 +66,14 @@ class _PantallaBibliotecaState extends State<PantallaBiblioteca> {
                     ),
                   ),
                   const SizedBox(height: 8),
+
                   if (receta.descripcion.isNotEmpty)
                     Text(
                       receta.descripcion,
                       style: TextStyle(fontSize: 14, color: Colors.grey[600]),
                     ),
                   const SizedBox(height: 16),
+
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
@@ -104,7 +93,7 @@ class _PantallaBibliotecaState extends State<PantallaBiblioteca> {
                             _infoItem(
                               icon: Icons.star,
                               label: 'Dificultad',
-                              valor: receta.dificultad,
+                              valor: receta.dificultadTexto, // ✅ MEJORADO
                             ),
                           ],
                         ),
@@ -114,7 +103,7 @@ class _PantallaBibliotecaState extends State<PantallaBiblioteca> {
                           children: [
                             _infoItem(
                               icon: Icons.people,
-                              label: 'Servings',
+                              label: 'Comensales',
                               valor: '${receta.comensales}',
                             ),
                             _infoItem(
@@ -127,6 +116,8 @@ class _PantallaBibliotecaState extends State<PantallaBiblioteca> {
                       ],
                     ),
                   ),
+
+                  // Ingredientes
                   if (receta.ingredientes.isNotEmpty) ...[
                     const SizedBox(height: 16),
                     const Text(
@@ -159,6 +150,8 @@ class _PantallaBibliotecaState extends State<PantallaBiblioteca> {
                           .toList(),
                     ),
                   ],
+
+                  // Pasos
                   if (receta.pasos.isNotEmpty) ...[
                     const SizedBox(height: 16),
                     const Text(
@@ -204,7 +197,48 @@ class _PantallaBibliotecaState extends State<PantallaBiblioteca> {
                       ),
                     ),
                   ],
+
                   const SizedBox(height: 16),
+
+                  // Botón comentarios
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      final userCred = Provider.of<UserCredentials>(
+                        context,
+                        listen: false,
+                      );
+
+                      String currentUserName = 'Usuario';
+                      if (userCred.email.isNotEmpty &&
+                          userCred.email.contains('@')) {
+                        currentUserName = userCred.email.split('@')[0];
+                      }
+
+                      showModalBottomSheet(
+                        context: context,
+                        isScrollControlled: true,
+                        backgroundColor: Colors.white,
+                        shape: const RoundedRectangleBorder(
+                          borderRadius: BorderRadius.vertical(
+                            top: Radius.circular(20),
+                          ),
+                        ),
+                        builder: (ctx) => ComentariosPopup(
+                          recipe: receta,
+                          currentUserName: currentUserName,
+                        ),
+                      );
+                    },
+                    icon: const Icon(Icons.comment),
+                    label: const Text('Comentarios'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue,
+                      foregroundColor: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Botón cerrar
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
@@ -225,6 +259,80 @@ class _PantallaBibliotecaState extends State<PantallaBiblioteca> {
           ),
         );
       },
+    );
+  }
+
+  // ✅ AÑADIR ESTE MÉTODO PARA CONSTRUIR LA IMAGEN
+  Widget _buildRecipeImage(Recipe receta) {
+    // Si tiene imágenes, usar la primera
+    if (receta.imagenes != null && receta.imagenes!.isNotEmpty) {
+      return Center(
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(12),
+          child: SizedBox(
+            width: 250,
+            height: 200,
+            child: Image.network(
+              receta.imagenes!.first, // ✅ USAR LA IMAGEN REAL
+              fit: BoxFit.cover,
+              loadingBuilder: (context, child, loadingProgress) {
+                if (loadingProgress == null) return child;
+                return Container(
+                  width: 250,
+                  height: 200,
+                  color: Colors.grey[300],
+                  child: Center(
+                    child: CircularProgressIndicator(
+                      value: loadingProgress.expectedTotalBytes != null
+                          ? loadingProgress.cumulativeBytesLoaded /
+                                loadingProgress.expectedTotalBytes!
+                          : null,
+                    ),
+                  ),
+                );
+              },
+              errorBuilder: (context, error, stackTrace) {
+                // Si falla, mostrar placeholder
+                return _buildPlaceholderImage();
+              },
+            ),
+          ),
+        ),
+      );
+    }
+
+    // Si no tiene imagen, mostrar placeholder
+    return _buildPlaceholderImage();
+  }
+
+  // ✅ AÑADIR ESTE MÉTODO PARA EL PLACEHOLDER
+  Widget _buildPlaceholderImage() {
+    return Center(
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          width: 250,
+          height: 200,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [Colors.grey[300]!, Colors.grey[400]!],
+            ),
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.restaurant, size: 60, color: Colors.grey[600]),
+              const SizedBox(height: 8),
+              Text(
+                'Sin imagen',
+                style: TextStyle(color: Colors.grey[600], fontSize: 14),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
@@ -546,19 +654,24 @@ class _PantallaBibliotecaState extends State<PantallaBiblioteca> {
                 ),
               ),
             ),
-            const SizedBox(height: 0),
+            const SizedBox(height: 8),
+            // ✅ CORREGIDO: Pasar List<Recipe> en lugar de List<String>
             RecipeCarousel(
               title: '',
-              recipes: _recetasLocales != null && _recetasLocales!.isNotEmpty
-                  ? _recetasLocales!.map((r) => r.nombre).toList()
-                  : ['Sin recetas'],
+              recipes:
+                  _recetasLocales ?? [], // ✅ Pasar objetos Recipe completos
+              emptyMessage: 'No tienes recetas personales aún',
               onRecipeTap: (index) {
                 if (_recetasLocales != null && _recetasLocales!.isNotEmpty) {
-                  print("Click en mis recetas ");
+                  print(
+                    "Click en mis recetas:  ${_recetasLocales![index].nombre}",
+                  );
                   _mostrarDetallesReceta(_recetasLocales![index]);
                 }
               },
             ),
+
+            const SizedBox(height: 24),
 
             // --- CARRUSEL 2: GUARDADOS ---
             Center(
@@ -579,13 +692,16 @@ class _PantallaBibliotecaState extends State<PantallaBiblioteca> {
                 ),
               ),
             ),
-            const SizedBox(height: 0),
+            const SizedBox(height: 8),
+            // ✅ CORREGIDO:  Pasar List<Recipe> en lugar de List<String>
             RecipeCarousel(
               title: '',
-              recipes: _todasLasRecetasCompletas.map((r) => r.nombre).toList(),
+              recipes:
+                  _todasLasRecetasCompletas, // ✅ Pasar objetos Recipe completos
+              emptyMessage: 'No has guardado ninguna receta',
               onRecipeTap: (index) {
                 print(
-                  "Click en receta " + _todasLasRecetasCompletas[index].nombre,
+                  "Click en receta guardada: ${_todasLasRecetasCompletas[index].nombre}",
                 );
                 _mostrarDetallesReceta(_todasLasRecetasCompletas[index]);
               },

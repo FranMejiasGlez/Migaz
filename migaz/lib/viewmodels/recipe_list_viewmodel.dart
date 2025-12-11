@@ -21,13 +21,27 @@ class RecipeListViewModel extends BaseViewModel {
     'Japonesa',
     'Mexicana',
   ];
-  final List<String> dificultad = ['Todos', 'Facil', 'Medio', 'Dificil'];
+
+  // ✅ ACTUALIZAR: Dificultades como números
+  final List<Map<String, dynamic>> dificultadOptions = [
+    {'value': 1, 'label': 'Muy Fácil', 'emoji': '⭐'},
+    {'value': 2, 'label': 'Fácil', 'emoji': '⭐⭐'},
+    {'value': 3, 'label': 'Medio', 'emoji': '⭐⭐⭐'},
+    {'value': 4, 'label': 'Difícil', 'emoji': '⭐⭐⭐⭐'},
+    {'value': 5, 'label': 'Muy Difícil', 'emoji': '⭐⭐⭐⭐⭐'},
+  ];
+
+  // ✅ AÑADIR: Helper para obtener labels
+  List<String> get dificultadLabels =>
+      dificultadOptions.map((d) => d['label'] as String).toList();
+
   // Getters
   List<Recipe> get recipes => _recipes;
   String get searchQuery => _searchQuery;
   String get selectedFilter => _selectedFilter;
 
-  /// Recetas filtradas según búsqueda y filtro
+  // ...  resto del código sin cambios
+
   List<Recipe> get filteredRecipes {
     return _recipes.where((recipe) {
       final matchesSearch = recipe.nombre.toLowerCase().contains(
@@ -39,14 +53,12 @@ class RecipeListViewModel extends BaseViewModel {
     }).toList();
   }
 
-  /// Cargar recetas desde la API
   Future<void> loadRecipes() async {
     await runAsync(() async {
       _recipes = await _recetaRepository.obtenerTodas();
     }, errorPrefix: 'Error al cargar recetas');
   }
 
-  /// Crear nueva receta
   Future<bool> crearReceta(Recipe receta, {List<File>? imagenes}) async {
     final result = await runAsync(() async {
       final nuevaReceta = await _recetaRepository.crear(
@@ -60,7 +72,6 @@ class RecipeListViewModel extends BaseViewModel {
     return result ?? false;
   }
 
-  /// Actualizar receta
   Future<bool> actualizarReceta(
     String id,
     Recipe receta, {
@@ -83,7 +94,6 @@ class RecipeListViewModel extends BaseViewModel {
     return result ?? false;
   }
 
-  /// Eliminar receta
   Future<bool> eliminarReceta(String id) async {
     final result = await runAsync(() async {
       await _recetaRepository.eliminar(id);
@@ -94,7 +104,6 @@ class RecipeListViewModel extends BaseViewModel {
     return result ?? false;
   }
 
-  /// Valorar receta
   Future<bool> valorarReceta(String id, double valoracion) async {
     final result = await runAsync(() async {
       final recetaValorada = await _recetaRepository.valorar(id, valoracion);
@@ -109,19 +118,16 @@ class RecipeListViewModel extends BaseViewModel {
     return result ?? false;
   }
 
-  /// Actualizar búsqueda
   void updateSearchQuery(String query) {
     _searchQuery = query;
     notifyListeners();
   }
 
-  /// Actualizar filtro
   void updateFilter(String filter) {
     _selectedFilter = filter;
     notifyListeners();
   }
 
-  /// Limpiar búsqueda
   void clearSearch() {
     _searchQuery = '';
     notifyListeners();

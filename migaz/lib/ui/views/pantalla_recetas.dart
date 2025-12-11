@@ -208,12 +208,10 @@ class _PantallaRecetasViewState extends State<_PantallaRecetasView> {
   Widget _buildHomeContent() {
     return Consumer<HomeViewModel>(
       builder: (context, homeViewModel, child) {
-        // Mostrar loading
         if (homeViewModel.isLoading) {
           return const Center(child: CircularProgressIndicator());
         }
 
-        // Mostrar error
         if (homeViewModel.hasError) {
           return Center(
             child: Padding(
@@ -244,7 +242,6 @@ class _PantallaRecetasViewState extends State<_PantallaRecetasView> {
           );
         }
 
-        // Mostrar contenido
         return RefreshIndicator(
           onRefresh: homeViewModel.refrescarHome,
           child: SingleChildScrollView(
@@ -253,21 +250,48 @@ class _PantallaRecetasViewState extends State<_PantallaRecetasView> {
               padding: const EdgeInsets.all(8),
               child: Column(
                 children: [
-                  // --- SECCIÓN:  MÁS VALORADAS ---
-                  _buildSectionTitle('Más Valoradas'),
+                  // TODAS LAS RECETAS
+                  _buildSectionTitle('📚 Todas las Recetas'),
                   const SizedBox(height: 8),
-                  _buildRecipeCarousel(
-                    homeViewModel.recetasMasValoradas,
-                    emptyMessage: 'No hay recetas valoradas aún',
+                  RecipeCarousel(
+                    title: '',
+                    recipes:
+                        homeViewModel.todasLasRecetas, // ✅ PASAR OBJETOS Recipe
+                    emptyMessage: 'No hay recetas en la base de datos',
+                    onRecipeTap: (index) {
+                      final receta = homeViewModel.todasLasRecetas[index];
+                      print('Receta seleccionada: ${receta.nombre}');
+                    },
                   ),
                   const SizedBox(height: 24),
 
-                  // --- SECCIÓN:  NUEVAS ---
-                  _buildSectionTitle('Nuevas'),
+                  // MÁS VALORADAS
+                  _buildSectionTitle('⭐ Más Valoradas'),
                   const SizedBox(height: 8),
-                  _buildRecipeCarousel(
-                    homeViewModel.recetasMasNuevas,
+                  RecipeCarousel(
+                    title: '',
+                    recipes: homeViewModel
+                        .recetasMasValoradas, // ✅ PASAR OBJETOS Recipe
+                    emptyMessage: 'No hay recetas valoradas aún',
+                    onRecipeTap: (index) {
+                      final receta = homeViewModel.recetasMasValoradas[index];
+                      print('Receta seleccionada: ${receta.nombre}');
+                    },
+                  ),
+                  const SizedBox(height: 24),
+
+                  // NUEVAS
+                  _buildSectionTitle('🆕 Nuevas'),
+                  const SizedBox(height: 8),
+                  RecipeCarousel(
+                    title: '',
+                    recipes: homeViewModel
+                        .recetasMasNuevas, // ✅ PASAR OBJETOS Recipe
                     emptyMessage: 'No hay recetas nuevas aún',
+                    onRecipeTap: (index) {
+                      final receta = homeViewModel.recetasMasNuevas[index];
+                      print('Receta seleccionada: ${receta.nombre}');
+                    },
                   ),
                 ],
               ),
@@ -297,31 +321,6 @@ class _PantallaRecetasViewState extends State<_PantallaRecetasView> {
     );
   }
 
-  Widget _buildRecipeCarousel(List<Recipe> recetas, {String? emptyMessage}) {
-    if (recetas.isEmpty) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Text(
-            emptyMessage ?? 'No hay recetas disponibles',
-            style: TextStyle(color: Colors.grey[600], fontSize: 14),
-          ),
-        ),
-      );
-    }
-
-    return RecipeCarousel(
-      title: '',
-      recipes: recetas.map((recipe) => recipe.nombre).toList(),
-      onRecipeTap: (index) {
-        final receta = recetas[index];
-        print('Receta seleccionada: ${receta.nombre}');
-        // TODO: Navegar a detalle de receta
-        // Navigator.pushNamed(context, AppRoutes.detalleReceta, arguments: receta);
-      },
-    );
-  }
-
   Widget _buildCreateRecipeButton(
     BuildContext context,
     RecipeListViewModel viewModel,
@@ -338,13 +337,12 @@ class _PantallaRecetasViewState extends State<_PantallaRecetasView> {
                 categorias: viewModel.categories
                     .where((c) => c != 'Todos')
                     .toList(),
-                dificultades: viewModel.dificultad,
+                dificultades: viewModel.dificultadLabels, // ✅ USAR LABELS
               ),
             );
 
-            if (nueva == null) return; // usuario canceló
+            if (nueva == null) return;
 
-            // ✅ USAR VIEWMODEL en lugar de saveRecipeToServer
             final exito = await viewModel.crearReceta(nueva);
 
             if (context.mounted) {
