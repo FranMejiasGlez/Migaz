@@ -264,8 +264,16 @@ class _PantallaBibliotecaState extends State<PantallaBiblioteca> {
 
   // ✅ AÑADIR ESTE MÉTODO PARA CONSTRUIR LA IMAGEN
   Widget _buildRecipeImage(Recipe receta) {
+    // ✅ AÑADIR DEBUGGING
+    print('🖼️ DEBUG - Receta: ${receta.nombre}');
+    print('🖼️ DEBUG - Tiene imágenes: ${receta.imagenes != null}');
+    print('🖼️ DEBUG - Cantidad imágenes: ${receta.imagenes?.length ?? 0}');
+    if (receta.imagenes != null && receta.imagenes!.isNotEmpty) {
+      print('🖼️ DEBUG - URL imagen: ${receta.imagenes!.first}');
+    }
     // Si tiene imágenes, usar la primera
     if (receta.imagenes != null && receta.imagenes!.isNotEmpty) {
+      final imageUrl = receta.imagenes!.first;
       return Center(
         child: ClipRRect(
           borderRadius: BorderRadius.circular(12),
@@ -273,10 +281,13 @@ class _PantallaBibliotecaState extends State<PantallaBiblioteca> {
             width: 250,
             height: 200,
             child: Image.network(
-              receta.imagenes!.first, // ✅ USAR LA IMAGEN REAL
+              imageUrl, // ✅ USAR LA IMAGEN REAL
               fit: BoxFit.cover,
               loadingBuilder: (context, child, loadingProgress) {
-                if (loadingProgress == null) return child;
+                if (loadingProgress == null) {
+                  print('✅ DEBUG - Imagen cargada:   $imageUrl');
+                  return child;
+                }
                 return Container(
                   width: 250,
                   height: 200,
@@ -292,8 +303,11 @@ class _PantallaBibliotecaState extends State<PantallaBiblioteca> {
                 );
               },
               errorBuilder: (context, error, stackTrace) {
-                // Si falla, mostrar placeholder
+                // ✅ AÑADIR MÁS INFO EN EL ERROR
+                print('❌ DEBUG - Error cargando imagen: $imageUrl');
+                print('❌ DEBUG - Error:  $error');
                 return _buildPlaceholderImage();
+                // Si falla, mostrar placeholder
               },
             ),
           ),
@@ -301,7 +315,7 @@ class _PantallaBibliotecaState extends State<PantallaBiblioteca> {
       );
     }
 
-    // Si no tiene imagen, mostrar placeholder
+    print('⚠️ DEBUG - Receta sin imágenes, mostrando placeholder');
     return _buildPlaceholderImage();
   }
 

@@ -1,12 +1,13 @@
-import 'package:migaz/core/config/api_config.dart';
 import 'package:migaz/core/config/routes.dart';
 import 'package:migaz/data/models/recipe.dart';
+import 'package:migaz/ui/widgets/auth/user_credentials.dart';
+import 'package:migaz/ui/widgets/comentarios/comentarios_popup.dart';
 import 'package:migaz/ui/widgets/recipe/user_avatar.dart';
 import 'package:migaz/ui/widgets/recipe/ventana_crear_receta.dart';
 import 'package:flutter/material.dart';
 import 'package:migaz/core/utils/app_theme.dart';
 import 'package:migaz/viewmodels/recipe_list_viewmodel.dart';
-import 'package:migaz/viewmodels/home_viewmodel.dart'; // ✅ NUEVO
+import 'package:migaz/viewmodels/home_viewmodel.dart';
 import 'package:provider/provider.dart';
 import '../widgets/recipe/recipe_filter_dropdown.dart';
 import '../widgets/recipe/recipe_search_bar.dart';
@@ -19,11 +20,7 @@ class PantallaRecetas extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
-      providers: [
-        ChangeNotifierProvider(create: (_) => RecipeListViewModel()),
-        // ✅ Usar el HomeViewModel del provider global
-        // Ya no necesitamos crearlo aquí porque está en main.dart
-      ],
+      providers: [ChangeNotifierProvider(create: (_) => RecipeListViewModel())],
       child: const _PantallaRecetasView(),
     );
   }
@@ -42,7 +39,7 @@ class _PantallaRecetasViewState extends State<_PantallaRecetasView> {
   @override
   void initState() {
     super.initState();
-    // ✅ Cargar datos al iniciar la pantalla
+    // Cargar datos al iniciar la pantalla
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<HomeViewModel>().cargarHome();
     });
@@ -72,7 +69,7 @@ class _PantallaRecetasViewState extends State<_PantallaRecetasView> {
                         recipeListViewModel.searchQuery.isNotEmpty ||
                             recipeListViewModel.selectedFilter != 'Todos'
                         ? _buildSearchResults(recipeListViewModel)
-                        : _buildHomeContent(), // ✅ Aquí mostramos las secciones
+                        : _buildHomeContent(),
                   ),
                   _buildCreateRecipeButton(context, recipeListViewModel),
                 ],
@@ -193,18 +190,18 @@ class _PantallaRecetasViewState extends State<_PantallaRecetasView> {
       padding: const EdgeInsets.symmetric(horizontal: 16),
       itemCount: viewModel.filteredRecipes.length,
       itemBuilder: (context, index) {
-        final receta = viewModel.filteredRecipes[index]; // ✅ Ahora es Recipe
+        final receta = viewModel.filteredRecipes[index];
         return RecipeCard(
-          nombre: receta.nombre, // ✅ Acceso directo a propiedades
+          nombre: receta.nombre,
           categoria: receta.categoria,
           valoracion: receta.valoracion,
-          onTap: () => print('Receta:  ${receta.nombre}'),
+          onTap: () => _mostrarDetallesReceta(context, receta),
         );
       },
     );
   }
 
-  //Construir contenido de home usando HomeViewModel
+  // Construir contenido de home usando HomeViewModel
   Widget _buildHomeContent() {
     return Consumer<HomeViewModel>(
       builder: (context, homeViewModel, child) {
@@ -255,12 +252,12 @@ class _PantallaRecetasViewState extends State<_PantallaRecetasView> {
                   const SizedBox(height: 8),
                   RecipeCarousel(
                     title: '',
-                    recipes:
-                        homeViewModel.todasLasRecetas, // ✅ PASAR OBJETOS Recipe
+                    recipes: homeViewModel.todasLasRecetas,
                     emptyMessage: 'No hay recetas en la base de datos',
                     onRecipeTap: (index) {
                       final receta = homeViewModel.todasLasRecetas[index];
                       print('Receta seleccionada: ${receta.nombre}');
+                      _mostrarDetallesReceta(context, receta);
                     },
                   ),
                   const SizedBox(height: 24),
@@ -270,12 +267,12 @@ class _PantallaRecetasViewState extends State<_PantallaRecetasView> {
                   const SizedBox(height: 8),
                   RecipeCarousel(
                     title: '',
-                    recipes: homeViewModel
-                        .recetasMasValoradas, // ✅ PASAR OBJETOS Recipe
+                    recipes: homeViewModel.recetasMasValoradas,
                     emptyMessage: 'No hay recetas valoradas aún',
                     onRecipeTap: (index) {
                       final receta = homeViewModel.recetasMasValoradas[index];
                       print('Receta seleccionada: ${receta.nombre}');
+                      _mostrarDetallesReceta(context, receta);
                     },
                   ),
                   const SizedBox(height: 24),
@@ -285,12 +282,12 @@ class _PantallaRecetasViewState extends State<_PantallaRecetasView> {
                   const SizedBox(height: 8),
                   RecipeCarousel(
                     title: '',
-                    recipes: homeViewModel
-                        .recetasMasNuevas, // ✅ PASAR OBJETOS Recipe
+                    recipes: homeViewModel.recetasMasNuevas,
                     emptyMessage: 'No hay recetas nuevas aún',
                     onRecipeTap: (index) {
                       final receta = homeViewModel.recetasMasNuevas[index];
-                      print('Receta seleccionada: ${receta.nombre}');
+                      print('Receta seleccionada:  ${receta.nombre}');
+                      _mostrarDetallesReceta(context, receta);
                     },
                   ),
                 ],
@@ -321,6 +318,332 @@ class _PantallaRecetasViewState extends State<_PantallaRecetasView> {
     );
   }
 
+  // Método para mostrar detalles de la receta
+  void _mostrarDetallesReceta(BuildContext context, Recipe receta) {
+    showDialog(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // IMAGEN REAL DE LA RECETA
+                  _buildRecipeImage(receta),
+                  const SizedBox(height: 16),
+
+                  Text(
+                    receta.nombre,
+                    style: const TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+
+                  if (receta.descripcion.isNotEmpty)
+                    Text(
+                      receta.descripcion,
+                      style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                    ),
+                  const SizedBox(height: 16),
+
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[100],
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Column(
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            _infoItem(
+                              icon: Icons.schedule,
+                              label: 'Tiempo',
+                              valor: receta.tiempo,
+                            ),
+                            _infoItem(
+                              icon: Icons.star,
+                              label: 'Dificultad',
+                              valor: receta.dificultadTexto,
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            _infoItem(
+                              icon: Icons.people,
+                              label: 'Comensales',
+                              valor: '${receta.comensales}',
+                            ),
+                            _infoItem(
+                              icon: Icons.restaurant,
+                              label: 'Categoría',
+                              valor: receta.categoria,
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // Ingredientes
+                  if (receta.ingredientes.isNotEmpty) ...[
+                    const SizedBox(height: 16),
+                    const Text(
+                      'Ingredientes',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: receta.ingredientes
+                          .map(
+                            (ingrediente) => Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 4),
+                              child: Row(
+                                children: [
+                                  const Icon(
+                                    Icons.circle,
+                                    size: 6,
+                                    color: Colors.teal,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Expanded(child: Text(ingrediente)),
+                                ],
+                              ),
+                            ),
+                          )
+                          .toList(),
+                    ),
+                  ],
+
+                  // Pasos
+                  if (receta.pasos.isNotEmpty) ...[
+                    const SizedBox(height: 16),
+                    const Text(
+                      'Pasos',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: List.generate(
+                        receta.pasos.length,
+                        (index) => Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 4),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Container(
+                                width: 24,
+                                height: 24,
+                                decoration: BoxDecoration(
+                                  color: Colors.teal,
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    '${index + 1}',
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(child: Text(receta.pasos[index])),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+
+                  const SizedBox(height: 16),
+
+                  // Botón comentarios
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      final userCred = Provider.of<UserCredentials>(
+                        context,
+                        listen: false,
+                      );
+
+                      String currentUserName = 'Usuario';
+                      if (userCred.email.isNotEmpty &&
+                          userCred.email.contains('@')) {
+                        currentUserName = userCred.email.split('@')[0];
+                      }
+
+                      showModalBottomSheet(
+                        context: context,
+                        isScrollControlled: true,
+                        backgroundColor: Colors.white,
+                        shape: const RoundedRectangleBorder(
+                          borderRadius: BorderRadius.vertical(
+                            top: Radius.circular(20),
+                          ),
+                        ),
+                        builder: (ctx) => ComentariosPopup(
+                          recipe: receta,
+                          currentUserName: currentUserName,
+                        ),
+                      );
+                    },
+                    icon: const Icon(Icons.comment),
+                    label: const Text('Comentarios'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue,
+                      foregroundColor: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Botón cerrar
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: () => Navigator.pop(dialogContext),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.teal,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                      ),
+                      child: const Text(
+                        'Cerrar',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  // Método para construir la imagen
+  Widget _buildRecipeImage(Recipe receta) {
+    // Si tiene imágenes, usar la primera
+    if (receta.imagenes != null && receta.imagenes!.isNotEmpty) {
+      return Center(
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(12),
+          child: SizedBox(
+            width: 250,
+            height: 200,
+            child: Image.network(
+              receta.imagenes!.first,
+              fit: BoxFit.cover,
+              loadingBuilder: (context, child, loadingProgress) {
+                if (loadingProgress == null) return child;
+                return Container(
+                  width: 250,
+                  height: 200,
+                  color: Colors.grey[300],
+                  child: Center(
+                    child: CircularProgressIndicator(
+                      value: loadingProgress.expectedTotalBytes != null
+                          ? loadingProgress.cumulativeBytesLoaded /
+                                loadingProgress.expectedTotalBytes!
+                          : null,
+                    ),
+                  ),
+                );
+              },
+              errorBuilder: (context, error, stackTrace) {
+                return _buildPlaceholderImage();
+              },
+            ),
+          ),
+        ),
+      );
+    }
+
+    return _buildPlaceholderImage();
+  }
+
+  // Método para el placeholder
+  Widget _buildPlaceholderImage() {
+    return Center(
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          width: 250,
+          height: 200,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [Colors.grey[300]!, Colors.grey[400]!],
+            ),
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.restaurant, size: 60, color: Colors.grey[600]),
+              const SizedBox(height: 8),
+              Text(
+                'Sin imagen',
+                style: TextStyle(color: Colors.grey[600], fontSize: 14),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // Método para los info items
+  Widget _infoItem({
+    required IconData icon,
+    required String label,
+    required String valor,
+  }) {
+    return Expanded(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, size: 16, color: Colors.teal),
+              const SizedBox(width: 6),
+              Text(
+                label,
+                style: const TextStyle(fontSize: 12, color: Colors.grey),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            valor,
+            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildCreateRecipeButton(
     BuildContext context,
     RecipeListViewModel viewModel,
@@ -337,7 +660,7 @@ class _PantallaRecetasViewState extends State<_PantallaRecetasView> {
                 categorias: viewModel.categories
                     .where((c) => c != 'Todos')
                     .toList(),
-                dificultades: viewModel.dificultadLabels, // ✅ USAR LABELS
+                dificultades: viewModel.dificultadLabels,
               ),
             );
 
