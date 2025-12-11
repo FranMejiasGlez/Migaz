@@ -1,9 +1,10 @@
+// lib/data/models/comentario.dart
 class Comentario {
   final String? id;
-  final String recetaId;
+  final String recetaId; // En backend es 'receta'
   final String usuario;
-  final String texto;
-  final DateTime? fecha;
+  final String texto; // En backend es 'contenido'
+  final DateTime? fecha; // En backend es 'createdAt'
 
   Comentario({
     this.id,
@@ -16,20 +17,24 @@ class Comentario {
   factory Comentario.fromJson(Map<String, dynamic> json) {
     return Comentario(
       id: json['_id'] ?? json['id'],
-      recetaId: json['recetaId'] ?? '',
+      recetaId: json['receta'] ?? json['recetaId'] ?? '', // ✅ Soporta ambos
       usuario: json['usuario'] ?? '',
-      texto: json['texto'] ?? '',
-      fecha: json['fecha'] != null ? DateTime.parse(json['fecha']) : null,
+      texto: json['contenido'] ?? json['texto'] ?? '', // ✅ Soporta ambos
+      fecha:
+          json['createdAt'] !=
+              null // ✅ CORREGIDO: usar createdAt
+          ? DateTime.parse(json['createdAt'])
+          : (json['fecha'] != null ? DateTime.parse(json['fecha']) : null),
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
       if (id != null) '_id': id,
-      'recetaId': recetaId,
+      'receta': recetaId, // ✅ CAMBIADO: usar 'receta'
       'usuario': usuario,
-      'texto': texto,
-      if (fecha != null) 'fecha': fecha!.toIso8601String(),
+      'contenido': texto, // ✅ CAMBIADO: usar 'contenido'
+      if (fecha != null) 'createdAt': fecha!.toIso8601String(),
     };
   }
 }

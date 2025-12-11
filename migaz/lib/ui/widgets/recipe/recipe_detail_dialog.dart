@@ -1,10 +1,13 @@
-// lib/ui/widgets/recipe/recipe_detail_dialog. dart
+// lib/ui/widgets/recipe/recipe_detail_dialog.dart
 import 'package:flutter/material.dart';
 import 'package:migaz/data/models/recipe.dart';
 import 'package:migaz/ui/widgets/recipe/rating_stars.dart';
 import 'package:migaz/ui/widgets/recipe/rating_display.dart';
+import 'package:migaz/ui/widgets/recipe/recipe_image_widget.dart';
+import 'package:migaz/ui/widgets/comentarios/comentarios_popup.dart';
 import 'package:migaz/viewmodels/home_viewmodel.dart';
 import 'package:provider/provider.dart';
+import 'package:migaz/ui/widgets/auth/user_credentials.dart';
 
 class RecipeDetailDialog {
   static void show(BuildContext context, Recipe recipe) {
@@ -47,17 +50,14 @@ class _RecipeDetailDialogContentState
 
     final homeViewModel = context.read<HomeViewModel>();
 
-    // Llamar al backend para valorar
     final success = await homeViewModel.valorarReceta(
       _recipe.id!,
       rating,
-      'usuario_demo', // ✅ Usuario temporal
+      'usuario_demo',
     );
 
     if (success) {
-      // Actualizar la receta localmente
       setState(() {
-        // Buscar la receta actualizada en el ViewModel
         final updatedRecipes = homeViewModel.todasLasRecetas
             .where((r) => r.id == _recipe.id)
             .toList();
@@ -105,10 +105,7 @@ class _RecipeDetailDialogContentState
         constraints: const BoxConstraints(maxWidth: 800, maxHeight: 600),
         child: Column(
           children: [
-            // Header con imagen y título
             _buildHeader(),
-
-            // Contenido scrolleable
             Expanded(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.all(24),
@@ -117,7 +114,10 @@ class _RecipeDetailDialogContentState
                   children: [
                     _buildBasicInfo(),
                     const SizedBox(height: 24),
-                    _buildRatingSection(), // ✅ NUEVO
+                    _buildRatingSection(),
+                    const SizedBox(height: 16),
+                    // ✅ NUEVO: Botón de comentarios
+                    _buildCommentsButton(),
                     const SizedBox(height: 24),
                     _buildDescription(),
                     const SizedBox(height: 24),
@@ -133,8 +133,6 @@ class _RecipeDetailDialogContentState
                 ),
               ),
             ),
-
-            // Footer con botón cerrar
             _buildFooter(),
           ],
         ),
@@ -145,31 +143,21 @@ class _RecipeDetailDialogContentState
   Widget _buildHeader() {
     return Stack(
       children: [
-        // Imagen de fondo
         ClipRRect(
           borderRadius: const BorderRadius.only(
             topLeft: Radius.circular(16),
             topRight: Radius.circular(16),
           ),
-          child: Image.network(
-            _recipe.imagenes?.isNotEmpty == true
-                ? 'http://localhost:3000/${_recipe.imagenes!.first}'
-                : 'https://via.placeholder.com/800x300? text=Sin+imagen',
+          child: RecipeImageWidget(
+            imageUrl: _recipe.imagenes?.isNotEmpty == true
+                ? _recipe.imagenes!.first
+                : null,
             width: double.infinity,
             height: 200,
             fit: BoxFit.cover,
-            errorBuilder: (context, error, stackTrace) {
-              return Container(
-                width: double.infinity,
-                height: 200,
-                color: Colors.grey[300],
-                child: const Icon(Icons.restaurant, size: 64),
-              );
-            },
           ),
         ),
 
-        // Degradado oscuro
         Container(
           height: 200,
           decoration: BoxDecoration(
@@ -185,7 +173,6 @@ class _RecipeDetailDialogContentState
           ),
         ),
 
-        // Título sobre la imagen
         Positioned(
           bottom: 16,
           left: 16,
@@ -250,7 +237,6 @@ class _RecipeDetailDialogContentState
     }
   }
 
-  // ✅ NUEVO: Sección de valoraciones
   Widget _buildRatingSection() {
     return Container(
       padding: const EdgeInsets.all(16),
@@ -268,7 +254,6 @@ class _RecipeDetailDialogContentState
           ),
           const SizedBox(height: 12),
 
-          // Valoración promedio
           Row(
             children: [
               const Text(
@@ -288,7 +273,6 @@ class _RecipeDetailDialogContentState
 
           const Divider(height: 24),
 
-          // Valorar
           const Text(
             '¿Qué te ha parecido?',
             style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
@@ -315,6 +299,82 @@ class _RecipeDetailDialogContentState
           ),
         ],
       ),
+    );
+  }
+
+  // ✅ NUEVO:  Botón de comentarios en el diálogo
+  Widget _buildCommentsButton() {
+    final comentariosCount = _recipe.comentarios.length;
+
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: Colors.blue.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.blue.withOpacity(0.3)),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(12),
+          onTap: _showComments,
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.blue,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(Icons.comment, color: Colors.white, size: 24),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Comentarios',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        comentariosCount == 0
+                            ? 'Sé el primero en comentar'
+                            : '$comentariosCount ${comentariosCount == 1 ? "comentario" : "comentarios"}',
+                        style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(
+                  Icons.arrow_forward_ios,
+                  size: 16,
+                  color: Colors.grey[600],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showComments() {
+    final credentials = Provider.of<UserCredentials>(context, listen: false);
+    final currentUser = credentials.email.isNotEmpty
+        ? credentials.email.split('@').first
+        : 'usuario_demo';
+
+    ComentariosPopup.show(
+      context: context,
+      recipe: _recipe,
+      currentUserName: currentUser,
     );
   }
 
@@ -428,7 +488,6 @@ class _RecipeDetailDialogContentState
         const SizedBox(height: 8),
         InkWell(
           onTap: () {
-            // Aquí puedes abrir el enlace en un navegador
             print('Abrir YouTube:  ${_recipe.youtube}');
           },
           child: Row(

@@ -20,7 +20,28 @@ class ComentariosPopup extends StatefulWidget {
     required BuildContext context,
     required Recipe recipe,
     required String currentUserName,
-  }) {}
+  }) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (BuildContext context) {
+        return ChangeNotifierProvider(
+          create: (_) => ComentarioViewModel(),
+          child: Container(
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+            ),
+            child: ComentariosPopup(
+              recipe: recipe,
+              currentUserName: currentUserName,
+            ),
+          ),
+        );
+      },
+    );
+  }
 }
 
 class _ComentariosPopupState extends State<ComentariosPopup> {
