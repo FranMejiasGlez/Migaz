@@ -264,19 +264,19 @@ class _PantallaRecetasViewState extends State<_PantallaRecetasView> {
           child: Column(
             children: [
               _buildRecipeSection(
-                title: '📚 Todas las Recetas',
+                title: 'Todas las Recetas',
                 recipes: homeViewModel.todasLasRecetas,
-                emptyMessage: 'No hay recetas en la base de datos',
+                emptyMessage: '',
               ),
               const SizedBox(height: 24),
               _buildRecipeSection(
-                title: '⭐ Más Valoradas',
+                title: 'Más Valoradas',
                 recipes: homeViewModel.recetasMasValoradas,
                 emptyMessage: 'No hay recetas valoradas aún',
               ),
               const SizedBox(height: 24),
               _buildRecipeSection(
-                title: '🆕 Nuevas',
+                title: 'Nuevas',
                 recipes: homeViewModel.recetasMasNuevas,
                 emptyMessage: 'No hay recetas nuevas aún',
               ),

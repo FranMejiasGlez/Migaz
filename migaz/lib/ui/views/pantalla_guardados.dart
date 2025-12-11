@@ -119,25 +119,10 @@ class _PantallaGuardadosState extends State<PantallaGuardados> {
   }
 
   Widget _buildBackButton() {
-    return ConstrainedBox(
-      constraints: const BoxConstraints(maxWidth: 140),
-      child: ElevatedButton(
-        onPressed: () => Navigator.pop(context),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFFFEC601),
-          foregroundColor: Colors.black,
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(
-              RecipeConstants.buttonBorderRadius,
-            ),
-          ),
-          elevation: RecipeConstants.buttonElevation,
-        ),
-        child: const FittedBox(
-          fit: BoxFit.scaleDown,
-          child: Icon(Icons.arrow_back),
-        ),
+    return SizedBox(
+      child: IconButton(
+        icon: const Icon(Icons.arrow_back),
+        onPressed: () => Navigator.pushNamed(context, AppRoutes.home),
       ),
     );
   }

@@ -7,8 +7,6 @@ class RecipeImageWidget extends StatelessWidget {
   final double? width;
   final double? height;
   final BorderRadius? borderRadius;
-  final Widget? placeholder;
-  final Widget? errorWidget;
 
   const RecipeImageWidget({
     Key? key,
@@ -17,18 +15,16 @@ class RecipeImageWidget extends StatelessWidget {
     this.width,
     this.height,
     this.borderRadius,
-    this.placeholder,
-    this.errorWidget,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     // Si no hay URL de imagen, mostrar placeholder
     if (imageUrl == null || imageUrl!.isEmpty) {
-      return _buildPlaceholder();
+      return _buildNoImagePlaceholder();
     }
 
-    // ✅ Construir URL completa del servidor
+    // Construir URL completa del servidor
     final fullUrl = _buildImageUrl(imageUrl!);
 
     return ClipRRect(
@@ -59,13 +55,14 @@ class RecipeImageWidget extends StatelessWidget {
         errorBuilder: (context, error, stackTrace) {
           print('❌ Error cargando imagen: $fullUrl');
           print('   Error: $error');
-          return errorWidget ?? _buildPlaceholder();
+          // Si falla la carga, mostrar placeholder de error
+          return _buildErrorPlaceholder();
         },
       ),
     );
   }
 
-  /// ✅ Construir URL completa de la imagen
+  /// Construir URL completa de la imagen
   String _buildImageUrl(String imagePath) {
     // Si ya es una URL completa (http/https), devolverla
     if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
@@ -73,7 +70,6 @@ class RecipeImageWidget extends StatelessWidget {
     }
 
     // Si es una ruta relativa del servidor, añadir base URL
-    // ⚠️ IMPORTANTE: Cambia 'localhost: 3000' por tu URL de producción cuando despliegues
     const baseUrl = 'http://localhost:3000';
 
     // Asegurarse de que no haya doble slash
@@ -82,9 +78,8 @@ class RecipeImageWidget extends StatelessWidget {
     return '$baseUrl$cleanPath';
   }
 
-  Widget _buildPlaceholder() {
-    if (placeholder != null) return placeholder!;
-
+  /// ✅ NUEVO: Placeholder cuando NO hay imagen
+  Widget _buildNoImagePlaceholder() {
     return Container(
       width: width,
       height: height,
@@ -92,12 +87,55 @@ class RecipeImageWidget extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Colors.grey[300]!, Colors.grey[400]!],
+          colors: [Colors.grey[200]!, Colors.grey[300]!],
         ),
         borderRadius: borderRadius,
       ),
-      child: Center(
-        child: Icon(Icons.restaurant_menu, size: 48, color: Colors.grey[500]),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.image_not_supported, size: 48, color: Colors.grey[500]),
+          const SizedBox(height: 8),
+          Text(
+            'No existe imagen',
+            style: TextStyle(
+              fontSize: 14,
+              color: Colors.grey[600],
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// ✅ NUEVO: Placeholder cuando hay ERROR al cargar
+  Widget _buildErrorPlaceholder() {
+    return Container(
+      width: width,
+      height: height,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Colors.red[50]!, Colors.red[100]!],
+        ),
+        borderRadius: borderRadius,
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.broken_image, size: 48, color: Colors.red[300]),
+          const SizedBox(height: 8),
+          Text(
+            'Error al cargar',
+            style: TextStyle(
+              fontSize: 14,
+              color: Colors.red[400],
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
       ),
     );
   }

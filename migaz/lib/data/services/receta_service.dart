@@ -59,6 +59,35 @@ class RecetaService {
     }
   }
 
+  /// ✅ NUEVO:  Obtener recetas de un usuario específico
+  Future<List<dynamic>> obtenerPorUsuario(String usuario) async {
+    try {
+      print('📥 DEBUG - Obteniendo recetas del usuario: $usuario');
+      final response = await _apiService.get(
+        ApiConfig.recetasByUserEndPoint(usuario),
+      );
+      print(
+        '✅ DEBUG - Recetas del usuario obtenidas: ${(response as List).length}',
+      );
+      return response as List<dynamic>;
+    } catch (e) {
+      print(
+        '⚠️ DEBUG - Endpoint de usuario no disponible, filtrando localmente',
+      );
+      // Fallback:  obtener todas y filtrar localmente
+      final response = await _apiService.get(ApiConfig.recetasEndpoint);
+      final List<dynamic> recetas = response as List<dynamic>;
+
+      final recetasUsuario = recetas.where((receta) {
+        return receta['user']?.toString().toLowerCase() ==
+            usuario.toLowerCase();
+      }).toList();
+
+      print('✅ DEBUG - Recetas filtradas localmente: ${recetasUsuario.length}');
+      return recetasUsuario;
+    }
+  }
+
   Future<Map<String, dynamic>> obtenerPorId(String id) async {
     final response = await _apiService.get(ApiConfig.recetaByIdEndpoint(id));
     return response as Map<String, dynamic>;

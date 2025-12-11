@@ -36,6 +36,16 @@ class RecetaRepository {
     }
   }
 
+  /// ✅ NUEVO: Obtener recetas de un usuario
+  Future<List<Recipe>> obtenerPorUsuario(String usuario) async {
+    try {
+      final jsonList = await _recetaService.obtenerPorUsuario(usuario);
+      return jsonList.map((json) => Recipe.fromJson(json)).toList();
+    } catch (e) {
+      throw Exception('Error al obtener recetas del usuario: $e');
+    }
+  }
+
   Future<Recipe> obtenerPorId(String id) async {
     try {
       final json = await _recetaService.obtenerPorId(id);

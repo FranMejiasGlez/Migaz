@@ -1,3 +1,4 @@
+// lib/ui/widgets/recipe/recipe_card.dart
 import 'package:flutter/material.dart';
 import 'package:migaz/data/models/recipe.dart';
 import 'package:migaz/ui/widgets/recipe/rating_display.dart';
@@ -5,16 +6,32 @@ import 'package:migaz/ui/widgets/recipe/recipe_image_widget.dart';
 import 'package:migaz/ui/widgets/comentarios/comentarios_popup.dart';
 import 'package:provider/provider.dart';
 import 'package:migaz/ui/widgets/auth/user_credentials.dart';
+import 'package:migaz/viewmodels/home_viewmodel.dart';
 
 class RecipeCard extends StatelessWidget {
-  final Recipe recipe; // ✅ Solo el objeto completo
-  final VoidCallback? onTap; // ✅ Opcional
+  final Recipe recipe;
+  final VoidCallback? onTap;
 
   const RecipeCard({Key? key, required this.recipe, this.onTap})
     : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    // ✅ NUEVO: Buscar la receta actualizada en el HomeViewModel
+    return Consumer<HomeViewModel>(
+      builder: (context, homeViewModel, child) {
+        // Intentar encontrar la versión actualizada de la receta
+        final recetaActualizada = homeViewModel.todasLasRecetas.firstWhere(
+          (r) => r.id == recipe.id,
+          orElse: () => recipe, // Si no se encuentra, usar la original
+        );
+
+        return _buildCard(context, recetaActualizada);
+      },
+    );
+  }
+
+  Widget _buildCard(BuildContext context, Recipe recetaActual) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -26,7 +43,6 @@ class RecipeCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // ✅ Imagen real de la receta
             ClipRRect(
               borderRadius: const BorderRadius.only(
                 topLeft: Radius.circular(10),
@@ -36,15 +52,14 @@ class RecipeCard extends StatelessWidget {
                 height: 250,
                 width: double.infinity,
                 child: RecipeImageWidget(
-                  imageUrl: recipe.imagenes?.isNotEmpty == true
-                      ? recipe.imagenes!.first
+                  imageUrl: recetaActual.imagenes?.isNotEmpty == true
+                      ? recetaActual.imagenes!.first
                       : null,
                   fit: BoxFit.cover,
                 ),
               ),
             ),
 
-            // Contenido
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.all(8),
@@ -52,12 +67,11 @@ class RecipeCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    // Título y categoría
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          recipe.nombre,
+                          recetaActual.nombre,
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
@@ -67,7 +81,7 @@ class RecipeCard extends StatelessWidget {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          recipe.categoria,
+                          recetaActual.categoria,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
@@ -78,21 +92,20 @@ class RecipeCard extends StatelessWidget {
                       ],
                     ),
 
-                    // ✅ Rating y Comentarios
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        // Rating con estrellas
+                        // ✅ ACTUALIZADO: Usa valoración actualizada
                         RatingDisplay(
-                          rating: recipe.valoracion,
-                          totalVotes: recipe.cantidadVotos,
+                          rating: recetaActual.valoracion,
+                          totalVotes: recetaActual.cantidadVotos,
                           size: 14,
                           showNumber: true,
                           showVotes: false,
                         ),
 
-                        // ✅ Botón de comentarios
-                        _buildCommentButton(context),
+                        // ✅ ACTUALIZADO: Usa comentarios actualizados
+                        _buildCommentButton(context, recetaActual),
                       ],
                     ),
                   ],
@@ -105,16 +118,15 @@ class RecipeCard extends StatelessWidget {
     );
   }
 
-  // En recipe_card.dart, actualiza _buildCommentButton
-  Widget _buildCommentButton(BuildContext context) {
-    final comentariosCount = recipe.comentarios.length;
+  Widget _buildCommentButton(BuildContext context, Recipe recetaActual) {
+    final comentariosCount = recetaActual.comentarios.length;
 
     return Material(
       color: Colors.transparent,
       child: InkWell(
         onTap: () {
-          print('👆 CLICK en comentarios de:  ${recipe.nombre}');
-          _showComments(context);
+          print('👆 CLICK en comentarios de:  ${recetaActual.nombre}');
+          _showComments(context, recetaActual);
         },
         borderRadius: BorderRadius.circular(8),
         child: Container(
@@ -157,18 +169,15 @@ class RecipeCard extends StatelessWidget {
     );
   }
 
-  // ✅ Mostrar popup de comentarios
-  void _showComments(BuildContext context) {
+  void _showComments(BuildContext context, Recipe recetaActual) {
     final credentials = Provider.of<UserCredentials>(context, listen: false);
     final currentUser = credentials.email.isNotEmpty
-        ? credentials.email
-              .split('@')
-              .first // Usar parte antes del @
+        ? credentials.email.split('@').first
         : 'usuario_demo';
 
     ComentariosPopup.show(
       context: context,
-      recipe: recipe,
+      recipe: recetaActual,
       currentUserName: currentUser,
     );
   }

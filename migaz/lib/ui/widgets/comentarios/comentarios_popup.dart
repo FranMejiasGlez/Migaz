@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:migaz/viewmodels/home_viewmodel.dart';
 import 'package:provider/provider.dart';
 import 'package:migaz/data/models/recipe.dart';
 import 'package:migaz/viewmodels/comentario_viewmodel.dart';
@@ -96,6 +97,16 @@ class _ComentariosPopupState extends State<ComentariosPopup> {
     if (mounted) {
       if (exito) {
         _controller.clear();
+
+        // ✅ NUEVO: Actualizar el HomeViewModel para refrescar las cards
+        try {
+          final homeViewModel = context.read<HomeViewModel>();
+          await homeViewModel.cargarHome();
+          print('✅ HomeViewModel actualizado después de comentar');
+        } catch (e) {
+          print('⚠️ No se pudo actualizar HomeViewModel:  $e');
+        }
+
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('✅ Comentario enviado'),
@@ -115,6 +126,8 @@ class _ComentariosPopupState extends State<ComentariosPopup> {
       }
     }
   }
+
+  // En el mismo archivo, actualiza _eliminarComentario
 
   Future<void> _eliminarComentario(String comentarioId) async {
     final confirmar = await showDialog<bool>(
@@ -143,6 +156,17 @@ class _ComentariosPopupState extends State<ComentariosPopup> {
       final exito = await viewModel.eliminarComentario(comentarioId);
 
       if (mounted) {
+        if (exito) {
+          // ✅ NUEVO:  Actualizar el HomeViewModel
+          try {
+            final homeViewModel = context.read<HomeViewModel>();
+            await homeViewModel.cargarHome();
+            print('✅ HomeViewModel actualizado después de eliminar');
+          } catch (e) {
+            print('⚠️ No se pudo actualizar HomeViewModel: $e');
+          }
+        }
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(

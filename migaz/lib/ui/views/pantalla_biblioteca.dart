@@ -2,6 +2,7 @@ import 'package:migaz/core/config/routes.dart';
 import 'package:migaz/core/constants/recipe_constants.dart';
 import 'package:migaz/core/utils/recipe_utils.dart';
 import 'package:migaz/data/models/recipe.dart';
+import 'package:migaz/data/repositories/receta_repository.dart';
 import 'package:migaz/ui/widgets/recipe/recipe_detail_dialog.dart';
 import 'package:migaz/ui/widgets/recipe/recipe_search_section.dart';
 import 'package:migaz/ui/widgets/recipe/user_avatar.dart';
@@ -9,6 +10,8 @@ import 'package:migaz/core/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:migaz/ui/widgets/recipe/recipe_card.dart';
 import 'package:migaz/ui/widgets/recipe/recipe_carousel.dart';
+import 'package:migaz/viewmodels/home_viewmodel.dart';
+import 'package:provider/provider.dart';
 
 class PantallaBiblioteca extends StatefulWidget {
   final List<Recipe>? listaRecetas;
@@ -20,17 +23,76 @@ class PantallaBiblioteca extends StatefulWidget {
 }
 
 class _PantallaBibliotecaState extends State<PantallaBiblioteca> {
-  List<Recipe>? _recetasLocales;
   final TextEditingController _searchController = TextEditingController();
+  final RecetaRepository _recetaRepository = RecetaRepository();
+
+  List<Recipe> _misRecetas = [];
+  List<Recipe> _recetasGuardadas = [];
   String _searchQuery = '';
   String _filtroSeleccionado = 'Todos';
+  bool _isLoading = true;
+  String? _errorMessage;
 
-  final List<Recipe> _todasLasRecetasCompletas = [];
+  // ✅ Usuario actual (temporal, luego vendrá de autenticación)
+  final String _currentUser = 'usuario_demo';
 
-  // Recetas filtradas usando utilidad compartida
+  @override
+  void initState() {
+    super.initState();
+    _cargarDatos();
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  // En el método _cargarDatos(), después de cargar las recetas:
+  Future<void> _cargarDatos() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      print('📥 Cargando recetas de:  $_currentUser');
+
+      final misRecetas = await _recetaRepository.obtenerPorUsuario(
+        _currentUser,
+      );
+
+      setState(() {
+        _misRecetas = misRecetas;
+        _recetasGuardadas = [];
+        _isLoading = false;
+      });
+
+      // ✅ NUEVO: Actualizar también el HomeViewModel
+      if (mounted) {
+        final homeViewModel = context.read<HomeViewModel>();
+        await homeViewModel.cargarHome();
+      }
+
+      print('✅ Mis recetas cargadas:  ${misRecetas.length}');
+    } catch (e) {
+      print('❌ Error al cargar datos de biblioteca: $e');
+      setState(() {
+        _errorMessage = 'Error al cargar tu biblioteca';
+        _isLoading = false;
+      });
+    }
+  }
+
+  // Todas las recetas para filtrar
+  List<Recipe> get _todasLasRecetas {
+    return [..._misRecetas, ..._recetasGuardadas];
+  }
+
+  // Recetas filtradas
   List<Recipe> get _recetasFiltradas {
     return RecipeUtils.filterRecipes(
-      recipes: _todasLasRecetasCompletas,
+      recipes: _todasLasRecetas,
       searchQuery: _searchQuery,
       selectedFilter: _filtroSeleccionado,
     );
@@ -42,36 +104,6 @@ class _PantallaBibliotecaState extends State<PantallaBiblioteca> {
       searchQuery: _searchQuery,
       selectedFilter: _filtroSeleccionado,
     );
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    _loadRecipesFromArguments();
-  }
-
-  void _loadRecipesFromArguments() {
-    final args = ModalRoute.of(context)?.settings.arguments;
-
-    if (args is List<Recipe>) {
-      setState(() => _recetasLocales = args);
-    } else if (args is List) {
-      setState(() => _recetasLocales = List<Recipe>.from(args));
-    } else if (widget.listaRecetas != null) {
-      setState(() => _recetasLocales = widget.listaRecetas);
-    }
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    _recetasLocales = widget.listaRecetas ?? [];
-  }
-
-  @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
   }
 
   @override
@@ -135,11 +167,19 @@ class _PantallaBibliotecaState extends State<PantallaBiblioteca> {
           borderRadius: BorderRadius.circular(20),
         ),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        child: const Text(
-          'Tu biblioteca',
-          textAlign: TextAlign.center,
-          overflow: TextOverflow.ellipsis,
-          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+        child: Column(
+          children: [
+            const Text(
+              'Tu biblioteca',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            if (!_isLoading)
+              Text(
+                '${_todasLasRecetas.length} ${_todasLasRecetas.length == 1 ? "receta" : "recetas"}',
+                style: TextStyle(fontSize: 12, color: Colors.grey[800]),
+              ),
+          ],
         ),
       ),
     );
@@ -171,16 +211,14 @@ class _PantallaBibliotecaState extends State<PantallaBiblioteca> {
         _buildNavigationButton(
           icon: Icons.bookmark,
           label: 'Guardados',
+
           onPressed: () => Navigator.pushNamed(context, AppRoutes.guardados),
         ),
         _buildNavigationButton(
           icon: Icons.edit,
           label: 'Mis Recetas',
-          onPressed: () => Navigator.pushNamed(
-            context,
-            AppRoutes.misrecetas,
-            arguments: _recetasLocales,
-          ),
+
+          onPressed: () => Navigator.pushNamed(context, AppRoutes.misrecetas),
         ),
       ],
     );
@@ -189,14 +227,13 @@ class _PantallaBibliotecaState extends State<PantallaBiblioteca> {
   Widget _buildNavigationButton({
     required IconData icon,
     required String label,
+
     required VoidCallback onPressed,
   }) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(0, 10, 0, 0),
-      child: ElevatedButton.icon(
+      child: ElevatedButton(
         onPressed: onPressed,
-        icon: Icon(icon),
-        label: Text(label),
         style: ElevatedButton.styleFrom(
           backgroundColor: const Color(0xFFEA7317).withOpacity(0.5),
           foregroundColor: Colors.black,
@@ -208,6 +245,17 @@ class _PantallaBibliotecaState extends State<PantallaBiblioteca> {
           ),
           elevation: 0,
           minimumSize: const Size(80, 36),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 20),
+            const SizedBox(width: 8),
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [Text(label, style: const TextStyle(fontSize: 14))],
+            ),
+          ],
         ),
       ),
     );
@@ -251,21 +299,65 @@ class _PantallaBibliotecaState extends State<PantallaBiblioteca> {
   }
 
   Widget _buildHomeContent() {
-    return SingleChildScrollView(
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (_errorMessage != null) {
+      return _buildErrorState();
+    }
+
+    return RefreshIndicator(
+      onRefresh: _cargarDatos,
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        child: Padding(
+          padding: const EdgeInsets.all(8),
+          child: Column(
+            children: [
+              // ✅ ACTUALIZADO: Mis Recetas del usuario
+              _buildCarouselSection(
+                title: 'Mis Recetas',
+                recipes: _misRecetas,
+                emptyMessage: 'No tienes recetas personales aún',
+              ),
+              const SizedBox(height: 24),
+              // ✅ Guardados (por implementar)
+              _buildCarouselSection(
+                title: 'Guardados',
+                recipes: _recetasGuardadas,
+                emptyMessage: 'No has guardado ninguna receta',
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildErrorState() {
+    return Center(
       child: Padding(
-        padding: const EdgeInsets.all(8),
+        padding: const EdgeInsets.all(24.0),
         child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            _buildCarouselSection(
-              title: 'Mis Recetas',
-              recipes: _recetasLocales ?? [],
-              emptyMessage: 'No tienes recetas personales aún',
+            const Icon(Icons.error_outline, size: 64, color: Colors.red),
+            const SizedBox(height: 16),
+            Text(
+              _errorMessage ?? 'Error desconocido',
+              style: const TextStyle(fontSize: 16, color: Colors.red),
+              textAlign: TextAlign.center,
             ),
             const SizedBox(height: 24),
-            _buildCarouselSection(
-              title: 'Guardados',
-              recipes: _todasLasRecetasCompletas,
-              emptyMessage: 'No has guardado ninguna receta',
+            ElevatedButton.icon(
+              onPressed: _cargarDatos,
+              icon: const Icon(Icons.refresh),
+              label: const Text('Reintentar'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.primaryYellow,
+                foregroundColor: Colors.black,
+              ),
             ),
           ],
         ),
@@ -280,7 +372,7 @@ class _PantallaBibliotecaState extends State<PantallaBiblioteca> {
   }) {
     return Column(
       children: [
-        _buildCarouselTitle(title),
+        _buildCarouselTitle(title, recipes.length),
         const SizedBox(height: 8),
         RecipeCarousel(
           title: '',
@@ -296,7 +388,7 @@ class _PantallaBibliotecaState extends State<PantallaBiblioteca> {
     );
   }
 
-  Widget _buildCarouselTitle(String title) {
+  Widget _buildCarouselTitle(String title, int count) {
     return Center(
       child: Container(
         width: 600,
@@ -305,10 +397,31 @@ class _PantallaBibliotecaState extends State<PantallaBiblioteca> {
           borderRadius: BorderRadius.circular(20),
         ),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        child: Text(
-          title,
-          textAlign: TextAlign.center,
-          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              title,
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(width: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+              decoration: BoxDecoration(
+                color: Colors.black.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text(
+                '$count',
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

@@ -2,7 +2,7 @@ import 'package:migaz/core/config/routes.dart';
 import 'package:migaz/core/constants/recipe_constants.dart';
 import 'package:migaz/core/utils/recipe_utils.dart';
 import 'package:migaz/data/models/recipe.dart';
-import 'package:migaz/ui/widgets/recipe/recipe_carousel.dart';
+import 'package:migaz/data/repositories/receta_repository.dart';
 import 'package:migaz/ui/widgets/recipe/recipe_detail_dialog.dart';
 import 'package:migaz/ui/widgets/recipe/recipe_search_section.dart';
 import 'package:migaz/ui/widgets/recipe/user_avatar.dart';
@@ -20,14 +20,63 @@ class PantallaMisRecetas extends StatefulWidget {
 }
 
 class _PantallaMisRecetasState extends State<PantallaMisRecetas> {
-  bool _dialogoAbiertoGuardados = false;
   final TextEditingController _searchController = TextEditingController();
+  final RecetaRepository _recetaRepository = RecetaRepository();
+
   String _searchQuery = '';
   String _filtroSeleccionado = 'Todos';
+  List<Recipe> _misRecetas = [];
+  bool _isLoading = true;
+  String? _errorMessage;
 
-  final List<Recipe> _misRecetas = [];
+  // ✅ Usuario actual (temporal, luego vendrá de autenticación)
+  final String _currentUser = 'usuario_demo';
 
-  // Recetas filtradas usando utilidad compartida
+  @override
+  void initState() {
+    super.initState();
+    _cargarMisRecetas();
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  // En el método _cargarMisRecetas():
+  Future<void> _cargarMisRecetas() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      print('📥 Cargando recetas de: $_currentUser');
+      final recetas = await _recetaRepository.obtenerPorUsuario(_currentUser);
+
+      setState(() {
+        _misRecetas = recetas;
+        _isLoading = false;
+      });
+
+      // ✅ NUEVO: Actualizar también el HomeViewModel
+      if (mounted) {
+        final homeViewModel = context.read<HomeViewModel>();
+        await homeViewModel.cargarHome();
+      }
+
+      print('✅ Recetas cargadas: ${recetas.length}');
+    } catch (e) {
+      print('❌ Error al cargar mis recetas: $e');
+      setState(() {
+        _errorMessage = 'Error al cargar tus recetas';
+        _isLoading = false;
+      });
+    }
+  }
+
+  // Recetas filtradas
   List<Recipe> get _recetasFiltradas {
     return RecipeUtils.filterRecipes(
       recipes: _misRecetas,
@@ -45,40 +94,6 @@ class _PantallaMisRecetasState extends State<PantallaMisRecetas> {
   }
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    final args = ModalRoute.of(context)?.settings.arguments;
-
-    // Si viene un nombre de receta para abrir directamente
-    if (args is String && !_dialogoAbiertoGuardados) {
-      _openRecipeByName(args);
-    }
-  }
-
-  void _openRecipeByName(String recipeName) {
-    try {
-      final receta = _misRecetas.firstWhere((r) => r.nombre == recipeName);
-      _dialogoAbiertoGuardados = true;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        RecipeDetailDialog.show(context, receta);
-      });
-    } catch (e) {
-      // Si no se encuentra, simplemente mostrar la lista
-    }
-  }
-
-  @override
-  void initState() {
-    super.initState();
-  }
-
-  @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
@@ -89,11 +104,7 @@ class _PantallaMisRecetasState extends State<PantallaMisRecetas> {
               _buildHeader(),
               _buildSearchSection(),
               const SizedBox(height: 16),
-              Expanded(
-                child: _hasActiveFilters
-                    ? _buildSearchResults()
-                    : _buildHomeContent(),
-              ),
+              Expanded(child: _buildContent()),
             ],
           ),
         ),
@@ -120,36 +131,29 @@ class _PantallaMisRecetasState extends State<PantallaMisRecetas> {
   }
 
   Widget _buildBackButton() {
-    return ConstrainedBox(
-      constraints: const BoxConstraints(maxWidth: 140),
-      child: ElevatedButton(
-        onPressed: () => Navigator.pop(context),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFFFEC601),
-          foregroundColor: Colors.black,
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(
-              RecipeConstants.buttonBorderRadius,
-            ),
-          ),
-          elevation: RecipeConstants.buttonElevation,
-        ),
-        child: const FittedBox(
-          fit: BoxFit.scaleDown,
-          child: Icon(Icons.arrow_back),
-        ),
+    return SizedBox(
+      child: IconButton(
+        icon: const Icon(Icons.arrow_back),
+        onPressed: () => Navigator.pushNamed(context, AppRoutes.home),
       ),
     );
   }
 
   Widget _buildTitle() {
-    return const Expanded(
-      child: Text(
-        'Mis Recetas',
-        textAlign: TextAlign.center,
-        overflow: TextOverflow.ellipsis,
-        style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+    return Expanded(
+      child: Column(
+        children: [
+          const Text(
+            'Mis Recetas',
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          ),
+          if (!_isLoading)
+            Text(
+              '${_misRecetas.length} ${_misRecetas.length == 1 ? "receta" : "recetas"}',
+              style: TextStyle(fontSize: 14, color: Colors.grey[700]),
+            ),
+        ],
       ),
     );
   }
@@ -173,60 +177,19 @@ class _PantallaMisRecetasState extends State<PantallaMisRecetas> {
     );
   }
 
-  Widget _buildSearchResults() {
-    if (_recetasFiltradas.isEmpty) {
-      return _buildEmptyState(
-        icon: Icons.search_off,
-        message: 'No se encontraron recetas',
-      );
+  Widget _buildContent() {
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator());
     }
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final screenWidth = constraints.maxWidth;
-        final cardWidth = (screenWidth - 100) / 4;
-        final cardHeight = cardWidth * 1.2;
+    if (_errorMessage != null) {
+      return _buildErrorState();
+    }
 
-        return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-          child: GridView.builder(
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: RecipeConstants.gridCrossAxisCount,
-              crossAxisSpacing: RecipeConstants.gridCrossAxisSpacing,
-              mainAxisSpacing: RecipeConstants.gridMainAxisSpacing,
-              childAspectRatio: cardWidth / cardHeight,
-            ),
-            itemCount: _recetasFiltradas.length,
-            itemBuilder: (context, index) {
-              final receta = _recetasFiltradas[index];
-              return RecipeCard(
-                recipe: receta,
-                onTap: () => RecipeDetailDialog.show(context, receta),
-              );
-            },
-          ),
-        );
-      },
-    );
+    return _buildGridView();
   }
 
-  Widget _buildHomeContent() {
-    return Consumer<HomeViewModel>(
-      builder: (context, homeViewModel, child) {
-        if (homeViewModel.isLoading) {
-          return const Center(child: CircularProgressIndicator());
-        }
-
-        if (homeViewModel.hasError) {
-          return _buildErrorState(homeViewModel);
-        }
-
-        return _buildRecipeSections(homeViewModel);
-      },
-    );
-  }
-
-  Widget _buildErrorState(HomeViewModel homeViewModel) {
+  Widget _buildErrorState() {
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(24.0),
@@ -236,13 +199,13 @@ class _PantallaMisRecetasState extends State<PantallaMisRecetas> {
             const Icon(Icons.error_outline, size: 64, color: Colors.red),
             const SizedBox(height: 16),
             Text(
-              homeViewModel.errorMessage ?? 'Error desconocido',
+              _errorMessage ?? 'Error desconocido',
               style: const TextStyle(fontSize: 16, color: Colors.red),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 24),
             ElevatedButton.icon(
-              onPressed: () => homeViewModel.cargarHome(),
+              onPressed: _cargarMisRecetas,
               icon: const Icon(Icons.refresh),
               label: const Text('Reintentar'),
               style: ElevatedButton.styleFrom(
@@ -256,87 +219,74 @@ class _PantallaMisRecetasState extends State<PantallaMisRecetas> {
     );
   }
 
-  Widget _buildRecipeSections(HomeViewModel homeViewModel) {
+  /// ✅ NUEVO: Grid de recetas del usuario
+  Widget _buildGridView() {
+    final recetasAMostrar = _hasActiveFilters ? _recetasFiltradas : _misRecetas;
+
+    if (recetasAMostrar.isEmpty) {
+      return _buildEmptyState();
+    }
+
     return RefreshIndicator(
-      onRefresh: homeViewModel.refrescarHome,
-      child: SingleChildScrollView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        child: Padding(
-          padding: const EdgeInsets.all(8),
-          child: Column(
-            children: [
-              _buildRecipeSection(
-                title: '📚 Todas las Recetas',
-                recipes: homeViewModel.todasLasRecetas,
-                emptyMessage: 'No hay recetas en la base de datos',
+      onRefresh: _cargarMisRecetas,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final screenWidth = constraints.maxWidth;
+          final cardWidth = (screenWidth - 100) / 4;
+          final cardHeight = cardWidth * 1.2;
+
+          return Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            child: GridView.builder(
+              physics: const AlwaysScrollableScrollPhysics(),
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: RecipeConstants.gridCrossAxisCount,
+                crossAxisSpacing: RecipeConstants.gridCrossAxisSpacing,
+                mainAxisSpacing: RecipeConstants.gridMainAxisSpacing,
+                childAspectRatio: cardWidth / cardHeight,
               ),
-              const SizedBox(height: 24),
-              _buildRecipeSection(
-                title: '⭐ Más Valoradas',
-                recipes: homeViewModel.recetasMasValoradas,
-                emptyMessage: 'No hay recetas valoradas aún',
-              ),
-              const SizedBox(height: 24),
-              _buildRecipeSection(
-                title: '🆕 Nuevas',
-                recipes: homeViewModel.recetasMasNuevas,
-                emptyMessage: 'No hay recetas nuevas aún',
-              ),
-            ],
-          ),
-        ),
+              itemCount: recetasAMostrar.length,
+              itemBuilder: (context, index) {
+                final receta = recetasAMostrar[index];
+                return RecipeCard(
+                  recipe: receta,
+                  onTap: () => RecipeDetailDialog.show(context, receta),
+                );
+              },
+            ),
+          );
+        },
       ),
     );
   }
 
-  Widget _buildRecipeSection({
-    required String title,
-    required List<Recipe> recipes,
-    required String emptyMessage,
-  }) {
-    return Column(
-      children: [
-        _buildSectionTitle(title),
-        const SizedBox(height: 8),
-        RecipeCarousel(
-          title: '',
-          recipes: recipes,
-          emptyMessage: emptyMessage,
-          onRecipeTap: (index) {
-            RecipeDetailDialog.show(context, recipes[index]);
-          },
-        ),
-      ],
-    );
-  }
+  Widget _buildEmptyState() {
+    final bool hasFilters = _hasActiveFilters;
 
-  Widget _buildSectionTitle(String title) {
-    return Center(
-      child: Container(
-        width: 200,
-        decoration: BoxDecoration(
-          color: const Color.fromARGB(255, 243, 243, 243).withOpacity(0.5),
-          borderRadius: BorderRadius.circular(5),
-          border: Border.all(),
-        ),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        child: Text(
-          title,
-          textAlign: TextAlign.center,
-          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildEmptyState({required IconData icon, required String message}) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, size: 64, color: Colors.grey[600]),
+          Icon(
+            hasFilters ? Icons.search_off : Icons.restaurant_menu,
+            size: 64,
+            color: Colors.grey[400],
+          ),
           const SizedBox(height: 16),
-          Text(message),
+          Text(
+            hasFilters
+                ? 'No se encontraron recetas'
+                : 'Aún no has creado ninguna receta',
+            style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+            textAlign: TextAlign.center,
+          ),
+          if (!hasFilters) ...[
+            const SizedBox(height: 8),
+            Text(
+              '¡Crea tu primera receta!',
+              style: TextStyle(fontSize: 14, color: Colors.grey[500]),
+            ),
+          ],
         ],
       ),
     );

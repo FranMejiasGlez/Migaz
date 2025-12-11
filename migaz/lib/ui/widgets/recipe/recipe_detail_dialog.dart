@@ -40,6 +40,8 @@ class _RecipeDetailDialogContentState
     _recipe = widget.recipe;
   }
 
+  // En el método _handleRating de recipe_detail_dialog.dart
+
   Future<void> _handleRating(double rating) async {
     if (_isRating) return;
 
@@ -57,17 +59,21 @@ class _RecipeDetailDialogContentState
     );
 
     if (success) {
-      setState(() {
-        final updatedRecipes = homeViewModel.todasLasRecetas
-            .where((r) => r.id == _recipe.id)
-            .toList();
+      // ✅ ACTUALIZADO: Buscar la receta actualizada
+      final updatedRecipes = homeViewModel.todasLasRecetas
+          .where((r) => r.id == _recipe.id)
+          .toList();
 
-        if (updatedRecipes.isNotEmpty) {
+      if (updatedRecipes.isNotEmpty) {
+        setState(() {
           _recipe = updatedRecipes.first;
-        }
-
-        _isRating = false;
-      });
+          _isRating = false;
+        });
+      } else {
+        setState(() {
+          _isRating = false;
+        });
+      }
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
