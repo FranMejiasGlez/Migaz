@@ -3,21 +3,25 @@ class Recipe {
   final String nombre;
   final String categoria;
   final String descripcion;
-  final int dificultad; // ✅ CAMBIADO: String → int (1-5)
+  final int dificultad;
   final String tiempo;
   final int comensales;
-  final List<String> pasos;
+  final List<String>
+  pasos; // En Flutter usamos "pasos", pero se envía como "instrucciones"
   final List<String> ingredientes;
   final List<String>? imagenes;
   final List<dynamic> comentarios;
-  final double valoracion;
+  final double valoracion; // Mapea a "promedio" en backend
+  final String? user; // ✅ AÑADIDO
+  final String? youtube; // ✅ AÑADIDO
+  final int? cantidadVotos; // ✅ AÑADIDO
 
   Recipe({
     this.id,
     required this.nombre,
     required this.categoria,
     required this.descripcion,
-    required this.dificultad, // ✅ int
+    required this.dificultad,
     required this.tiempo,
     required this.comensales,
     required this.pasos,
@@ -25,24 +29,23 @@ class Recipe {
     this.imagenes,
     this.comentarios = const [],
     this.valoracion = 0,
+    this.user, // ✅ AÑADIDO
+    this.youtube, // ✅ AÑADIDO
+    this.cantidadVotos, // ✅ AÑADIDO
   });
 
   // ✅ MÉTODO AUXILIAR: Convertir dificultad texto a número
   static int dificultadToInt(dynamic value) {
     if (value == null) return 1;
 
-    // Si ya es un número
     if (value is int) {
-      return value.clamp(1, 5); // Asegurar que esté entre 1-5
+      return value.clamp(1, 5);
     }
 
-    // Si es String, convertir
     if (value is String) {
-      // Intentar parsear directamente
       final parsed = int.tryParse(value);
       if (parsed != null) return parsed.clamp(1, 5);
 
-      // Convertir texto a número
       final lower = value.toLowerCase().trim();
       switch (lower) {
         case 'muy fácil':
@@ -65,11 +68,11 @@ class Recipe {
         case 'muy dificil':
           return 5;
         default:
-          return 3; // Por defecto:  medio
+          return 3;
       }
     }
 
-    return 3; // Por defecto
+    return 3;
   }
 
   // ✅ MÉTODO AUXILIAR:  Convertir número a texto para mostrar
@@ -90,10 +93,8 @@ class Recipe {
     }
   }
 
-  // ✅ GETTER: Para mostrar dificultad como texto
   String get dificultadTexto => dificultadToString(dificultad);
 
-  // ✅ GETTER: Para mostrar estrellas/emojis
   String get dificultadEstrellas {
     return '⭐' * dificultad;
   }
@@ -104,16 +105,23 @@ class Recipe {
       nombre: json['nombre'] ?? '',
       categoria: json['categoria'] ?? '',
       descripcion: json['descripcion'] ?? '',
-      dificultad: dificultadToInt(json['dificultad']), // ✅ CONVERTIR
+      dificultad: dificultadToInt(json['dificultad']),
       tiempo: json['tiempo'] ?? '',
-      comensales: _parseIntSafely(json['servings'] ?? json['comensales']),
-      pasos: List<String>.from(json['pasos'] ?? []),
+      comensales: _parseIntSafely(json['comensales']),
+      // ✅ CORREGIDO: Backend usa "instrucciones"
+      pasos: json['instrucciones'] != null
+          ? List<String>.from(json['instrucciones'])
+          : (json['pasos'] != null ? List<String>.from(json['pasos']) : []),
       ingredientes: List<String>.from(json['ingredientes'] ?? []),
       imagenes: json['imagenes'] != null
           ? List<String>.from(json['imagenes'])
           : null,
       comentarios: json['comentarios'] ?? [],
-      valoracion: (json['valoracion'] ?? 0).toDouble(),
+      valoracion: (json['promedio'] ?? json['valoracion'] ?? 0)
+          .toDouble(), // ✅ CORREGIDO
+      user: json['user'], // ✅ AÑADIDO
+      youtube: json['youtube'], // ✅ AÑADIDO
+      cantidadVotos: json['cantidadVotos'], // ✅ AÑADIDO
     );
   }
 
@@ -131,16 +139,18 @@ class Recipe {
     return {
       if (id != null) '_id': id,
       'nombre': nombre,
-      'categoria': categoria,
+      'categoria': categoria.toLowerCase(), // ✅ Backend usa lowercase
       'descripcion': descripcion,
-      'dificultad': dificultad, // ✅ Enviar como número
+      'dificultad': dificultad,
       'tiempo': tiempo,
-      'servings': comensales,
-      'pasos': pasos,
+      'comensales': comensales, // ✅ CORREGIDO
+      'instrucciones': pasos, // ✅ CORREGIDO
       'ingredientes': ingredientes,
       if (imagenes != null) 'imagenes': imagenes,
       'comentarios': comentarios,
-      'valoracion': valoracion,
+      'promedio': valoracion, // ✅ CORREGIDO
+      if (user != null) 'user': user, // ✅ AÑADIDO
+      if (youtube != null) 'youtube': youtube, // ✅ AÑADIDO
     };
   }
 
@@ -149,7 +159,7 @@ class Recipe {
     String? nombre,
     String? categoria,
     String? descripcion,
-    int? dificultad, // ✅ int
+    int? dificultad,
     String? tiempo,
     int? comensales,
     List<String>? pasos,
@@ -157,6 +167,9 @@ class Recipe {
     List<String>? imagenes,
     List<dynamic>? comentarios,
     double? valoracion,
+    String? user,
+    String? youtube,
+    int? cantidadVotos,
   }) {
     return Recipe(
       id: id ?? this.id,
@@ -171,6 +184,9 @@ class Recipe {
       imagenes: imagenes ?? this.imagenes,
       comentarios: comentarios ?? this.comentarios,
       valoracion: valoracion ?? this.valoracion,
+      user: user ?? this.user,
+      youtube: youtube ?? this.youtube,
+      cantidadVotos: cantidadVotos ?? this.cantidadVotos,
     );
   }
 }

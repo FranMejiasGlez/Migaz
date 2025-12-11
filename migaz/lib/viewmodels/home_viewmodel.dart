@@ -7,7 +7,7 @@ class HomeViewModel extends BaseViewModel {
 
   List<Recipe> _recetasMasValoradas = [];
   List<Recipe> _recetasMasNuevas = [];
-  List<Recipe> _todasLasRecetas = []; // ✅ NUEVO: Todas las recetas
+  List<Recipe> _todasLasRecetas = [];
 
   HomeViewModel({RecetaRepository? recetaRepository})
     : _recetaRepository = recetaRepository ?? RecetaRepository();
@@ -15,14 +15,14 @@ class HomeViewModel extends BaseViewModel {
   // Getters
   List<Recipe> get recetasMasValoradas => _recetasMasValoradas;
   List<Recipe> get recetasMasNuevas => _recetasMasNuevas;
-  List<Recipe> get todasLasRecetas => _todasLasRecetas; // ✅ NUEVO
+  List<Recipe> get todasLasRecetas => _todasLasRecetas;
 
   bool get tieneRecetas =>
       _recetasMasValoradas.isNotEmpty ||
       _recetasMasNuevas.isNotEmpty ||
       _todasLasRecetas.isNotEmpty;
 
-  /// ✅ NUEVO: Cargar TODAS las recetas
+  /// Cargar TODAS las recetas
   Future<void> cargarTodasLasRecetas() async {
     await runAsync(() async {
       _todasLasRecetas = await _recetaRepository.obtenerTodas();
@@ -50,7 +50,6 @@ class HomeViewModel extends BaseViewModel {
   /// Cargar todas las secciones de home
   Future<void> cargarHome() async {
     await runAsync(() async {
-      // ✅ MODIFICADO: Cargar TODAS las recetas de la BD
       final todasRecetas = await _recetaRepository.obtenerTodas();
       _todasLasRecetas = todasRecetas;
 
@@ -59,8 +58,7 @@ class HomeViewModel extends BaseViewModel {
         ..sort((a, b) => b.valoracion.compareTo(a.valoracion))
         ..take(5).toList();
 
-      _recetasMasNuevas = List.from(todasRecetas)
-        ..take(5).toList(); // Las primeras son las más recientes
+      _recetasMasNuevas = List.from(todasRecetas)..take(5).toList();
     }, errorPrefix: 'Error al cargar la pantalla de inicio');
   }
 
@@ -71,9 +69,18 @@ class HomeViewModel extends BaseViewModel {
   }
 
   /// Valorar una receta y actualizar la lista
-  Future<bool> valorarReceta(String id, double valoracion) async {
+  /// ✅ CORREGIDO: Añadido parámetro usuario
+  Future<bool> valorarReceta(
+    String id,
+    double puntuacion,
+    String usuario, // ✅ AÑADIDO
+  ) async {
     final result = await runAsync(() async {
-      final recetaValorada = await _recetaRepository.valorar(id, valoracion);
+      final recetaValorada = await _recetaRepository.valorar(
+        id,
+        puntuacion,
+        usuario, // ✅ AÑADIDO
+      );
 
       // Actualizar en todas las listas
       final indexTodas = _todasLasRecetas.indexWhere((r) => r.id == id);

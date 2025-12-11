@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:image_picker/image_picker.dart';
 import 'package:migaz/data/models/recipe.dart';
 import 'package:migaz/data/repositories/receta_repository.dart';
 import 'package:migaz/viewmodels/base_viewmodel.dart';
@@ -13,7 +14,6 @@ class RecipeListViewModel extends BaseViewModel {
   RecipeListViewModel({RecetaRepository? recetaRepository})
     : _recetaRepository = recetaRepository ?? RecetaRepository();
 
-  // Categorías disponibles
   final List<String> categories = [
     'Todos',
     'Española',
@@ -22,7 +22,6 @@ class RecipeListViewModel extends BaseViewModel {
     'Mexicana',
   ];
 
-  // ✅ ACTUALIZAR: Dificultades como números
   final List<Map<String, dynamic>> dificultadOptions = [
     {'value': 1, 'label': 'Muy Fácil', 'emoji': '⭐'},
     {'value': 2, 'label': 'Fácil', 'emoji': '⭐⭐'},
@@ -31,16 +30,12 @@ class RecipeListViewModel extends BaseViewModel {
     {'value': 5, 'label': 'Muy Difícil', 'emoji': '⭐⭐⭐⭐⭐'},
   ];
 
-  // ✅ AÑADIR: Helper para obtener labels
   List<String> get dificultadLabels =>
       dificultadOptions.map((d) => d['label'] as String).toList();
 
-  // Getters
   List<Recipe> get recipes => _recipes;
   String get searchQuery => _searchQuery;
   String get selectedFilter => _selectedFilter;
-
-  // ...  resto del código sin cambios
 
   List<Recipe> get filteredRecipes {
     return _recipes.where((recipe) {
@@ -59,11 +54,20 @@ class RecipeListViewModel extends BaseViewModel {
     }, errorPrefix: 'Error al cargar recetas');
   }
 
-  Future<bool> crearReceta(Recipe receta, {List<File>? imagenes}) async {
+  Future<bool> crearReceta(
+    Recipe receta, {
+    List<File>? imagenes,
+    List<XFile>? imagenesXFile, // ✅ Este parámetro está bien
+    required String usuario,
+    String? youtube,
+  }) async {
     final result = await runAsync(() async {
       final nuevaReceta = await _recetaRepository.crear(
         receta,
         imagenes: imagenes,
+        imagenesXFile: imagenesXFile, // ✅ CORRECTO:  Se pasa al repository
+        usuario: usuario,
+        youtube: youtube,
       );
       _recipes.add(nuevaReceta);
       return true;
@@ -104,9 +108,18 @@ class RecipeListViewModel extends BaseViewModel {
     return result ?? false;
   }
 
-  Future<bool> valorarReceta(String id, double valoracion) async {
+  // ✅ CORREGIDO: Añadir parámetro usuario
+  Future<bool> valorarReceta(
+    String id,
+    double valoracion,
+    String usuario, // ✅ AÑADIDO: Este parámetro faltaba
+  ) async {
     final result = await runAsync(() async {
-      final recetaValorada = await _recetaRepository.valorar(id, valoracion);
+      final recetaValorada = await _recetaRepository.valorar(
+        id,
+        valoracion,
+        usuario,
+      ); // ✅ AHORA FUNCIONA
 
       final index = _recipes.indexWhere((r) => r.id == id);
       if (index != -1) {

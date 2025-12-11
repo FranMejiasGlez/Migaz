@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:image_picker/image_picker.dart';
 import 'package:migaz/data/models/recipe.dart';
 import 'package:migaz/data/services/receta_service.dart';
 
@@ -8,17 +9,15 @@ class RecetaRepository {
   RecetaRepository({RecetaService? recetaService})
     : _recetaService = recetaService ?? RecetaService();
 
-  /// Obtener todas las recetas
   Future<List<Recipe>> obtenerTodas() async {
     try {
       final jsonList = await _recetaService.obtenerTodas();
       return jsonList.map((json) => Recipe.fromJson(json)).toList();
     } catch (e) {
-      throw Exception('Error al obtener recetas:  $e');
+      throw Exception('Error al obtener recetas: $e');
     }
   }
 
-  /// Obtener recetas más valoradas
   Future<List<Recipe>> obtenerMasValoradas({int limit = 10}) async {
     try {
       final jsonList = await _recetaService.obtenerMasValoradas(limit: limit);
@@ -28,7 +27,6 @@ class RecetaRepository {
     }
   }
 
-  /// Obtener recetas más nuevas
   Future<List<Recipe>> obtenerMasNuevas({int limit = 10}) async {
     try {
       final jsonList = await _recetaService.obtenerMasNuevas(limit: limit);
@@ -38,18 +36,22 @@ class RecetaRepository {
     }
   }
 
-  /// Obtener receta por ID
   Future<Recipe> obtenerPorId(String id) async {
     try {
       final json = await _recetaService.obtenerPorId(id);
       return Recipe.fromJson(json);
     } catch (e) {
-      throw Exception('Error al obtener receta: $e');
+      throw Exception('Error al obtener receta:  $e');
     }
   }
 
-  /// Crear nueva receta
-  Future<Recipe> crear(Recipe receta, {List<File>? imagenes}) async {
+  Future<Recipe> crear(
+    Recipe receta, {
+    List<File>? imagenes,
+    List<XFile>? imagenesXFile,
+    required String usuario,
+    String? youtube,
+  }) async {
     try {
       final json = await _recetaService.crear(
         nombre: receta.nombre,
@@ -57,10 +59,13 @@ class RecetaRepository {
         descripcion: receta.descripcion,
         dificultad: receta.dificultad,
         tiempo: receta.tiempo,
-        servings: receta.comensales,
-        pasos: receta.pasos,
+        comensales: receta.comensales,
+        instrucciones: receta.pasos,
         ingredientes: receta.ingredientes,
+        user: usuario,
+        youtube: youtube,
         imagenes: imagenes,
+        imagenesXFile: imagenesXFile,
       );
 
       return Recipe.fromJson(json);
@@ -69,7 +74,6 @@ class RecetaRepository {
     }
   }
 
-  /// Actualizar receta
   Future<Recipe> actualizar(
     String id,
     Recipe receta, {
@@ -78,12 +82,12 @@ class RecetaRepository {
     try {
       final campos = {
         'nombre': receta.nombre,
-        'categoria': receta.categoria,
+        'categoria': receta.categoria.toLowerCase(),
         'descripcion': receta.descripcion,
         'dificultad': receta.dificultad.toString(),
         'tiempo': receta.tiempo,
-        'servings': receta.comensales.toString(),
-        'pasos': receta.pasos.join(','),
+        'comensales': receta.comensales.toString(),
+        'instrucciones': receta.pasos.join(','),
         'ingredientes': receta.ingredientes.join(','),
       };
 
@@ -98,7 +102,6 @@ class RecetaRepository {
     }
   }
 
-  /// Eliminar receta
   Future<void> eliminar(String id) async {
     try {
       await _recetaService.eliminar(id);
@@ -107,10 +110,9 @@ class RecetaRepository {
     }
   }
 
-  /// Valorar receta
-  Future<Recipe> valorar(String id, double valoracion) async {
+  Future<Recipe> valorar(String id, double puntuacion, String usuario) async {
     try {
-      final json = await _recetaService.valorar(id, valoracion);
+      final json = await _recetaService.valorar(id, puntuacion, usuario);
       return Recipe.fromJson(json);
     } catch (e) {
       throw Exception('Error al valorar receta: $e');

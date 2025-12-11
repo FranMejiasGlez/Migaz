@@ -1,3 +1,6 @@
+import 'dart:io';
+import 'package:flutter/foundation.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:migaz/core/config/routes.dart';
 import 'package:migaz/core/constants/recipe_constants.dart';
 import 'package:migaz/data/models/recipe.dart';
@@ -52,7 +55,6 @@ class _PantallaRecetasViewState extends State<_PantallaRecetasView> {
     super.dispose();
   }
 
-  // Recetas filtradas usando utilidad compartida
   List<Recipe> _getFilteredRecipes(RecipeListViewModel viewModel) {
     return RecipeUtils.filterRecipes(
       recipes: viewModel.recipes,
@@ -61,7 +63,6 @@ class _PantallaRecetasViewState extends State<_PantallaRecetasView> {
     );
   }
 
-  // Verificar si hay filtros activos
   bool _hasActiveFilters() {
     return RecipeUtils.hasActiveFilters(
       searchQuery: _searchQuery,
@@ -415,7 +416,7 @@ class _PantallaRecetasViewState extends State<_PantallaRecetasView> {
     BuildContext context,
     RecipeListViewModel viewModel,
   ) async {
-    final Recipe? nueva = await showDialog<Recipe>(
+    final result = await showDialog<Map<String, dynamic>>(
       context: context,
       builder: (context) => DialogoCrearReceta(
         categorias: RecipeConstants.categories
@@ -425,15 +426,65 @@ class _PantallaRecetasViewState extends State<_PantallaRecetasView> {
       ),
     );
 
-    if (nueva == null) return;
+    if (result == null) return;
 
-    final exito = await viewModel.crearReceta(nueva);
+    final Recipe nueva = result['receta'] as Recipe;
+    final String? youtube = result['youtube'] as String?;
+    final List<XFile> imagenesXFile = result['imagenes'] as List<XFile>? ?? [];
+
+    // ✅ DEBUGGING:  Verificar que lleguen las imágenes
+    print('🔍 DEBUG - Imágenes recibidas del diálogo: ${imagenesXFile.length}');
+
+    // Convertir XFile a File solo en móvil/desktop
+    List<File>? imagenes;
+    List<XFile>? imagenesWeb;
+
+    if (imagenesXFile.isNotEmpty) {
+      if (kIsWeb) {
+        imagenesWeb = imagenesXFile;
+        print('🌐 DEBUG - Usando imagenesWeb (${imagenesWeb.length} archivos)');
+      } else {
+        imagenes = imagenesXFile.map((xfile) => File(xfile.path)).toList();
+        print('📱 DEBUG - Usando imagenes File (${imagenes.length} archivos)');
+      }
+    } else {
+      print('⚠️ DEBUG - No hay imágenes seleccionadas');
+    }
+
+    if (context.mounted) {
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    print('📤 DEBUG - Llamando a crearReceta con: ');
+    print('  - imagenes (File): ${imagenes?.length ?? 0}');
+    print('  - imagenesXFile (XFile): ${imagenesWeb?.length ?? 0}');
+
+    final exito = await viewModel.crearReceta(
+      nueva,
+      usuario: 'usuario_demo',
+      youtube: youtube?.isNotEmpty == true ? youtube : null,
+      imagenes: imagenes,
+      imagenesXFile: imagenesWeb,
+    );
+
+    if (context.mounted) {
+      Navigator.pop(context);
+    }
 
     if (context.mounted) {
       _showCreateRecipeResult(context, exito, viewModel.errorMessage);
+
+      if (exito) {
+        await context.read<HomeViewModel>().cargarHome();
+      }
     }
   }
 
+  // ✅ MÉTODO AÑADIDO
   void _showCreateRecipeResult(
     BuildContext context,
     bool success,
@@ -443,10 +494,12 @@ class _PantallaRecetasViewState extends State<_PantallaRecetasView> {
       SnackBar(
         content: Text(
           success
-              ? '✅ Receta guardada en servidor'
-              : errorMessage ?? 'Error al guardar receta',
+              ? '✅ Receta creada exitosamente'
+              : '❌ ${errorMessage ?? "Error al crear receta"}',
         ),
         backgroundColor: success ? Colors.green : Colors.red,
+        duration: const Duration(seconds: 3),
+        behavior: SnackBarBehavior.floating,
       ),
     );
   }

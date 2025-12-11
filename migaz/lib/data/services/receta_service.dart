@@ -1,4 +1,6 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:migaz/core/config/api_config.dart';
 import 'package:migaz/data/services/api_service.dart';
 
@@ -8,29 +10,24 @@ class RecetaService {
   RecetaService({ApiService? apiService})
     : _apiService = apiService ?? ApiService();
 
-  /// Obtener todas las recetas
   Future<List<dynamic>> obtenerTodas() async {
     final response = await _apiService.get(ApiConfig.recetasEndpoint);
     return response as List<dynamic>;
   }
 
-  /// Obtener recetas más valoradas
   Future<List<dynamic>> obtenerMasValoradas({int limit = 10}) async {
-    // OPCIÓN 1: Si tienes endpoint específico en backend
     try {
       final response = await _apiService.get(
         '${ApiConfig.recetasMasValoradasEndpoint}?limit=$limit',
       );
       return response as List<dynamic>;
     } catch (e) {
-      // OPCIÓN 2: Si NO tienes endpoint, obtener todas y filtrar localmente
       final response = await _apiService.get(ApiConfig.recetasEndpoint);
       final List<dynamic> recetas = response as List<dynamic>;
 
-      // Ordenar por valoración descendente
       recetas.sort(
-        (a, b) => ((b['valoracion'] ?? 0) as num).compareTo(
-          (a['valoracion'] ?? 0) as num,
+        (a, b) => ((b['promedio'] ?? 0) as num).compareTo(
+          (a['promedio'] ?? 0) as num,
         ),
       );
 
@@ -38,20 +35,16 @@ class RecetaService {
     }
   }
 
-  /// Obtener recetas más nuevas
   Future<List<dynamic>> obtenerMasNuevas({int limit = 10}) async {
-    // OPCIÓN 1: Si tienes endpoint específico en backend
     try {
       final response = await _apiService.get(
-        '${ApiConfig.recetasMasNuevasEndpoint}? limit=$limit',
+        '${ApiConfig.recetasMasNuevasEndpoint}?limit=$limit',
       );
       return response as List<dynamic>;
     } catch (e) {
-      // OPCIÓN 2: Si NO tienes endpoint, obtener todas y filtrar localmente
       final response = await _apiService.get(ApiConfig.recetasEndpoint);
       final List<dynamic> recetas = response as List<dynamic>;
 
-      // Ordenar por fecha de creación descendente
       recetas.sort((a, b) {
         final fechaA =
             DateTime.tryParse(a['createdAt']?.toString() ?? '') ??
@@ -66,44 +59,54 @@ class RecetaService {
     }
   }
 
-  /// Obtener receta por ID
   Future<Map<String, dynamic>> obtenerPorId(String id) async {
     final response = await _apiService.get(ApiConfig.recetaByIdEndpoint(id));
     return response as Map<String, dynamic>;
   }
 
-  /// Crear nueva receta (con imágenes)
+  /// ✅ ACTUALIZADO: Enviar datos como el backend espera
   Future<Map<String, dynamic>> crear({
     required String nombre,
     required String categoria,
     required String descripcion,
     required int dificultad,
     required String tiempo,
-    required int servings,
-    required List<String> pasos,
+    required int comensales,
+    required List<String> instrucciones,
     required List<String> ingredientes,
+    required String user,
+    String? youtube,
     List<File>? imagenes,
+    List<XFile>? imagenesXFile,
   }) async {
-    final fields = {
+    // ✅ Crear objeto con TODOS los datos
+    final datos = {
       'nombre': nombre,
-      'categoria': categoria,
+      'categoria': categoria.toLowerCase(),
       'descripcion': descripcion,
-      'dificultad': dificultad.toString(),
+      'dificultad': dificultad,
       'tiempo': tiempo,
-      'servings': servings.toString(),
-      'pasos': pasos.join(','), // ajusta según tu API
-      'ingredientes': ingredientes.join(','), // ajusta según tu API
+      'comensales': comensales,
+      'instrucciones': instrucciones, // ✅ Array directo
+      'ingredientes': ingredientes, // ✅ Array directo
+      'user': user,
+      if (youtube != null && youtube.isNotEmpty) 'youtube': youtube,
     };
 
-    final response = await _apiService.postMultipart(
-      ApiConfig.recetasEndpoint,
-      fields,
-      imagenes,
+    print('🔍 DEBUG - Datos a enviar: $datos');
+    print(
+      '🔍 DEBUG - Imágenes: ${kIsWeb ? imagenesXFile?.length : imagenes?.length}',
     );
+
+    final response = await _apiService.postMultipartWithJson(
+      ApiConfig.recetasEndpoint,
+      datos,
+      kIsWeb ? imagenesXFile : imagenes,
+    );
+
     return response as Map<String, dynamic>;
   }
 
-  /// Actualizar receta
   Future<Map<String, dynamic>> actualizar({
     required String id,
     required Map<String, String> campos,
@@ -117,16 +120,21 @@ class RecetaService {
     return response as Map<String, dynamic>;
   }
 
-  /// Eliminar receta
   Future<void> eliminar(String id) async {
     await _apiService.delete(ApiConfig.recetaByIdEndpoint(id));
   }
 
-  /// Valorar receta
-  Future<Map<String, dynamic>> valorar(String id, double valoracion) async {
+  Future<Map<String, dynamic>> valorar(
+    String id,
+    double puntuacion,
+    String usuario,
+  ) async {
     final response = await _apiService.post(
       ApiConfig.valorarRecetaEndpoint(id),
-      {'valoracion': valoracion},
+      {
+        'user': usuario, // ✅ Cambiado de 'usuario' a 'user'
+        'puntuacion': puntuacion,
+      },
     );
     return response as Map<String, dynamic>;
   }
