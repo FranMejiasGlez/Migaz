@@ -48,7 +48,6 @@ class _PantallaBibliotecaState extends State<PantallaBiblioteca> {
     super.dispose();
   }
 
-  // En el método _cargarDatos(), después de cargar las recetas:
   Future<void> _cargarDatos() async {
     setState(() {
       _isLoading = true;
@@ -58,23 +57,31 @@ class _PantallaBibliotecaState extends State<PantallaBiblioteca> {
     try {
       print('📥 Cargando recetas de:  $_currentUser');
 
+      // Cargar mis recetas
       final misRecetas = await _recetaRepository.obtenerPorUsuario(
         _currentUser,
       );
 
-      setState(() {
-        _misRecetas = misRecetas;
-        _recetasGuardadas = [];
-        _isLoading = false;
-      });
-
-      // ✅ NUEVO: Actualizar también el HomeViewModel
+      // ✅ NUEVO: Actualizar HomeViewModel
       if (mounted) {
         final homeViewModel = context.read<HomeViewModel>();
         await homeViewModel.cargarHome();
-      }
+        await homeViewModel.cargarGuardadas(
+          _currentUser,
+        ); // ✅ AÑADIR ESTA LÍNEA
 
-      print('✅ Mis recetas cargadas:  ${misRecetas.length}');
+        // ✅ NUEVO: Obtener recetas guardadas del HomeViewModel
+        final recetasGuardadas = homeViewModel.recetasGuardadas;
+
+        setState(() {
+          _misRecetas = misRecetas;
+          _recetasGuardadas = recetasGuardadas; // ✅ ACTUALIZAR con datos reales
+          _isLoading = false;
+        });
+
+        print('✅ Mis recetas cargadas:  ${misRecetas.length}');
+        print('✅ Recetas guardadas: ${recetasGuardadas.length}');
+      }
     } catch (e) {
       print('❌ Error al cargar datos de biblioteca: $e');
       setState(() {

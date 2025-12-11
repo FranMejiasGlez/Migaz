@@ -1,3 +1,4 @@
+// lib/ui/views/pantalla_guardados.dart
 import 'package:migaz/core/config/routes.dart';
 import 'package:migaz/core/constants/recipe_constants.dart';
 import 'package:migaz/core/utils/recipe_utils.dart';
@@ -8,6 +9,8 @@ import 'package:migaz/ui/widgets/recipe/user_avatar.dart';
 import 'package:migaz/core/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:migaz/ui/widgets/recipe/recipe_card.dart';
+import 'package:migaz/viewmodels/home_viewmodel.dart';
+import 'package:provider/provider.dart';
 
 class PantallaGuardados extends StatefulWidget {
   const PantallaGuardados({Key? key}) : super(key: key);
@@ -17,64 +20,44 @@ class PantallaGuardados extends StatefulWidget {
 }
 
 class _PantallaGuardadosState extends State<PantallaGuardados> {
-  bool _dialogoAbiertoGuardados = false;
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
   String _filtroSeleccionado = 'Todos';
+  bool _isLoading = true;
 
-  final List<Recipe> _recetasGuardadas = [];
-
-  // Recetas filtradas usando utilidad compartida
-  List<Recipe> get _recetasFiltradas {
-    return RecipeUtils.filterRecipes(
-      recipes: _recetasGuardadas,
-      searchQuery: _searchQuery,
-      selectedFilter: _filtroSeleccionado,
-    );
-  }
-
-  // Verificar si hay filtros activos
-  bool get _hasActiveFilters {
-    return RecipeUtils.hasActiveFilters(
-      searchQuery: _searchQuery,
-      selectedFilter: _filtroSeleccionado,
-    );
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    final args = ModalRoute.of(context)?.settings.arguments;
-
-    // Si viene un nombre de receta para abrir directamente
-    if (args is String && !_dialogoAbiertoGuardados) {
-      _openRecipeByName(args);
-    }
-  }
-
-  void _openRecipeByName(String recipeName) {
-    try {
-      final receta = _recetasGuardadas.firstWhere(
-        (r) => r.nombre == recipeName,
-      );
-      _dialogoAbiertoGuardados = true;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        RecipeDetailDialog.show(context, receta);
-      });
-    } catch (e) {
-      // Si no se encuentra, simplemente mostrar la lista
-    }
-  }
+  // ✅ Usuario actual
+  final String _currentUser = 'usuario_demo';
 
   @override
   void initState() {
     super.initState();
+    _cargarGuardadas();
   }
 
   @override
   void dispose() {
     _searchController.dispose();
     super.dispose();
+  }
+
+  // ✅ NUEVO: Cargar recetas guardadas
+  Future<void> _cargarGuardadas() async {
+    setState(() => _isLoading = true);
+
+    try {
+      final homeViewModel = context.read<HomeViewModel>();
+      await homeViewModel.cargarHome();
+      await homeViewModel.cargarGuardadas(_currentUser);
+
+      setState(() => _isLoading = false);
+
+      print(
+        '✅ Recetas guardadas cargadas:  ${homeViewModel.recetasGuardadas.length}',
+      );
+    } catch (e) {
+      print('❌ Error al cargar guardadas: $e');
+      setState(() => _isLoading = false);
+    }
   }
 
   @override
@@ -88,11 +71,7 @@ class _PantallaGuardadosState extends State<PantallaGuardados> {
               _buildHeader(),
               _buildSearchSection(),
               const SizedBox(height: 16),
-              Expanded(
-                child: _hasActiveFilters
-                    ? _buildSearchResults()
-                    : _buildHomeContent(),
-              ),
+              Expanded(child: _buildContent()),
             ],
           ),
         ),
@@ -119,21 +98,32 @@ class _PantallaGuardadosState extends State<PantallaGuardados> {
   }
 
   Widget _buildBackButton() {
-    return SizedBox(
-      child: IconButton(
-        icon: const Icon(Icons.arrow_back),
-        onPressed: () => Navigator.pushNamed(context, AppRoutes.home),
-      ),
+    return IconButton(
+      icon: const Icon(Icons.arrow_back),
+      onPressed: () => Navigator.pop(context),
     );
   }
 
   Widget _buildTitle() {
-    return const Expanded(
-      child: Text(
-        'Recetas Guardadas',
-        textAlign: TextAlign.center,
-        overflow: TextOverflow.ellipsis,
-        style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+    return Expanded(
+      child: Consumer<HomeViewModel>(
+        builder: (context, homeViewModel, child) {
+          final count = homeViewModel.recetasGuardadas.length;
+          return Column(
+            children: [
+              const Text(
+                'Recetas Guardadas',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+              if (!_isLoading)
+                Text(
+                  '$count ${count == 1 ? "receta" : "recetas"}',
+                  style: TextStyle(fontSize: 14, color: Colors.grey[700]),
+                ),
+            ],
+          );
+        },
       ),
     );
   }
@@ -157,51 +147,42 @@ class _PantallaGuardadosState extends State<PantallaGuardados> {
     );
   }
 
-  Widget _buildSearchResults() {
-    if (_recetasFiltradas.isEmpty) {
-      return _buildEmptyState(
-        icon: Icons.search_off,
-        message: 'No se encontraron recetas',
-      );
+  Widget _buildContent() {
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator());
     }
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final screenWidth = constraints.maxWidth;
-        final cardWidth = (screenWidth - 100) / 4;
-        final cardHeight = cardWidth * 1.2;
+    return Consumer<HomeViewModel>(
+      builder: (context, homeViewModel, child) {
+        final recetasGuardadas = homeViewModel.recetasGuardadas;
 
-        return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-          child: GridView.builder(
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: RecipeConstants.gridCrossAxisCount,
-              crossAxisSpacing: RecipeConstants.gridCrossAxisSpacing,
-              mainAxisSpacing: RecipeConstants.gridMainAxisSpacing,
-              childAspectRatio: cardWidth / cardHeight,
-            ),
-            itemCount: _recetasFiltradas.length,
-            itemBuilder: (context, index) {
-              final receta = _recetasFiltradas[index];
-              return RecipeCard(
-                recipe: receta, // ✅ Simplificado
-                onTap: () => RecipeDetailDialog.show(context, receta),
-              );
-            },
-          ),
+        // Aplicar filtros si hay
+        final recetasFiltradas = _hasActiveFilters
+            ? RecipeUtils.filterRecipes(
+                recipes: recetasGuardadas,
+                searchQuery: _searchQuery,
+                selectedFilter: _filtroSeleccionado,
+              )
+            : recetasGuardadas;
+
+        if (recetasFiltradas.isEmpty) {
+          return _buildEmptyState(
+            icon: _hasActiveFilters ? Icons.search_off : Icons.bookmark_outline,
+            message: _hasActiveFilters
+                ? 'No se encontraron recetas'
+                : 'No has guardado ninguna receta aún',
+          );
+        }
+
+        return RefreshIndicator(
+          onRefresh: _cargarGuardadas,
+          child: _buildGridView(recetasFiltradas),
         );
       },
     );
   }
 
-  Widget _buildHomeContent() {
-    if (_recetasGuardadas.isEmpty) {
-      return _buildEmptyState(
-        icon: Icons.bookmark_outline,
-        message: 'No hay recetas guardadas',
-      );
-    }
-
+  Widget _buildGridView(List<Recipe> recetas) {
     return LayoutBuilder(
       builder: (context, constraints) {
         final screenWidth = constraints.maxWidth;
@@ -211,15 +192,16 @@ class _PantallaGuardadosState extends State<PantallaGuardados> {
         return Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
           child: GridView.builder(
+            physics: const AlwaysScrollableScrollPhysics(),
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: RecipeConstants.gridCrossAxisCount,
               crossAxisSpacing: RecipeConstants.gridCrossAxisSpacing,
               mainAxisSpacing: RecipeConstants.gridMainAxisSpacing,
               childAspectRatio: cardWidth / cardHeight,
             ),
-            itemCount: _recetasGuardadas.length,
+            itemCount: recetas.length,
             itemBuilder: (context, index) {
-              final receta = _recetasGuardadas[index];
+              final receta = recetas[index];
               return RecipeCard(
                 recipe: receta,
                 onTap: () => RecipeDetailDialog.show(context, receta),
@@ -241,9 +223,29 @@ class _PantallaGuardadosState extends State<PantallaGuardados> {
           Text(
             message,
             style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+            textAlign: TextAlign.center,
           ),
+          if (!_hasActiveFilters) ...[
+            const SizedBox(height: 24),
+            ElevatedButton.icon(
+              onPressed: () => Navigator.pushNamed(context, AppRoutes.home),
+              icon: const Icon(Icons.explore),
+              label: const Text('Explorar recetas'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.primaryYellow,
+                foregroundColor: Colors.black,
+              ),
+            ),
+          ],
         ],
       ),
+    );
+  }
+
+  bool get _hasActiveFilters {
+    return RecipeUtils.hasActiveFilters(
+      searchQuery: _searchQuery,
+      selectedFilter: _filtroSeleccionado,
     );
   }
 }
