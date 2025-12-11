@@ -1,6 +1,6 @@
-// lib/ui/widgets/recipe/recipe_card.dart
 import 'package:flutter/material.dart';
 import 'package:migaz/data/models/recipe.dart';
+import 'package:migaz/ui/widgets/auth/user_credentials.dart';
 import 'package:migaz/ui/widgets/recipe/rating_display.dart';
 import 'package:migaz/ui/widgets/recipe/recipe_image_widget.dart';
 import 'package:migaz/ui/widgets/comentarios/comentarios_popup.dart';
@@ -8,26 +8,11 @@ import 'package:provider/provider.dart';
 import 'package:migaz/ui/widgets/auth/user_credentials.dart';
 
 class RecipeCard extends StatelessWidget {
-  final String nombre;
-  final String categoria;
-  final double valoracion;
-  final int? cantidadVotos;
-  final String? imageUrl;
-  final int? cantidadComentarios; // ✅ NUEVO
-  final Recipe recipe; // ✅ NUEVO:  Necesario para el popup
-  final VoidCallback onTap;
+  final Recipe recipe; // ✅ Objeto completo
+  final VoidCallback? onTap; // ✅ Opcional
 
-  const RecipeCard({
-    Key? key,
-    required this.nombre,
-    required this.categoria,
-    required this.valoracion,
-    this.cantidadVotos,
-    this.imageUrl,
-    this.cantidadComentarios, // ✅ NUEVO
-    required this.recipe, // ✅ NUEVO
-    required this.onTap,
-  }) : super(key: key);
+  const RecipeCard({Key? key, required this.recipe, this.onTap})
+    : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -42,7 +27,7 @@ class RecipeCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Imagen
+            // ✅ Imagen real de la receta
             ClipRRect(
               borderRadius: const BorderRadius.only(
                 topLeft: Radius.circular(10),
@@ -51,7 +36,12 @@ class RecipeCard extends StatelessWidget {
               child: SizedBox(
                 height: 250,
                 width: double.infinity,
-                child: RecipeImageWidget(imageUrl: imageUrl, fit: BoxFit.cover),
+                child: RecipeImageWidget(
+                  imageUrl: recipe.imagenes?.isNotEmpty == true
+                      ? recipe.imagenes!.first
+                      : null,
+                  fit: BoxFit.cover,
+                ),
               ),
             ),
 
@@ -68,7 +58,7 @@ class RecipeCard extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          nombre,
+                          recipe.nombre,
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
@@ -78,7 +68,7 @@ class RecipeCard extends StatelessWidget {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          categoria,
+                          recipe.categoria,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
@@ -89,20 +79,20 @@ class RecipeCard extends StatelessWidget {
                       ],
                     ),
 
-                    // ✅ ACTUALIZADO: Rating y Comentarios
+                    // ✅ Rating y Comentarios
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        // Rating
+                        // Rating con estrellas
                         RatingDisplay(
-                          rating: valoracion,
-                          totalVotes: cantidadVotos,
+                          rating: recipe.valoracion,
+                          totalVotes: recipe.cantidadVotos,
                           size: 14,
                           showNumber: true,
                           showVotes: false,
                         ),
 
-                        // ✅ NUEVO: Botón de comentarios
+                        // ✅ Botón de comentarios
                         _buildCommentButton(context),
                       ],
                     ),
@@ -116,9 +106,9 @@ class RecipeCard extends StatelessWidget {
     );
   }
 
-  // ✅ NUEVO:  Botón de comentarios
+  // ✅ Botón de comentarios con contador
   Widget _buildCommentButton(BuildContext context) {
-    final comentariosCount = cantidadComentarios ?? recipe.comentarios.length;
+    final comentariosCount = recipe.comentarios.length;
 
     return InkWell(
       onTap: () => _showComments(context),
@@ -128,14 +118,20 @@ class RecipeCard extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.comment_outlined, size: 16, color: Colors.grey[600]),
+            Icon(
+              Icons.comment_outlined,
+              size: 16,
+              color: comentariosCount > 0 ? Colors.blue[700] : Colors.grey[600],
+            ),
             const SizedBox(width: 4),
             Text(
               '$comentariosCount',
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.bold,
-                color: Colors.grey[600],
+                color: comentariosCount > 0
+                    ? Colors.blue[700]
+                    : Colors.grey[600],
               ),
             ),
           ],
@@ -144,11 +140,13 @@ class RecipeCard extends StatelessWidget {
     );
   }
 
-  // ✅ NUEVO: Mostrar popup de comentarios
+  // ✅ Mostrar popup de comentarios
   void _showComments(BuildContext context) {
     final credentials = Provider.of<UserCredentials>(context, listen: false);
     final currentUser = credentials.email.isNotEmpty
         ? credentials.email
+              .split('@')
+              .first // Usar parte antes del @
         : 'usuario_demo';
 
     ComentariosPopup.show(

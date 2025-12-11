@@ -199,12 +199,8 @@ class _PantallaGuardadosState extends State<PantallaGuardados> {
             itemBuilder: (context, index) {
               final receta = _recetasFiltradas[index];
               return RecipeCard(
-                nombre: receta.nombre,
-                categoria: receta.categoria,
-                valoracion: 4.5,
-                cantidadComentarios: receta.comentarios.length,
+                recipe: receta, // ✅ Simplificado
                 onTap: () => RecipeDetailDialog.show(context, receta),
-                recipe: receta,
               );
             },
           ),
@@ -240,12 +236,8 @@ class _PantallaGuardadosState extends State<PantallaGuardados> {
             itemBuilder: (context, index) {
               final receta = _recetasGuardadas[index];
               return RecipeCard(
-                nombre: receta.nombre,
-                categoria: receta.categoria,
-                valoracion: 4.5,
-                cantidadComentarios: receta.cantidadComentarios,
-                onTap: () => RecipeDetailDialog.show(context, receta),
                 recipe: receta,
+                onTap: () => RecipeDetailDialog.show(context, receta),
               );
             },
           ),

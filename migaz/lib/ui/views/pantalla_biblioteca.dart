@@ -240,12 +240,8 @@ class _PantallaBibliotecaState extends State<PantallaBiblioteca> {
             itemBuilder: (context, index) {
               final receta = _recetasFiltradas[index];
               return RecipeCard(
-                nombre: receta.nombre,
-                categoria: receta.categoria,
-                valoracion: 4.5,
-                cantidadComentarios: receta.cantidadComentarios,
-                onTap: () => RecipeDetailDialog.show(context, receta),
                 recipe: receta,
+                onTap: () => RecipeDetailDialog.show(context, receta),
               );
             },
           ),

@@ -194,18 +194,15 @@ class _PantallaRecetasViewState extends State<_PantallaRecetasView> {
       );
     }
 
+    // En _buildSearchResults
     return ListView.builder(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       itemCount: filteredRecipes.length,
       itemBuilder: (context, index) {
         final receta = filteredRecipes[index];
         return RecipeCard(
-          nombre: receta.nombre,
-          categoria: receta.categoria,
-          valoracion: receta.valoracion,
-          cantidadComentarios:receta.cantidadComentarios,
+          recipe: receta, // ✅ Solo pasa el objeto completo
           onTap: () => RecipeDetailDialog.show(context, receta),
-          recipe: receta,
         );
       },
     );
