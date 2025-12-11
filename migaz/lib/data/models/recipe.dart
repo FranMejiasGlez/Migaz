@@ -5,7 +5,7 @@ class Recipe {
   final String descripcion;
   final String dificultad;
   final String tiempo;
-  final int servings;
+  final int comensales;
   final List<String> pasos;
   final List<String> ingredientes;
   final List<String>? imagenes; // URLs de las imágenes
@@ -19,7 +19,7 @@ class Recipe {
     required this.descripcion,
     required this.dificultad,
     required this.tiempo,
-    required this.servings,
+    required this.comensales,
     required this.pasos,
     required this.ingredientes,
     this.imagenes,
@@ -36,7 +36,7 @@ class Recipe {
       descripcion: json['descripcion'] ?? '',
       dificultad: json['dificultad'] ?? '',
       tiempo: json['tiempo'] ?? '',
-      servings: json['servings'] ?? 0,
+      comensales: json['servings'] ?? 0,
       pasos: List<String>.from(json['pasos'] ?? []),
       ingredientes: List<String>.from(json['ingredientes'] ?? []),
       imagenes: json['imagenes'] != null
@@ -56,7 +56,7 @@ class Recipe {
       'descripcion': descripcion,
       'dificultad': dificultad,
       'tiempo': tiempo,
-      'servings': servings,
+      'comensales': comensales,
       'pasos': pasos,
       'ingredientes': ingredientes,
       if (imagenes != null) 'imagenes': imagenes,
@@ -87,7 +87,7 @@ class Recipe {
       descripcion: descripcion ?? this.descripcion,
       dificultad: dificultad ?? this.dificultad,
       tiempo: tiempo ?? this.tiempo,
-      servings: servings ?? this.servings,
+      comensales: comensales,
       pasos: pasos ?? this.pasos,
       ingredientes: ingredientes ?? this.ingredientes,
       imagenes: imagenes ?? this.imagenes,

@@ -35,80 +35,7 @@ class _PantallaBibliotecaState extends State<PantallaBiblioteca> {
 
   // ignore: unused_field
   final List<String> _dificultad = ['fácil', 'Medio', 'Difícil'];
-  final List<Recipe> _todasLasRecetasCompletas = [
-    Recipe(
-      nombre: 'Paella Valenciana',
-      categoria: 'Española',
-      descripcion: 'Deliciosa paella tradicional valenciana',
-      dificultad: 'Medio',
-      tiempo: '45 min',
-      servings: 4,
-      pasos: ['Paso 1', 'Paso 2', 'Paso 3'],
-      ingredientes: ['Arroz', 'Azafrán', 'Pollo'],
-      comentarios: [],
-      valoracion: 0,
-    ),
-    Recipe(
-      nombre: 'Tortilla de Patatas',
-      categoria: 'Española',
-      descripcion: 'Tortilla española clásica',
-      dificultad: 'Fácil',
-      tiempo: '20 min',
-      servings: 3,
-      pasos: ['Paso 1', 'Paso 2'],
-      ingredientes: ['Patatas', 'Huevos', 'Cebolla'],
-      comentarios: [],
-      valoracion: 0,
-    ),
-    Recipe(
-      nombre: 'Pizza Margarita',
-      categoria: 'Italiana',
-      descripcion: 'Pizza italiana auténtica',
-      dificultad: 'Medio',
-      tiempo: '30 min',
-      servings: 2,
-      pasos: ['Paso 1', 'Paso 2', 'Paso 3'],
-      ingredientes: ['Harina', 'Tomate', 'Mozzarella'],
-      comentarios: [],
-      valoracion: 0,
-    ),
-    Recipe(
-      nombre: 'Sushi Roll',
-      categoria: 'Japonesa',
-      descripcion: 'Sushi roll casero',
-      dificultad: 'Difícil',
-      tiempo: '40 min',
-      servings: 2,
-      pasos: ['Paso 1', 'Paso 2', 'Paso 3', 'Paso 4'],
-      ingredientes: ['Arroz', 'Nori', 'Pepino', 'Aguacate'],
-      comentarios: [],
-      valoracion: 0,
-    ),
-    Recipe(
-      nombre: 'Tacos al Pastor',
-      categoria: 'Mexicana',
-      descripcion: 'Tacos mexicanos tradicionales',
-      dificultad: 'Medio',
-      tiempo: '35 min',
-      servings: 4,
-      pasos: ['Paso 1', 'Paso 2', 'Paso 3'],
-      ingredientes: ['Carne', 'Tortillas', 'Cebolla'],
-      comentarios: [],
-      valoracion: 0,
-    ),
-    Recipe(
-      nombre: 'Lasaña Boloñesa',
-      categoria: 'Italiana',
-      descripcion: 'Lasaña casera con salsa boloñesa',
-      dificultad: 'Medio',
-      tiempo: '50 min',
-      servings: 6,
-      pasos: ['Paso 1', 'Paso 2', 'Paso 3', 'Paso 4'],
-      ingredientes: ['Pasta', 'Carne molida', 'Tomate', 'Queso'],
-      comentarios: [],
-      valoracion: 0,
-    ),
-  ];
+  final List<Recipe> _todasLasRecetasCompletas = [];
   void _mostrarDetallesReceta(Recipe receta) {
     showDialog(
       context: context,
@@ -188,7 +115,7 @@ class _PantallaBibliotecaState extends State<PantallaBiblioteca> {
                             _infoItem(
                               icon: Icons.people,
                               label: 'Servings',
-                              valor: '${receta.servings}',
+                              valor: '${receta.comensales}',
                             ),
                             _infoItem(
                               icon: Icons.restaurant,

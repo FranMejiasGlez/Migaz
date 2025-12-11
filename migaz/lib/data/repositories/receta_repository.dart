@@ -57,7 +57,7 @@ class RecetaRepository {
         descripcion: receta.descripcion,
         dificultad: receta.dificultad,
         tiempo: receta.tiempo,
-        servings: receta.servings,
+        servings: receta.comensales,
         pasos: receta.pasos,
         ingredientes: receta.ingredientes,
         imagenes: imagenes,
@@ -82,7 +82,7 @@ class RecetaRepository {
         'descripcion': receta.descripcion,
         'dificultad': receta.dificultad,
         'tiempo': receta.tiempo,
-        'servings': receta.servings.toString(),
+        'servings': receta.comensales.toString(),
         'pasos': receta.pasos.join(','),
         'ingredientes': receta.ingredientes.join(','),
       };

@@ -32,83 +32,10 @@ class _PantallaMisRecetasState extends State<PantallaMisRecetas> {
     'Mexicana',
   ];
 
-  final List<Recipe> _recetasGuardadas = [
-    Recipe(
-      nombre: 'Paella Valenciana',
-      categoria: 'Española',
-      descripcion: 'Deliciosa paella tradicional valenciana',
-      dificultad: 'Medio',
-      tiempo: '45 min',
-      servings: 4,
-      pasos: ['Paso 1', 'Paso 2', 'Paso 3'],
-      ingredientes: ['Arroz', 'Azafrán', 'Pollo'],
-      comentarios: <Comentario>[],
-      valoracion: 0.0,
-    ),
-    Recipe(
-      nombre: 'Tortilla de Patatas',
-      categoria: 'Española',
-      descripcion: 'Tortilla española clásica',
-      dificultad: 'Fácil',
-      tiempo: '20 min',
-      servings: 3,
-      pasos: ['Paso 1', 'Paso 2'],
-      ingredientes: ['Patatas', 'Huevos', 'Cebolla'],
-      comentarios: <Comentario>[],
-      valoracion: 0.0,
-    ),
-    Recipe(
-      nombre: 'Pizza Margarita',
-      categoria: 'Italiana',
-      descripcion: 'Pizza italiana auténtica',
-      dificultad: 'Medio',
-      tiempo: '30 min',
-      servings: 2,
-      pasos: ['Paso 1', 'Paso 2', 'Paso 3'],
-      ingredientes: ['Harina', 'Tomate', 'Mozzarella'],
-      comentarios: <Comentario>[],
-      valoracion: 0.0,
-    ),
-    Recipe(
-      nombre: 'Sushi Roll',
-      categoria: 'Japonesa',
-      descripcion: 'Sushi roll casero',
-      dificultad: 'Difícil',
-      tiempo: '40 min',
-      servings: 2,
-      pasos: ['Paso 1', 'Paso 2', 'Paso 3', 'Paso 4'],
-      ingredientes: ['Arroz', 'Nori', 'Pepino', 'Aguacate'],
-      comentarios: <Comentario>[],
-      valoracion: 0.0,
-    ),
-    Recipe(
-      nombre: 'Tacos al Pastor',
-      categoria: 'Mexicana',
-      descripcion: 'Tacos mexicanos tradicionales',
-      dificultad: 'Medio',
-      tiempo: '35 min',
-      servings: 4,
-      pasos: ['Paso 1', 'Paso 2', 'Paso 3'],
-      ingredientes: ['Carne', 'Tortillas', 'Cebolla'],
-      comentarios: <Comentario>[],
-      valoracion: 0.0,
-    ),
-    Recipe(
-      nombre: 'Lasaña Boloñesa',
-      categoria: 'Italiana',
-      descripcion: 'Lasaña casera con salsa boloñesa',
-      dificultad: 'Medio',
-      tiempo: '50 min',
-      servings: 6,
-      pasos: ['Paso 1', 'Paso 2', 'Paso 3', 'Paso 4'],
-      ingredientes: ['Pasta', 'Carne molida', 'Tomate', 'Queso'],
-      comentarios: <Comentario>[],
-      valoracion: 0.0,
-    ),
-  ];
+  final List<Recipe> _misRecetas = [];
 
   List<Recipe> get _recetasFiltradas {
-    return _recetasGuardadas.where((receta) {
+    return _misRecetas.where((receta) {
       final matchesSearch = receta.nombre.toLowerCase().contains(
         _searchQuery.toLowerCase(),
       );
@@ -200,7 +127,7 @@ class _PantallaMisRecetasState extends State<PantallaMisRecetas> {
                             _infoItem(
                               icon: Icons.people,
                               label: 'Servings',
-                              valor: '${receta.servings}',
+                              valor: '${receta.comensales}',
                             ),
                             _infoItem(
                               icon: Icons.restaurant,
@@ -305,13 +232,15 @@ class _PantallaMisRecetasState extends State<PantallaMisRecetas> {
                       showModalBottomSheet(
                         context: context,
                         isScrollControlled: true,
+                        backgroundColor: Colors.white,
+                        shape: const RoundedRectangleBorder(
+                          borderRadius: BorderRadius.vertical(
+                            top: Radius.circular(20),
+                          ),
+                        ),
                         builder: (ctx) => ComentariosPopup(
                           recipe: receta,
                           currentUserName: currentUserName,
-                          onAddComentario: (comment) {
-                            // opcional: enviar al servidor o notificar ViewModel
-                            // ejemplo: print('Comentario agregado: ${comment.text}');
-                          },
                         ),
                       );
                     },
@@ -378,9 +307,9 @@ class _PantallaMisRecetasState extends State<PantallaMisRecetas> {
 
     // CASO 1: Nueva lógica (Viene un nombre para abrir)
     if (args is String && !_dialogoAbiertoGuardados) {
-      // Buscamos la receta por nombre en tu lista local _recetasGuardadas
+      // Buscamos la receta por nombre en tu lista local _misRecetas
       try {
-        final recetaAbrevar = _recetasGuardadas.firstWhere(
+        final recetaAbrevar = _misRecetas.firstWhere(
           (r) => r.nombre == args,
         );
         _dialogoAbiertoGuardados = true;
@@ -551,7 +480,7 @@ class _PantallaMisRecetasState extends State<PantallaMisRecetas> {
   }
 
   Widget _buildHomeContent() {
-    if (_recetasGuardadas.isEmpty) {
+    if (_misRecetas.isEmpty) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -582,9 +511,9 @@ class _PantallaMisRecetasState extends State<PantallaMisRecetas> {
               mainAxisSpacing: 12,
               childAspectRatio: cardWidth / cardHeight,
             ),
-            itemCount: _recetasGuardadas.length,
+            itemCount: _misRecetas.length,
             itemBuilder: (context, index) {
-              final receta = _recetasGuardadas[index];
+              final receta = _misRecetas[index];
               return RecipeCard(
                 nombre: receta.nombre,
                 categoria: receta.categoria,

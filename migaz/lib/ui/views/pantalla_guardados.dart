@@ -32,80 +32,7 @@ class _PantallaGuardadosState extends State<PantallaGuardados> {
     'Mexicana',
   ];
 
-  final List<Recipe> _recetasGuardadas = [
-    Recipe(
-      nombre: 'Paella Valenciana',
-      categoria: 'Española',
-      descripcion: 'Deliciosa paella tradicional valenciana',
-      dificultad: 'Medio',
-      tiempo: '45 min',
-      servings: 4,
-      pasos: ['Paso 1', 'Paso 2', 'Paso 3'],
-      ingredientes: ['Arroz', 'Azafrán', 'Pollo'],
-      comentarios: <Comentario>[],
-      valoracion: 0.0,
-    ),
-    Recipe(
-      nombre: 'Tortilla de Patatas',
-      categoria: 'Española',
-      descripcion: 'Tortilla española clásica',
-      dificultad: 'Fácil',
-      tiempo: '20 min',
-      servings: 3,
-      pasos: ['Paso 1', 'Paso 2'],
-      ingredientes: ['Patatas', 'Huevos', 'Cebolla'],
-      comentarios: <Comentario>[],
-      valoracion: 0.0,
-    ),
-    Recipe(
-      nombre: 'Pizza Margarita',
-      categoria: 'Italiana',
-      descripcion: 'Pizza italiana auténtica',
-      dificultad: 'Medio',
-      tiempo: '30 min',
-      servings: 2,
-      pasos: ['Paso 1', 'Paso 2', 'Paso 3'],
-      ingredientes: ['Harina', 'Tomate', 'Mozzarella'],
-      comentarios: <Comentario>[],
-      valoracion: 0.0,
-    ),
-    Recipe(
-      nombre: 'Sushi Roll',
-      categoria: 'Japonesa',
-      descripcion: 'Sushi roll casero',
-      dificultad: 'Difícil',
-      tiempo: '40 min',
-      servings: 2,
-      pasos: ['Paso 1', 'Paso 2', 'Paso 3', 'Paso 4'],
-      ingredientes: ['Arroz', 'Nori', 'Pepino', 'Aguacate'],
-      comentarios: <Comentario>[],
-      valoracion: 0.0,
-    ),
-    Recipe(
-      nombre: 'Tacos al Pastor',
-      categoria: 'Mexicana',
-      descripcion: 'Tacos mexicanos tradicionales',
-      dificultad: 'Medio',
-      tiempo: '35 min',
-      servings: 4,
-      pasos: ['Paso 1', 'Paso 2', 'Paso 3'],
-      ingredientes: ['Carne', 'Tortillas', 'Cebolla'],
-      comentarios: <Comentario>[],
-      valoracion: 0.0,
-    ),
-    Recipe(
-      nombre: 'Lasaña Boloñesa',
-      categoria: 'Italiana',
-      descripcion: 'Lasaña casera con salsa boloñesa',
-      dificultad: 'Medio',
-      tiempo: '50 min',
-      servings: 6,
-      pasos: ['Paso 1', 'Paso 2', 'Paso 3', 'Paso 4'],
-      ingredientes: ['Pasta', 'Carne molida', 'Tomate', 'Queso'],
-      comentarios: <Comentario>[],
-      valoracion: 0.0,
-    ),
-  ];
+  final List<Recipe> _recetasGuardadas = [];
 
   List<Recipe> get _recetasFiltradas {
     return _recetasGuardadas.where((receta) {
@@ -200,7 +127,7 @@ class _PantallaGuardadosState extends State<PantallaGuardados> {
                             _infoItem(
                               icon: Icons.people,
                               label: 'Servings',
-                              valor: '${receta.servings}',
+                              valor: '${receta.comensales}',
                             ),
                             _infoItem(
                               icon: Icons.restaurant,
@@ -305,13 +232,15 @@ class _PantallaGuardadosState extends State<PantallaGuardados> {
                       showModalBottomSheet(
                         context: context,
                         isScrollControlled: true,
+                        backgroundColor: Colors.white,
+                        shape: const RoundedRectangleBorder(
+                          borderRadius: BorderRadius.vertical(
+                            top: Radius.circular(20),
+                          ),
+                        ),
                         builder: (ctx) => ComentariosPopup(
                           recipe: receta,
                           currentUserName: currentUserName,
-                          onAddComentario: (comment) {
-                            // opcional: enviar al servidor o notificar ViewModel
-                            // ejemplo: print('Comentario agregado: ${comment.text}');
-                          },
                         ),
                       );
                     },

@@ -102,7 +102,7 @@ class _DialogoCrearRecetaState extends State<DialogoCrearReceta> {
       categoria: _categoriaSeleccionada,
       descripcion: _descripcionController.text.trim(),
       dificultad: _dificultadSeleccionada,
-      servings: servings,
+      comensales: servings,
       tiempo: tiempo,
       pasos: List<String>.from(_pasos),
       ingredientes: List<String>.from(_ingredientes),
