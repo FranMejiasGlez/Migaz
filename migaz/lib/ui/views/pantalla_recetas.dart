@@ -40,12 +40,26 @@ class _PantallaRecetasViewState extends State<_PantallaRecetasView> {
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
   String _selectedFilter = 'Todos';
-
+  /*
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<HomeViewModel>().cargarHome();
+    });
+  }
+*/
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      // ✅ Añadir async
+      final homeViewModel = context.read<HomeViewModel>();
+      await homeViewModel.cargarHome(); // ✅ Esperar a que termine
+
+      // ✅ NUEVO: Cargar guardadas DESPUÉS de cargar home
+      await homeViewModel.cargarGuardadas('usuario_demo');
     });
   }
 

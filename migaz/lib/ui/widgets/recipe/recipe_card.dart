@@ -17,7 +17,7 @@ class RecipeCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // ✅ NUEVO: Buscar la receta actualizada en el HomeViewModel
+    // ✅ Consumer que busca la receta actualizada
     return Consumer<HomeViewModel>(
       builder: (context, homeViewModel, child) {
         // Intentar encontrar la versión actualizada de la receta

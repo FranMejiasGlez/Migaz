@@ -15,6 +15,8 @@ class Recipe {
   final String? user; // ✅ AÑADIDO
   final String? youtube; // ✅ AÑADIDO
   final int? cantidadVotos; // ✅ AÑADIDO
+  final String? createdAt;
+  bool isGuardada;
 
   Recipe({
     this.id,
@@ -32,6 +34,8 @@ class Recipe {
     this.user, // ✅ AÑADIDO
     this.youtube, // ✅ AÑADIDO
     this.cantidadVotos, // ✅ AÑADIDO
+    this.createdAt,
+    this.isGuardada = false,
   });
 
   // ✅ MÉTODO AUXILIAR: Convertir dificultad texto a número
@@ -122,7 +126,13 @@ class Recipe {
       user: json['user'], // ✅ AÑADIDO
       youtube: json['youtube'], // ✅ AÑADIDO
       cantidadVotos: json['cantidadVotos'], // ✅ AÑADIDO
+      createdAt: json['createdAt'],
+      isGuardada: false, //Se actualizara despues
     );
+  }
+  // ✅ NUEVO:  Método para verificar si es del usuario actual
+  bool esMia(String currentUser) {
+    return user?.toLowerCase() == currentUser.toLowerCase();
   }
 
   static int _parseIntSafely(dynamic value) {
@@ -151,6 +161,7 @@ class Recipe {
       'promedio': valoracion, // ✅ CORREGIDO
       if (user != null) 'user': user, // ✅ AÑADIDO
       if (youtube != null) 'youtube': youtube, // ✅ AÑADIDO
+      if (createdAt != null) 'createdAt': createdAt,
     };
   }
 

@@ -219,7 +219,7 @@ class _PantallaMisRecetasState extends State<PantallaMisRecetas> {
     );
   }
 
-  /// ✅ ACTUALIZADO: Grid que escucha cambios del HomeViewModel
+  /// ✅ ACTUALIZADO:  Grid simplificado (RecipeCard maneja el Consumer)
   Widget _buildGridView() {
     final recetasAMostrar = _hasActiveFilters ? _recetasFiltradas : _misRecetas;
 
@@ -237,34 +237,22 @@ class _PantallaMisRecetasState extends State<PantallaMisRecetas> {
 
           return Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-            child: Consumer<HomeViewModel>(
-              // ✅ AÑADIDO:  Consumer
-              builder: (context, homeViewModel, child) {
-                return GridView.builder(
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: RecipeConstants.gridCrossAxisCount,
-                    crossAxisSpacing: RecipeConstants.gridCrossAxisSpacing,
-                    mainAxisSpacing: RecipeConstants.gridMainAxisSpacing,
-                    childAspectRatio: cardWidth / cardHeight,
-                  ),
-                  itemCount: recetasAMostrar.length,
-                  itemBuilder: (context, index) {
-                    final receta = recetasAMostrar[index];
+            child: GridView.builder(
+              physics: const AlwaysScrollableScrollPhysics(),
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: RecipeConstants.gridCrossAxisCount,
+                crossAxisSpacing: RecipeConstants.gridCrossAxisSpacing,
+                mainAxisSpacing: RecipeConstants.gridMainAxisSpacing,
+                childAspectRatio: cardWidth / cardHeight,
+              ),
+              itemCount: recetasAMostrar.length,
+              itemBuilder: (context, index) {
+                final receta = recetasAMostrar[index];
 
-                    // ✅ CLAVE: Buscar la receta actualizada en HomeViewModel
-                    final recetaActualizada = homeViewModel.todasLasRecetas
-                        .firstWhere(
-                          (r) => r.id == receta.id,
-                          orElse: () => receta,
-                        );
-
-                    return RecipeCard(
-                      recipe: recetaActualizada, // ✅ Usa la versión actualizada
-                      onTap: () =>
-                          RecipeDetailDialog.show(context, recetaActualizada),
-                    );
-                  },
+                // ✅ RecipeCard se encarga de buscar la versión actualizada
+                return RecipeCard(
+                  recipe: receta,
+                  onTap: () => RecipeDetailDialog.show(context, receta),
                 );
               },
             ),
