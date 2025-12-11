@@ -4,11 +4,11 @@ import 'package:migaz/viewmodels/base_viewmodel.dart';
 
 class ComentarioViewModel extends BaseViewModel {
   final ComentarioRepository _comentarioRepository;
-  
+
   List<Comentario> _comentarios = [];
 
   ComentarioViewModel({ComentarioRepository? comentarioRepository})
-      : _comentarioRepository = comentarioRepository ?? ComentarioRepository();
+    : _comentarioRepository = comentarioRepository ?? ComentarioRepository();
 
   List<Comentario> get comentarios => _comentarios;
 
@@ -34,22 +34,25 @@ class ComentarioViewModel extends BaseViewModel {
       _comentarios.add(nuevoComentario);
       return true;
     }, errorPrefix: 'Error al crear comentario');
-    
-    return result ??  false;
+
+    return result ?? false;
   }
 
   /// Editar comentario
   Future<bool> editarComentario(String id, String nuevoTexto) async {
     final result = await runAsync(() async {
-      final comentarioEditado = await _comentarioRepository. editar(id, nuevoTexto);
-      
+      final comentarioEditado = await _comentarioRepository.editar(
+        id,
+        nuevoTexto,
+      );
+
       final index = _comentarios.indexWhere((c) => c.id == id);
       if (index != -1) {
         _comentarios[index] = comentarioEditado;
       }
       return true;
     }, errorPrefix: 'Error al editar comentario');
-    
+
     return result ?? false;
   }
 
@@ -57,10 +60,10 @@ class ComentarioViewModel extends BaseViewModel {
   Future<bool> eliminarComentario(String id) async {
     final result = await runAsync(() async {
       await _comentarioRepository.eliminar(id);
-      _comentarios. removeWhere((c) => c.id == id);
+      _comentarios.removeWhere((c) => c.id == id);
       return true;
-    }, errorPrefix:  'Error al eliminar comentario');
-    
-    return result ??  false;
+    }, errorPrefix: 'Error al eliminar comentario');
+
+    return result ?? false;
   }
 }

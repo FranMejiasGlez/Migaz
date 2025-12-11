@@ -21,7 +21,7 @@ class RecipeListViewModel extends BaseViewModel {
     'Japonesa',
     'Mexicana',
   ];
-
+  final List<String> dificultad = ['Todos', 'Facil', 'Medio', 'Dificil'];
   // Getters
   List<Recipe> get recipes => _recipes;
   String get searchQuery => _searchQuery;

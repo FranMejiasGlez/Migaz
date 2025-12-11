@@ -62,6 +62,7 @@ class RecetaRepository {
         ingredientes: receta.ingredientes,
         imagenes: imagenes,
       );
+
       return Recipe.fromJson(json);
     } catch (e) {
       throw Exception('Error al crear receta: $e');

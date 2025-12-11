@@ -1,7 +1,7 @@
-import 'package:migaz/config/routes.dart';
+import 'package:migaz/core/config/api_config.dart';
+import 'package:migaz/core/config/routes.dart';
 import 'package:migaz/data/models/recipe.dart';
-import 'package:migaz/core/utils/network. dart';
-import 'package: migaz/ui/widgets/recipe/user_avatar.dart';
+import 'package:migaz/ui/widgets/recipe/user_avatar.dart';
 import 'package:migaz/ui/widgets/recipe/ventana_crear_receta.dart';
 import 'package:flutter/material.dart';
 import 'package:migaz/core/utils/app_theme.dart';
@@ -57,19 +57,20 @@ class _PantallaRecetasViewState extends State<_PantallaRecetasView> {
   @override
   Widget build(BuildContext context) {
     return Consumer<RecipeListViewModel>(
-      builder:  (context, recipeListViewModel, child) {
+      builder: (context, recipeListViewModel, child) {
         return Scaffold(
           body: Container(
             decoration: BoxDecoration(gradient: AppTheme.appGradient),
-            child:  SafeArea(
-              child:  Column(
+            child: SafeArea(
+              child: Column(
                 children: [
                   _buildHeader(context, recipeListViewModel),
                   _buildSearchSection(recipeListViewModel),
                   const SizedBox(height: 16),
                   Expanded(
-                    child: recipeListViewModel.searchQuery.isNotEmpty ||
-                            recipeListViewModel. selectedFilter != 'Todos'
+                    child:
+                        recipeListViewModel.searchQuery.isNotEmpty ||
+                            recipeListViewModel.selectedFilter != 'Todos'
                         ? _buildSearchResults(recipeListViewModel)
                         : _buildHomeContent(), // ✅ Aquí mostramos las secciones
                   ),
@@ -85,7 +86,7 @@ class _PantallaRecetasViewState extends State<_PantallaRecetasView> {
 
   Widget _buildHeader(BuildContext context, RecipeListViewModel viewModel) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24. 0, vertical: 16.0),
+      padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
@@ -108,13 +109,13 @@ class _PantallaRecetasViewState extends State<_PantallaRecetasView> {
                   horizontal: 12,
                   vertical: 10,
                 ),
-                shape:  RoundedRectangleBorder(
-                  borderRadius:  BorderRadius.circular(20),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
                 ),
                 elevation: 5,
               ),
-              child:  const FittedBox(
-                fit:  BoxFit.scaleDown,
+              child: const FittedBox(
+                fit: BoxFit.scaleDown,
                 child: Text(
                   'Biblioteca',
                   style: TextStyle(fontWeight: FontWeight.bold),
@@ -131,15 +132,12 @@ class _PantallaRecetasViewState extends State<_PantallaRecetasView> {
                 'Nombre de usuario',
                 textAlign: TextAlign.center,
                 overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               ),
             ),
           ),
           UserAvatar(
-            imageUrl: 
+            imageUrl:
                 'https://raw.githubusercontent.com/FranMejiasGlez/TallerFlutter/main/sandbox_fran/imperativo/img/Logo.png',
             onTap: () => Navigator.pushNamed(context, AppRoutes.perfilUser),
           ),
@@ -180,7 +178,7 @@ class _PantallaRecetasViewState extends State<_PantallaRecetasView> {
   Widget _buildSearchResults(RecipeListViewModel viewModel) {
     if (viewModel.filteredRecipes.isEmpty) {
       return Center(
-        child:  Column(
+        child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(Icons.search_off, size: 64, color: Colors.grey[600]),
@@ -193,58 +191,49 @@ class _PantallaRecetasViewState extends State<_PantallaRecetasView> {
 
     return ListView.builder(
       padding: const EdgeInsets.symmetric(horizontal: 16),
-      itemCount: viewModel. filteredRecipes.length,
+      itemCount: viewModel.filteredRecipes.length,
       itemBuilder: (context, index) {
-        final receta = viewModel.filteredRecipes[index];
+        final receta = viewModel.filteredRecipes[index]; // ✅ Ahora es Recipe
         return RecipeCard(
-          nombre: receta['nombre'],
-          categoria: receta['categoria'],
-          valoracion: receta['valoracion'],
-          onTap: () => print('Receta:  ${receta['nombre']}'),
+          nombre: receta.nombre, // ✅ Acceso directo a propiedades
+          categoria: receta.categoria,
+          valoracion: receta.valoracion,
+          onTap: () => print('Receta:  ${receta.nombre}'),
         );
       },
     );
   }
 
-  // ✅ NUEVO: Construir contenido de home usando HomeViewModel
+  //Construir contenido de home usando HomeViewModel
   Widget _buildHomeContent() {
     return Consumer<HomeViewModel>(
       builder: (context, homeViewModel, child) {
         // Mostrar loading
         if (homeViewModel.isLoading) {
-          return const Center(
-            child: CircularProgressIndicator(),
-          );
+          return const Center(child: CircularProgressIndicator());
         }
 
         // Mostrar error
         if (homeViewModel.hasError) {
           return Center(
-            child:  Padding(
+            child: Padding(
               padding: const EdgeInsets.all(24.0),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(
-                    Icons.error_outline,
-                    size: 64,
-                    color: Colors. red,
-                  ),
-                  const SizedBox(height:  16),
+                  const Icon(Icons.error_outline, size: 64, color: Colors.red),
+                  const SizedBox(height: 16),
                   Text(
-                    homeViewModel.errorMessage ??  'Error desconocido',
-                    style: const TextStyle(
-                      fontSize: 16,
-                      color: Colors.red,
-                    ),
+                    homeViewModel.errorMessage ?? 'Error desconocido',
+                    style: const TextStyle(fontSize: 16, color: Colors.red),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 24),
-                  ElevatedButton. icon(
-                    onPressed:  () => homeViewModel.cargarHome(),
+                  ElevatedButton.icon(
+                    onPressed: () => homeViewModel.cargarHome(),
                     icon: const Icon(Icons.refresh),
                     label: const Text('Reintentar'),
-                    style:  ElevatedButton.styleFrom(
+                    style: ElevatedButton.styleFrom(
                       backgroundColor: AppTheme.primaryYellow,
                       foregroundColor: Colors.black,
                     ),
@@ -258,9 +247,9 @@ class _PantallaRecetasViewState extends State<_PantallaRecetasView> {
         // Mostrar contenido
         return RefreshIndicator(
           onRefresh: homeViewModel.refrescarHome,
-          child:  SingleChildScrollView(
+          child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
-            child:  Padding(
+            child: Padding(
               padding: const EdgeInsets.all(8),
               child: Column(
                 children: [
@@ -294,14 +283,11 @@ class _PantallaRecetasViewState extends State<_PantallaRecetasView> {
       child: Container(
         width: 200,
         decoration: BoxDecoration(
-          color: const Color. fromARGB(255, 243, 243, 243).withOpacity(0.5),
+          color: const Color.fromARGB(255, 243, 243, 243).withOpacity(0.5),
           borderRadius: BorderRadius.circular(5),
           border: Border.all(),
         ),
-        padding: const EdgeInsets.symmetric(
-          horizontal: 16,
-          vertical: 8,
-        ),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         child: Text(
           title,
           textAlign: TextAlign.center,
@@ -314,14 +300,11 @@ class _PantallaRecetasViewState extends State<_PantallaRecetasView> {
   Widget _buildRecipeCarousel(List<Recipe> recetas, {String? emptyMessage}) {
     if (recetas.isEmpty) {
       return Center(
-        child:  Padding(
+        child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Text(
             emptyMessage ?? 'No hay recetas disponibles',
-            style: TextStyle(
-              color: Colors.grey[600],
-              fontSize: 14,
-            ),
+            style: TextStyle(color: Colors.grey[600], fontSize: 14),
           ),
         ),
       );
@@ -329,7 +312,7 @@ class _PantallaRecetasViewState extends State<_PantallaRecetasView> {
 
     return RecipeCarousel(
       title: '',
-      recipes: recetas. map((recipe) => recipe.nombre).toList(),
+      recipes: recetas.map((recipe) => recipe.nombre).toList(),
       onRecipeTap: (index) {
         final receta = recetas[index];
         print('Receta seleccionada: ${receta.nombre}');
@@ -345,59 +328,62 @@ class _PantallaRecetasViewState extends State<_PantallaRecetasView> {
   ) {
     return Padding(
       padding: const EdgeInsets.all(20),
-      child:  Align(
+      child: Align(
         alignment: Alignment.centerRight,
         child: ElevatedButton(
-          onPressed:  () async {
-            final Recipe?  nueva = await showDialog<Recipe>(
+          onPressed: () async {
+            final Recipe? nueva = await showDialog<Recipe>(
               context: context,
               builder: (context) => DialogoCrearReceta(
                 categorias: viewModel.categories
                     .where((c) => c != 'Todos')
                     .toList(),
-                dificultades: viewModel.difficultyLevels,
+                dificultades: viewModel.dificultad,
               ),
             );
 
-            if (nueva == null) return;
+            if (nueva == null) return; // usuario canceló
 
-            try {
-              await saveRecipeToServer(nueva);
+            // ✅ USAR VIEWMODEL en lugar de saveRecipeToServer
+            final exito = await viewModel.crearReceta(nueva);
 
-              if (context.mounted) {
+            if (context.mounted) {
+              if (exito) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Receta guardada en servidor')),
+                  const SnackBar(
+                    content: Text('✅ Receta guardada en servidor'),
+                    backgroundColor: Colors.green,
+                  ),
                 );
-                
-                // ✅ Refrescar home después de crear receta
-                context.read<HomeViewModel>().refrescarHome();
-              }
-            } catch (e) {
-              if (context.mounted) {
-                ScaffoldMessenger. of(context).showSnackBar(
-                  SnackBar(content: Text('Error guardando:  $e')),
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      viewModel.errorMessage ?? 'Error al guardar receta',
+                    ),
+                    backgroundColor: Colors.red,
+                  ),
                 );
               }
             }
-            viewModel.addRecipe(nueva);
           },
-          style:  ElevatedButton.styleFrom(
+          style: ElevatedButton.styleFrom(
             backgroundColor: Colors.transparent,
             foregroundColor: Colors.black,
             elevation: 0,
-            padding:  EdgeInsets.zero,
+            padding: EdgeInsets.zero,
             shape: RoundedRectangleBorder(
-              borderRadius:  BorderRadius.circular(30),
+              borderRadius: BorderRadius.circular(30),
             ),
           ),
           child: Container(
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(30),
-              boxShadow:  [
+              boxShadow: [
                 BoxShadow(
                   color: Colors.black.withOpacity(0.15),
-                  blurRadius:  8,
-                  offset:  const Offset(0, 4),
+                  blurRadius: 8,
+                  offset: const Offset(0, 4),
                 ),
               ],
             ),
@@ -427,10 +413,10 @@ class _PantallaRecetasViewState extends State<_PantallaRecetasView> {
                   ),
                   child: const Text(
                     'Crear nueva receta',
-                    style:  TextStyle(
-                      fontSize:  16,
+                    style: TextStyle(
+                      fontSize: 16,
                       fontWeight: FontWeight.bold,
-                      color: Colors. black,
+                      color: Colors.black,
                     ),
                   ),
                 ),

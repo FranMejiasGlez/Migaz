@@ -134,7 +134,7 @@ class _PantallaGuardadosState extends State<PantallaGuardados> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  if (receta.imageUrl != null && receta.imageUrl!.isNotEmpty)
+                  if (receta.imagenes != null && receta.imagenes!.isNotEmpty)
                     Center(
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(12),
