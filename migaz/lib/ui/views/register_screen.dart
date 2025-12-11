@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../widgets/auth/auth_logo.dart';
 import '../widgets/auth/auth_form_field.dart';
-import '../../core/utils/gradient_scaffold.dart';
+import '../../core/theme/gradient_scaffold.dart';
 import '../../core/utils/responsive_helper.dart';
 import '../../core/config/routes.dart';
 

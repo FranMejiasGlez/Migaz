@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
-import 'package:migaz/core/utils/app_theme.dart';
+import 'package:migaz/core/theme/app_theme.dart';
 import 'package:migaz/data/models/recipe.dart'; // ✅ IMPORTAR
 
 class RecipeCarousel extends StatelessWidget {

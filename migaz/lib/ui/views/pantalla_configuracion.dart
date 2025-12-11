@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:migaz/ui/widgets/recipe/user_avatar.dart';
 
 class PantallaConfiguracion extends StatelessWidget {
   const PantallaConfiguracion({Key? key}) : super(key: key);

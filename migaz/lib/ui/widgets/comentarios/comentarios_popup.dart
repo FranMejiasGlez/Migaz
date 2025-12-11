@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:migaz/data/models/recipe.dart';
-import 'package:migaz/data/models/comentario.dart';
 import 'package:migaz/viewmodels/comentario_viewmodel.dart';
 
 class ComentariosPopup extends StatefulWidget {

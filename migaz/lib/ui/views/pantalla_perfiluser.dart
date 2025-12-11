@@ -15,7 +15,6 @@ class _PantallaPerfilUserState extends State<PantallaPerfilUser> {
 }*/
 import 'package:migaz/core/config/routes.dart';
 import 'package:flutter/material.dart';
-import 'package:migaz/core/utils/app_theme.dart';
 import 'package:migaz/ui/widgets/recipe/user_avatar.dart';
 
 // ---------------------------------------------------------------------------
@@ -209,12 +208,10 @@ class _PantallaPerfilUserState extends State<PantallaPerfilUser> {
                             const SizedBox(height: 20),
                             ElevatedButton(
                               onPressed: () {
-                                
                                 // Pasar la lista de recetas cuando navegues a biblioteca
                                 Navigator.pushNamed(
                                   context,
                                   AppRoutes.biblioteca,
-                                  
                                 );
                               },
                               style: ElevatedButton.styleFrom(
