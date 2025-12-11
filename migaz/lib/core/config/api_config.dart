@@ -6,7 +6,9 @@ class ApiConfig {
   static const String recetasEndpoint = '/recetas';
   static String recetaByIdEndpoint(String id) => '/recetas/$id';
   static String valorarRecetaEndpoint(String id) => '/recetas/$id/valorar';
-
+  static const String recetasMasValoradasEndpoint = '/recetas/mas-valoradas';
+  static const String recetasMasNuevasEndpoint = '/recetas/mas-nuevas';
+  
   // Endpoints de Comentarios
   static const String comentariosEndpoint = '/comentarios';
   static String comentariosByRecetaEndpoint(String recetaId) =>

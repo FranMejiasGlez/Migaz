@@ -5,6 +5,7 @@ import 'ui/widgets/auth/user_credentials.dart';
 import 'viewmodels/auth_viewmodel.dart';
 import 'viewmodels/recipe_list_viewmodel.dart';
 import 'viewmodels/comentario_viewmodel.dart';
+import 'viewmodels/home_viewmodel.dart';
 
 void main() {
   runApp(
@@ -14,6 +15,7 @@ void main() {
         ChangeNotifierProvider(create: (_) => AuthViewModel()),
         ChangeNotifierProvider(create: (_) => RecipeListViewModel()),
         ChangeNotifierProvider(create: (_) => ComentarioViewModel()),
+        ChangeNotifierProvider(create: (_) => HomeViewModel()),
       ],
       child: const MyApp(),
     ),

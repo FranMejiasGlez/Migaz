@@ -14,6 +14,58 @@ class RecetaService {
     return response as List<dynamic>;
   }
 
+  /// Obtener recetas más valoradas
+  Future<List<dynamic>> obtenerMasValoradas({int limit = 10}) async {
+    // OPCIÓN 1: Si tienes endpoint específico en backend
+    try {
+      final response = await _apiService.get(
+        '${ApiConfig.recetasMasValoradasEndpoint}?limit=$limit',
+      );
+      return response as List<dynamic>;
+    } catch (e) {
+      // OPCIÓN 2: Si NO tienes endpoint, obtener todas y filtrar localmente
+      final response = await _apiService.get(ApiConfig.recetasEndpoint);
+      final List<dynamic> recetas = response as List<dynamic>;
+
+      // Ordenar por valoración descendente
+      recetas.sort(
+        (a, b) => ((b['valoracion'] ?? 0) as num).compareTo(
+          (a['valoracion'] ?? 0) as num,
+        ),
+      );
+
+      return recetas.take(limit).toList();
+    }
+  }
+
+  /// Obtener recetas más nuevas
+  Future<List<dynamic>> obtenerMasNuevas({int limit = 10}) async {
+    // OPCIÓN 1: Si tienes endpoint específico en backend
+    try {
+      final response = await _apiService.get(
+        '${ApiConfig.recetasMasNuevasEndpoint}? limit=$limit',
+      );
+      return response as List<dynamic>;
+    } catch (e) {
+      // OPCIÓN 2: Si NO tienes endpoint, obtener todas y filtrar localmente
+      final response = await _apiService.get(ApiConfig.recetasEndpoint);
+      final List<dynamic> recetas = response as List<dynamic>;
+
+      // Ordenar por fecha de creación descendente
+      recetas.sort((a, b) {
+        final fechaA =
+            DateTime.tryParse(a['createdAt']?.toString() ?? '') ??
+            DateTime(1970);
+        final fechaB =
+            DateTime.tryParse(b['createdAt']?.toString() ?? '') ??
+            DateTime(1970);
+        return fechaB.compareTo(fechaA);
+      });
+
+      return recetas.take(limit).toList();
+    }
+  }
+
   /// Obtener receta por ID
   Future<Map<String, dynamic>> obtenerPorId(String id) async {
     final response = await _apiService.get(ApiConfig.recetaByIdEndpoint(id));

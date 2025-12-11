@@ -18,6 +18,26 @@ class RecetaRepository {
     }
   }
 
+  /// Obtener recetas más valoradas
+  Future<List<Recipe>> obtenerMasValoradas({int limit = 10}) async {
+    try {
+      final jsonList = await _recetaService.obtenerMasValoradas(limit: limit);
+      return jsonList.map((json) => Recipe.fromJson(json)).toList();
+    } catch (e) {
+      throw Exception('Error al obtener recetas más valoradas: $e');
+    }
+  }
+
+  /// Obtener recetas más nuevas
+  Future<List<Recipe>> obtenerMasNuevas({int limit = 10}) async {
+    try {
+      final jsonList = await _recetaService.obtenerMasNuevas(limit: limit);
+      return jsonList.map((json) => Recipe.fromJson(json)).toList();
+    } catch (e) {
+      throw Exception('Error al obtener recetas más nuevas: $e');
+    }
+  }
+
   /// Obtener receta por ID
   Future<Recipe> obtenerPorId(String id) async {
     try {
