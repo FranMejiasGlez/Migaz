@@ -157,8 +157,7 @@ class _PantallaPerfilUserState extends State<PantallaPerfilUser> {
     return Scaffold(
       body: Stack(
         children: [
-          Container(decoration: BoxDecoration(gradient: AppTheme.appGradient)),
-
+          //Container(decoration: BoxDecoration(gradient: AppTheme.appGradient)),
           SafeArea(
             child: Column(
               children: [
@@ -170,66 +169,72 @@ class _PantallaPerfilUserState extends State<PantallaPerfilUser> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 140),
-                        child: ElevatedButton(
-                          onPressed: () =>
-                              Navigator.pushNamed(context, AppRoutes.home),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFFFEC601),
-                            foregroundColor: Colors.black,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 10,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            elevation: 5,
-                          ),
-                          child: const FittedBox(
-                            fit: BoxFit.scaleDown,
-                            child: Icon(Icons.arrow_back),
-                          ),
+                      SizedBox(
+                        child: IconButton(
+                          icon: const Icon(Icons.arrow_back),
+                          onPressed: () {
+                            Navigator.pushNamed(context, AppRoutes.home);
+                          },
                         ),
                       ),
                       Padding(
                         padding: const EdgeInsets.only(left: 40.0),
                         child: Column(
                           children: [
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 40,
-                                vertical: 12,
-                              ),
-                              child: const Text(
-                                'Tu Perfil',
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
+                            const SizedBox(width: 10),
+                            SizedBox(
+                              width: 200,
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: const Color(
+                                    0xFFEA7317,
+                                  ).withOpacity(0.5),
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 8,
+                                ),
+                                child: Text(
+                                  'Tu Perfil',
+                                  textAlign: TextAlign.center,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
                               ),
                             ),
                             const SizedBox(height: 20),
-                            ElevatedButton.icon(
-                              onPressed: () => Navigator.pushNamed(
-                                context,
-                                AppRoutes.biblioteca,
-                              ),
-                              label: const Text('Biblioteca'),
+                            ElevatedButton(
+                              onPressed: () {
+                                
+                                // Pasar la lista de recetas cuando navegues a biblioteca
+                                Navigator.pushNamed(
+                                  context,
+                                  AppRoutes.biblioteca,
+                                  
+                                );
+                              },
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFFFEC601),
+                                backgroundColor: Color(0xFF25CCAD),
                                 foregroundColor: Colors.black,
                                 padding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
+                                  horizontal: 20,
                                   vertical: 10,
                                 ),
                                 shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
+                                  borderRadius: BorderRadius.circular(20),
                                 ),
-                                elevation: 3,
-                                minimumSize: const Size(80, 36),
+                                elevation: 5,
+                              ),
+                              child: const FittedBox(
+                                fit: BoxFit.scaleDown,
+                                child: Text(
+                                  'Biblioteca',
+                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                ),
                               ),
                             ),
                           ],
