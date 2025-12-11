@@ -1,4 +1,4 @@
-import 'package:migaz/config/routes.dart';
+import 'package:migaz/core/config/routes.dart';
 import 'package:migaz/ui/widgets/recipe/user_avatar.dart';
 import 'package:migaz/data/models/recipe.dart';
 import 'package:flutter/material.dart';

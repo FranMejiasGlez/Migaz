@@ -1,4 +1,4 @@
-import 'package:migaz/config/routes.dart';
+import 'package:migaz/core/config/routes.dart';
 import 'package:migaz/data/models/comentario.dart';
 import 'package:migaz/data/models/recipe.dart';
 import 'package:migaz/ui/widgets/auth/user_credentials.dart';

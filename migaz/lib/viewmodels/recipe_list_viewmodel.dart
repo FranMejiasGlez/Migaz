@@ -1,12 +1,17 @@
+import 'dart:io';
 import 'package:migaz/data/models/recipe.dart';
+import 'package:migaz/data/repositories/receta_repository.dart';
 import 'package:migaz/viewmodels/base_viewmodel.dart';
 
-/// ViewModel para la lista de recetas
-/// Maneja el estado y lógica de negocio de la pantalla de recetas
 class RecipeListViewModel extends BaseViewModel {
+  final RecetaRepository _recetaRepository;
+
   List<Recipe> _recipes = [];
   String _searchQuery = '';
   String _selectedFilter = 'Todos';
+
+  RecipeListViewModel({RecetaRepository? recetaRepository})
+    : _recetaRepository = recetaRepository ?? RecetaRepository();
 
   // Categorías disponibles
   final List<String> categories = [
@@ -17,75 +22,108 @@ class RecipeListViewModel extends BaseViewModel {
     'Mexicana',
   ];
 
-  // Niveles de dificultad
-  final List<String> difficultyLevels = [
-    'Todos los niveles',
-    'fácil',
-    'Medio',
-    'Difícil',
-  ];
-
-  // Datos de ejemplo (en producción vendría de un servicio/repositorio)
-  final List<Map<String, dynamic>> _allRecipesData = [
-    {'nombre': 'Paella Valenciana', 'categoria': 'Española', 'valoracion': 4.8},
-    {'nombre': 'Tortilla de Patatas', 'categoria': 'Española', 'valoracion': 4.5},
-    {'nombre': 'Pizza Margarita', 'categoria': 'Italiana', 'valoracion': 4.7},
-    {'nombre': 'Sushi Roll', 'categoria': 'Japonesa', 'valoracion': 4.9},
-    {'nombre': 'Tacos al Pastor', 'categoria': 'Mexicana', 'valoracion': 4.6},
-    {'nombre': 'Lasaña Boloñesa', 'categoria': 'Italiana', 'valoracion': 4.4},
-    {'nombre': 'Ramen', 'categoria': 'Japonesa', 'valoracion': 4.8},
-    {'nombre': 'Gazpacho', 'categoria': 'Española', 'valoracion': 4.3},
-  ];
-
   // Getters
   List<Recipe> get recipes => _recipes;
   String get searchQuery => _searchQuery;
   String get selectedFilter => _selectedFilter;
 
   /// Recetas filtradas según búsqueda y filtro
-  List<Map<String, dynamic>> get filteredRecipes {
-    return _allRecipesData.where((recipe) {
-      final matchesSearch = recipe['nombre']
-          .toString()
-          .toLowerCase()
-          .contains(_searchQuery.toLowerCase());
+  List<Recipe> get filteredRecipes {
+    return _recipes.where((recipe) {
+      final matchesSearch = recipe.nombre.toLowerCase().contains(
+        _searchQuery.toLowerCase(),
+      );
       final matchesFilter =
-          _selectedFilter == 'Todos' || recipe['categoria'] == _selectedFilter;
+          _selectedFilter == 'Todos' || recipe.categoria == _selectedFilter;
       return matchesSearch && matchesFilter;
     }).toList();
   }
 
-  /// Actualiza la consulta de búsqueda
+  /// Cargar recetas desde la API
+  Future<void> loadRecipes() async {
+    await runAsync(() async {
+      _recipes = await _recetaRepository.obtenerTodas();
+    }, errorPrefix: 'Error al cargar recetas');
+  }
+
+  /// Crear nueva receta
+  Future<bool> crearReceta(Recipe receta, {List<File>? imagenes}) async {
+    final result = await runAsync(() async {
+      final nuevaReceta = await _recetaRepository.crear(
+        receta,
+        imagenes: imagenes,
+      );
+      _recipes.add(nuevaReceta);
+      return true;
+    }, errorPrefix: 'Error al crear receta');
+
+    return result ?? false;
+  }
+
+  /// Actualizar receta
+  Future<bool> actualizarReceta(
+    String id,
+    Recipe receta, {
+    List<File>? imagenes,
+  }) async {
+    final result = await runAsync(() async {
+      final recetaActualizada = await _recetaRepository.actualizar(
+        id,
+        receta,
+        imagenes: imagenes,
+      );
+
+      final index = _recipes.indexWhere((r) => r.id == id);
+      if (index != -1) {
+        _recipes[index] = recetaActualizada;
+      }
+      return true;
+    }, errorPrefix: 'Error al actualizar receta');
+
+    return result ?? false;
+  }
+
+  /// Eliminar receta
+  Future<bool> eliminarReceta(String id) async {
+    final result = await runAsync(() async {
+      await _recetaRepository.eliminar(id);
+      _recipes.removeWhere((r) => r.id == id);
+      return true;
+    }, errorPrefix: 'Error al eliminar receta');
+
+    return result ?? false;
+  }
+
+  /// Valorar receta
+  Future<bool> valorarReceta(String id, double valoracion) async {
+    final result = await runAsync(() async {
+      final recetaValorada = await _recetaRepository.valorar(id, valoracion);
+
+      final index = _recipes.indexWhere((r) => r.id == id);
+      if (index != -1) {
+        _recipes[index] = recetaValorada;
+      }
+      return true;
+    }, errorPrefix: 'Error al valorar receta');
+
+    return result ?? false;
+  }
+
+  /// Actualizar búsqueda
   void updateSearchQuery(String query) {
     _searchQuery = query;
     notifyListeners();
   }
 
-  /// Actualiza el filtro seleccionado
+  /// Actualizar filtro
   void updateFilter(String filter) {
     _selectedFilter = filter;
     notifyListeners();
   }
 
-  /// Limpia la búsqueda
+  /// Limpiar búsqueda
   void clearSearch() {
     _searchQuery = '';
     notifyListeners();
-  }
-
-  /// Agrega una nueva receta
-  void addRecipe(Recipe recipe) {
-    _recipes.add(recipe);
-    _allRecipesData.add(recipe.toJson());
-    notifyListeners();
-  }
-
-  /// Carga recetas desde un servicio (simulado)
-  Future<void> loadRecipes() async {
-    await runAsync(() async {
-      // Simular carga de datos
-      await Future.delayed(const Duration(milliseconds: 500));
-      // En producción, aquí se llamaría a un servicio/repositorio
-    }, errorPrefix: 'Error al cargar recetas');
   }
 }

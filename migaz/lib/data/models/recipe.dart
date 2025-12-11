@@ -1,6 +1,5 @@
-import 'comentario.dart';
-
 class Recipe {
+  final String? id; // ID desde el backend
   final String nombre;
   final String categoria;
   final String descripcion;
@@ -9,78 +8,91 @@ class Recipe {
   final int servings;
   final List<String> pasos;
   final List<String> ingredientes;
-  final String? youtubeUrl;
-  final String? imageUrl;
-
-  // Nuevos campos
-  final List<Comentario> comentarios;
+  final List<String>? imagenes; // URLs de las imágenes
+  final List<dynamic> comentarios;
   final double valoracion;
 
   Recipe({
+    this.id,
     required this.nombre,
     required this.categoria,
-    this.descripcion = '',
-    this.dificultad = 'Todos los niveles',
-    this.tiempo = '',
-    this.servings = 1,
-    List<String>? pasos,
-    List<String>? ingredientes,
-    this.youtubeUrl,
-    this.imageUrl,
-    List<Comentario>? comentarios,
-    this.valoracion = 0.0,
-  }) : pasos = pasos ?? const [],
-       ingredientes = ingredientes ?? const [],
-       comentarios = comentarios ?? const [];
+    required this.descripcion,
+    required this.dificultad,
+    required this.tiempo,
+    required this.servings,
+    required this.pasos,
+    required this.ingredientes,
+    this.imagenes,
+    this.comentarios = const [],
+    this.valoracion = 0,
+  });
 
-  factory Recipe.fromJson(Map<String, dynamic> json) => Recipe(
-    nombre: json['nombre'] as String? ?? '',
-    categoria: json['categoria'] as String? ?? 'Otros',
-    descripcion: json['descripcion'] as String? ?? '',
-    dificultad: json['dificultad'] as String? ?? 'Todos los niveles',
-    tiempo: json['tiempo'] as String? ?? '',
-    servings: (json['servings'] is int)
-        ? json['servings'] as int
-        : (json['servings'] is num ? (json['servings'] as num).toInt() : 1),
-    pasos: (json['pasos'] is List)
-        ? List<String>.from(json['pasos'])
-        : const [],
-    ingredientes: (json['ingredientes'] is List)
-        ? List<String>.from(json['ingredientes'])
-        : const [],
-    youtubeUrl: json['youtubeUrl'] as String?,
-    imageUrl: json['imageUrl'] as String?,
-    comentarios: (json['comentarios'] is List)
-        ? (json['comentarios'] as List)
-              .map((e) => Comentario.fromJson(Map<String, dynamic>.from(e)))
-              .toList()
-        : const [],
-    valoracion: (json['valoracion'] is num)
-        ? (json['valoracion'] as num).toDouble()
-        : 0.0,
-  );
-
-  Map<String, dynamic> toJson() => {
-    'nombre': nombre,
-    'categoria': categoria,
-    'descripcion': descripcion,
-    'dificultad': dificultad,
-    'tiempo': tiempo,
-    'servings': servings,
-    'pasos': pasos,
-    'ingredientes': ingredientes,
-    'youtubeUrl': youtubeUrl,
-    'imageUrl': imageUrl,
-    'comentarios': comentarios.map((c) => c.toJson()).toList(),
-    'valoracion': valoracion,
-  };
-
-  Map<String, dynamic> toMap() => toJson();
-
-  @override
-  String toString() {
-    return 'Recipe(nombre: $nombre, categoria: $categoria, dificultad: $dificultad, tiempo: $tiempo, servings: $servings, pasos:${pasos.length}, ingredientes:${ingredientes.length}, comentarios:${comentarios.length}, valoracion:$valoracion)';
+  // Crear Recipe desde JSON (respuesta de API)
+  factory Recipe.fromJson(Map<String, dynamic> json) {
+    return Recipe(
+      id: json['_id'] ?? json['id'],
+      nombre: json['nombre'] ?? '',
+      categoria: json['categoria'] ?? '',
+      descripcion: json['descripcion'] ?? '',
+      dificultad: json['dificultad'] ?? '',
+      tiempo: json['tiempo'] ?? '',
+      servings: json['servings'] ?? 0,
+      pasos: List<String>.from(json['pasos'] ?? []),
+      ingredientes: List<String>.from(json['ingredientes'] ?? []),
+      imagenes: json['imagenes'] != null
+          ? List<String>.from(json['imagenes'])
+          : null,
+      comentarios: json['comentarios'] ?? [],
+      valoracion: (json['valoracion'] ?? 0).toDouble(),
+    );
   }
 
-  factory Recipe.fromMap(Map<String, dynamic> m) => Recipe.fromJson(m);
+  // Convertir Recipe a JSON (para enviar a API)
+  Map<String, dynamic> toJson() {
+    return {
+      if (id != null) '_id': id,
+      'nombre': nombre,
+      'categoria': categoria,
+      'descripcion': descripcion,
+      'dificultad': dificultad,
+      'tiempo': tiempo,
+      'servings': servings,
+      'pasos': pasos,
+      'ingredientes': ingredientes,
+      if (imagenes != null) 'imagenes': imagenes,
+      'comentarios': comentarios,
+      'valoracion': valoracion,
+    };
+  }
+
+  // Método copyWith para crear copias modificadas
+  Recipe copyWith({
+    String? id,
+    String? nombre,
+    String? categoria,
+    String? descripcion,
+    String? dificultad,
+    String? tiempo,
+    int? servings,
+    List<String>? pasos,
+    List<String>? ingredientes,
+    List<String>? imagenes,
+    List<dynamic>? comentarios,
+    double? valoracion,
+  }) {
+    return Recipe(
+      id: id ?? this.id,
+      nombre: nombre ?? this.nombre,
+      categoria: categoria ?? this.categoria,
+      descripcion: descripcion ?? this.descripcion,
+      dificultad: dificultad ?? this.dificultad,
+      tiempo: tiempo ?? this.tiempo,
+      servings: servings ?? this.servings,
+      pasos: pasos ?? this.pasos,
+      ingredientes: ingredientes ?? this.ingredientes,
+      imagenes: imagenes ?? this.imagenes,
+      comentarios: comentarios ?? this.comentarios,
+      valoracion: valoracion ?? this.valoracion,
+    );
+  }
 }

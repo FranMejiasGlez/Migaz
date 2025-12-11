@@ -2,11 +2,11 @@ import 'package:migaz/ui/views/pantalla_biblioteca.dart';
 import 'package:migaz/ui/views/pantalla_guardados.dart';
 import 'package:migaz/ui/views/pantalla_misrecetas.dart';
 import 'package:flutter/material.dart';
-import '../ui/views/login_screen.dart';
-import '../ui/views/register_screen.dart';
-import '../ui/views/pantalla_recetas.dart';
-import '../ui/views/pantalla_perfiluser.dart';
-import '../ui/views/pantalla_configuracion.dart';
+import '../../ui/views/login_screen.dart';
+import '../../ui/views/register_screen.dart';
+import '../../ui/views/pantalla_recetas.dart';
+import '../../ui/views/pantalla_perfiluser.dart';
+import '../../ui/views/pantalla_configuracion.dart';
 
 class AppRoutes {
   static const String login = '/';

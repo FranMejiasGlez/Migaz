@@ -1,26 +1,35 @@
 class Comentario {
-  final String autor;
+  final String? id;
+  final String recetaId;
+  final String usuario;
   final String texto;
-  final DateTime creadoEn;
+  final DateTime? fecha;
 
-  Comentario({required this.autor, required this.texto, DateTime? creadoEn})
-    : creadoEn = creadoEn ?? DateTime.now();
+  Comentario({
+    this.id,
+    required this.recetaId,
+    required this.usuario,
+    required this.texto,
+    this.fecha,
+  });
 
-  factory Comentario.fromJson(Map<String, dynamic> json) => Comentario(
-    autor: json['autor'] as String? ?? 'Anónimo',
-    texto: json['texto'] as String? ?? '',
-    creadoEn: json['creadoEn'] != null
-        ? DateTime.parse(json['creadoEn'] as String)
-        : DateTime.now(),
-  );
+  factory Comentario.fromJson(Map<String, dynamic> json) {
+    return Comentario(
+      id: json['_id'] ?? json['id'],
+      recetaId: json['recetaId'] ?? '',
+      usuario: json['usuario'] ?? '',
+      texto: json['texto'] ?? '',
+      fecha: json['fecha'] != null ? DateTime.parse(json['fecha']) : null,
+    );
+  }
 
-  Map<String, dynamic> toJson() => {
-    'autor': autor,
-    'texto': texto,
-    'creadoEn': creadoEn.toIso8601String(),
-  };
-
-  @override
-  String toString() =>
-      'Comentario(autor: $autor, texto: $texto, creadoEn: $creadoEn)';
+  Map<String, dynamic> toJson() {
+    return {
+      if (id != null) '_id': id,
+      'recetaId': recetaId,
+      'usuario': usuario,
+      'texto': texto,
+      if (fecha != null) 'fecha': fecha!.toIso8601String(),
+    };
+  }
 }

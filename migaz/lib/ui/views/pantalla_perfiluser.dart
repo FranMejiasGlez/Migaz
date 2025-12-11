@@ -13,7 +13,7 @@ class _PantallaPerfilUserState extends State<PantallaPerfilUser> {
     return const Placeholder();
   }
 }*/
-import 'package:migaz/config/routes.dart';
+import 'package:migaz/core/config/routes.dart';
 import 'package:flutter/material.dart';
 import 'package:migaz/core/utils/app_theme.dart';
 import 'package:migaz/ui/widgets/recipe/user_avatar.dart';
