@@ -5,6 +5,7 @@ import 'package:migaz/ui/widgets/recipe/rating_stars.dart';
 import 'package:migaz/ui/widgets/recipe/rating_display.dart';
 import 'package:migaz/ui/widgets/recipe/recipe_image_widget.dart';
 import 'package:migaz/ui/widgets/comentarios/comentarios_popup.dart';
+import 'package:migaz/ui/widgets/recipe/youtube_player_widget.dart';
 import 'package:migaz/viewmodels/home_viewmodel.dart';
 import 'package:provider/provider.dart';
 import 'package:migaz/ui/widgets/auth/user_credentials.dart';
@@ -502,12 +503,12 @@ class _RecipeDetailDialogContentState
           child: RecipeImageWidget(
             imageUrl: imageUrl,
             width: double.infinity,
-            height: 500, // 📐 MODIFICADO: Aumentado de 200 a 500
+            height: 300, //!!
             fit: BoxFit.contain,
           ),
         ),
         Container(
-          height: 500, // 📐 MODIFICADO: Aumentado de 200 a 500
+          height: 300, //!!
           decoration: BoxDecoration(
             borderRadius: const BorderRadius.only(
               topLeft: Radius.circular(16),
@@ -548,7 +549,7 @@ class _RecipeDetailDialogContentState
   Widget _buildCarouselHeader() {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final carouselHeight = 500.0;
+        final carouselHeight = 300.0;
         double _dragStartX = 0;
         double _dragDistance = 0;
 
@@ -1257,37 +1258,12 @@ class _RecipeDetailDialogContentState
   }
 
   Widget _buildYoutubeLink() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Video Tutorial',
-          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 8),
-        InkWell(
-          onTap: () {
-            print('Abrir YouTube:  ${_recipe.youtube}');
-          },
-          child: Row(
-            children: [
-              const Icon(Icons.play_circle_outline, color: Colors.red),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  _recipe.youtube!,
-                  style: const TextStyle(
-                    color: Colors.blue,
-                    decoration: TextDecoration.underline,
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
+    // Validar que la URL existe y no está vacía
+    if (_recipe.youtube == null || _recipe.youtube!.trim().isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return YoutubePlayerWidget(youtubeUrl: _recipe.youtube!);
   }
 
   Widget _buildFooter() {
