@@ -145,4 +145,6 @@ class RecipeListViewModel extends BaseViewModel {
     _searchQuery = '';
     notifyListeners();
   }
+
+  Future<void> refresh() async {}
 }
