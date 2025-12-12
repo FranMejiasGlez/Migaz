@@ -121,7 +121,7 @@ class RecipeCarousel extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               Text(
-                '¡Agrega tu primera receta!',
+                '¡No hay imagenes aún!',
                 style: TextStyle(color: Colors.grey[500], fontSize: 14),
                 textAlign: TextAlign.center,
               ),

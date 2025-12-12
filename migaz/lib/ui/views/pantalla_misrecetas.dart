@@ -116,6 +116,7 @@ class _PantallaMisRecetasState extends State<PantallaMisRecetas> {
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
           _buildBackButton(),
           const SizedBox(width: 12),
@@ -140,20 +141,28 @@ class _PantallaMisRecetasState extends State<PantallaMisRecetas> {
   }
 
   Widget _buildTitle() {
-    return Expanded(
-      child: Column(
-        children: [
-          const Text(
-            'Mis Recetas',
-            textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-          ),
-          if (!_isLoading)
-            Text(
-              '${_misRecetas.length} ${_misRecetas.length == 1 ? "receta" : "recetas"}',
-              style: TextStyle(fontSize: 14, color: Colors.grey[700]),
+    return SizedBox(
+      width: 300,
+      child: Container(
+        decoration: BoxDecoration(
+          color: const Color(0xFFEA7317).withOpacity(0.5),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        child: Column(
+          children: [
+            const Text(
+              'Mis Recetas',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
-        ],
+            if (!_isLoading)
+              Text(
+                '${_misRecetas.length} ${_misRecetas.length == 1 ? "receta" : "recetas"}',
+                style: TextStyle(fontSize: 14, color: Colors.grey[700]),
+              ),
+          ],
+        ),
       ),
     );
   }
