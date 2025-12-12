@@ -1,12 +1,18 @@
 // lib/ui/widgets/recipe/recipe_detail_dialog.dart
+import 'dart:io';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:migaz/data/models/recipe.dart';
 import 'package:migaz/ui/widgets/recipe/rating_stars.dart';
 import 'package:migaz/ui/widgets/recipe/rating_display.dart';
 import 'package:migaz/ui/widgets/recipe/recipe_image_widget.dart';
 import 'package:migaz/ui/widgets/comentarios/comentarios_popup.dart';
+import 'package:migaz/ui/widgets/recipe/ventana_editar_receta.dart';
 import 'package:migaz/ui/widgets/recipe/youtube_player_widget.dart';
 import 'package:migaz/viewmodels/home_viewmodel.dart';
+import 'package:migaz/viewmodels/recipe_list_viewmodel.dart';
 import 'package:provider/provider.dart';
 import 'package:migaz/ui/widgets/auth/user_credentials.dart';
 import 'package:carousel_slider/carousel_slider.dart';
@@ -271,6 +277,10 @@ class _RecipeDetailDialogContentState
                               _buildRatingSection(),
                               const SizedBox(height: 16),
                               _buildCommentsButton(),
+                              const SizedBox(height: 24),
+                              _buildEditRecipeButton(),
+                              const SizedBox(height: 24),
+                              _buildDeleteRecipeButton(),
                               const SizedBox(height: 24),
                               _buildSaveButton(),
                               _buildDescription(),
@@ -1108,6 +1118,302 @@ class _RecipeDetailDialogContentState
         ],
       ),
     );
+  }
+
+  Widget _buildEditRecipeButton() {
+    final esCreador = _recipe.esMia(_currentUser);
+    if (!esCreador) return const SizedBox.shrink();
+
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 18),
+      decoration: BoxDecoration(
+        color: Colors.orange.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.orange.withOpacity(0.3)),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(12),
+          onTap: _handleEditRecipe, // A continuación implementamos esta función
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.orange,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.edit, color: Colors.white, size: 24),
+                ),
+                const SizedBox(width: 16),
+                const Expanded(
+                  child: Text(
+                    'Editar receta',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                ),
+                Icon(
+                  Icons.arrow_forward_ios,
+                  size: 16,
+                  color: Colors.grey[600],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDeleteRecipeButton() {
+    final esCreador = _recipe.esMia(_currentUser);
+    if (!esCreador) return const SizedBox.shrink();
+
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 18),
+      decoration: BoxDecoration(
+        color: Colors.orange.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.orange.withOpacity(0.3)),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(12),
+          onTap:
+              _handleDeleteRecipe, // A continuación implementamos esta función
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: const Color.fromARGB(255, 255, 0, 0),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.edit, color: Colors.white, size: 24),
+                ),
+                const SizedBox(width: 16),
+                const Expanded(
+                  child: Text(
+                    'Eliminar receta',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                ),
+                Icon(
+                  Icons.arrow_forward_ios,
+                  size: 16,
+                  color: const Color.fromARGB(255, 0, 0, 0),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _handleDeleteRecipe() async {
+    final shouldDelete = await _confirmDelete();
+
+    if (!shouldDelete) {
+      print('⚪ Eliminación cancelada por el usuario.');
+      return;
+    }
+
+    try {
+      print('🚀 Llamando a eliminarReceta...');
+
+      final recipeVM = Provider.of<RecipeListViewModel>(context, listen: false);
+
+      final exito = await recipeVM.eliminarReceta(_recipe.id!);
+
+      if (!mounted) return;
+
+      if (exito) {
+        print('✅ Receta eliminada correctamente');
+
+        // Cierra el diálogo de detalle de la receta
+        Navigator.of(context).pop();
+
+        // Muestra un mensaje de éxito en la pantalla principal
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('🗑️ Receta eliminada correctamente'),
+            backgroundColor: Colors.red,
+            duration: Duration(seconds: 2),
+          ),
+        );
+      } else {
+        print('❌ Error al eliminar: ${recipeVM.errorMessage}');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              '❌ ${recipeVM.errorMessage ?? "No se pudo eliminar la receta"}',
+            ),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    } catch (e, stackTrace) {
+      print('💥 ERROR INESPERADO en _handleDeleteRecipe: $e');
+      print('Stack trace: $stackTrace');
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('❌ Error inesperado: $e'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    }
+  }
+
+  Future<bool> _confirmDelete() async {
+    return await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Confirmar Eliminación'),
+            content: Text(
+              '¿Estás seguro de que quieres eliminar la receta "${_recipe.nombre}"? Esta acción es irreversible.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: const Text('Cancelar'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                style: TextButton.styleFrom(foregroundColor: Colors.red),
+                child: const Text('Eliminar'),
+              ),
+            ],
+          ),
+        ) ??
+        false;
+  }
+
+  Future<void> _handleEditRecipe() async {
+    try {
+      print('🔵 Iniciando edición de receta...');
+
+      final edited = await showDialog<Map<String, dynamic>>(
+        context: context,
+        builder: (context) => DialogoEditarReceta(
+          recetaOriginal: _recipe,
+          categorias: ['Española', 'Italiana', 'Japonesa', 'Mexicana'],
+          dificultades: [
+            'Muy Fácil',
+            'Fácil',
+            'Medio',
+            'Difícil',
+            'Muy Difícil',
+          ],
+        ),
+      );
+
+      if (edited == null) {
+        print('⚪ Edición cancelada por el usuario');
+        return;
+      }
+
+      print('🟢 Datos recibidos del diálogo de edición');
+
+      final Recipe recetaEditada = edited['receta'] as Recipe;
+      final List<XFile>? imagenesNuevas =
+          edited['imagenesNuevas'] as List<XFile>?;
+      final List<String>? imagenesPrevias =
+          edited['imagenesPrevias'] as List<String>?;
+
+      print('📝 Receta editada: ${recetaEditada.nombre}');
+      print('📸 Imágenes nuevas: ${imagenesNuevas?.length ?? 0}');
+      print('📸 Imágenes previas: ${imagenesPrevias?.length ?? 0}');
+
+      // Manejo de imágenes nuevas: XFile -> File si no es web
+      List<File>? imagenes;
+      List<XFile>? imagenesWeb;
+
+      if (imagenesNuevas != null && imagenesNuevas.isNotEmpty) {
+        if (kIsWeb) {
+          imagenesWeb = imagenesNuevas;
+          print('🌐 Usando imágenes web: ${imagenesWeb.length}');
+        } else {
+          imagenes = imagenesNuevas.map((xfile) => File(xfile.path)).toList();
+          print('📱 Usando imágenes móvil: ${imagenes.length}');
+        }
+      }
+
+      // Llama al ViewModel
+      final recipeVM = Provider.of<RecipeListViewModel>(context, listen: false);
+
+      print('🚀 Llamando a actualizarReceta...');
+
+      // 🔴 CAMBIO CLAVE 1: Capturamos la receta actualizada (Recipe?)
+      final Recipe? updatedRecipe = await recipeVM.actualizarReceta(
+        _recipe.id!,
+        recetaEditada,
+        usuarioActual: _currentUser,
+        imagenes: imagenes,
+        imagenesXFile: imagenesWeb,
+        imagenesPrevias: imagenesPrevias,
+      );
+
+      if (!mounted) return;
+
+      // 🔴 CAMBIO CLAVE 2: Comprobamos si el resultado NO es nulo (éxito)
+      if (updatedRecipe != null) {
+        print('✅ Receta actualizada correctamente');
+
+        // 🔴 CAMBIO CLAVE 3: Actualizamos el estado local del diálogo
+        setState(() {
+          _recipe =
+              updatedRecipe; // Sincronizamos la receta con la nueva versión
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('✅ Receta editada correctamente'),
+            backgroundColor: Colors.green,
+            duration: Duration(seconds: 2),
+          ),
+        );
+      } else {
+        // La actualización falló, usamos el mensaje de error del ViewModel
+        print('❌ Error al actualizar: ${recipeVM.errorMessage}');
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              '❌ ${recipeVM.errorMessage ?? "No se pudo editar la receta"}',
+            ),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    } catch (e, stackTrace) {
+      print('💥 ERROR INESPERADO en _handleEditRecipe: $e');
+      print('Stack trace: $stackTrace');
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('❌ Error inesperado: $e'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    }
   }
 
   Widget _buildCommentsButton() {

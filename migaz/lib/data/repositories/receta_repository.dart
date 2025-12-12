@@ -36,7 +36,6 @@ class RecetaRepository {
     }
   }
 
-  /// ✅ NUEVO: Obtener recetas de un usuario
   Future<List<Recipe>> obtenerPorUsuario(String usuario) async {
     try {
       final jsonList = await _recetaService.obtenerPorUsuario(usuario);
@@ -51,7 +50,7 @@ class RecetaRepository {
       final json = await _recetaService.obtenerPorId(id);
       return Recipe.fromJson(json);
     } catch (e) {
-      throw Exception('Error al obtener receta:  $e');
+      throw Exception('Error al obtener receta: $e');
     }
   }
 
@@ -84,28 +83,31 @@ class RecetaRepository {
     }
   }
 
+  // ✅ CORREGIDO: Pasar todos los parámetros al servicio
   Future<Recipe> actualizar(
     String id,
     Recipe receta, {
     List<File>? imagenes,
+    List<XFile>? imagenesXFile,
+    List<String>? imagenesPrevias,
   }) async {
     try {
-      final campos = {
-        'nombre': receta.nombre,
-        'categoria': receta.categoria.toLowerCase(),
-        'descripcion': receta.descripcion,
-        'dificultad': receta.dificultad.toString(),
-        'tiempo': receta.tiempo,
-        'comensales': receta.comensales.toString(),
-        'instrucciones': receta.pasos.join(','),
-        'ingredientes': receta.ingredientes.join(','),
-      };
-
       final json = await _recetaService.actualizar(
         id: id,
-        campos: campos,
+        nombre: receta.nombre,
+        categoria: receta.categoria,
+        descripcion: receta.descripcion,
+        dificultad: receta.dificultad,
+        tiempo: receta.tiempo,
+        comensales: receta.comensales,
+        instrucciones: receta.pasos,
+        ingredientes: receta.ingredientes,
+        youtube: receta.youtube,
         imagenes: imagenes,
+        imagenesXFile: imagenesXFile,
+        imagenesPrevias: imagenesPrevias,
       );
+
       return Recipe.fromJson(json);
     } catch (e) {
       throw Exception('Error al actualizar receta: $e');

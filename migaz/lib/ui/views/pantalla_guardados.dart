@@ -26,7 +26,7 @@ class _PantallaGuardadosState extends State<PantallaGuardados> {
   bool _isLoading = true;
 
   // ✅ Usuario actual
-  final String _currentUser = 'usuario_demo';
+  final String _currentUser = 'usuario_demo'; 
 
   @override
   void initState() {

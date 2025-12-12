@@ -76,26 +76,43 @@ class RecipeListViewModel extends BaseViewModel {
     return result ?? false;
   }
 
-  Future<bool> actualizarReceta(
+  // ANTES: Future<bool> actualizarReceta(...)
+  // AHORA: Devuelve la receta actualizada (Recipe?) o null si falla.
+  Future<Recipe?> actualizarReceta(
     String id,
     Recipe receta, {
+    required String usuarioActual,
     List<File>? imagenes,
+    List<XFile>? imagenesXFile,
+    List<String>? imagenesPrevias,
   }) async {
-    final result = await runAsync(() async {
+    if (receta.user != null && receta.user != usuarioActual) {
+      setError('No tienes permiso para editar esta receta');
+      return null; // Devuelve null en caso de error de permiso
+    }
+
+    // Usamos runAsync<Recipe?> para indicar que la operación devolverá una Recipe o null
+    final result = await runAsync<Recipe?>(() async {
       final recetaActualizada = await _recetaRepository.actualizar(
         id,
         receta,
         imagenes: imagenes,
+        imagenesXFile: imagenesXFile,
+        imagenesPrevias: imagenesPrevias,
       );
 
+      // Si estaba en la lista local, la actualizamos y notificamos
       final index = _recipes.indexWhere((r) => r.id == id);
       if (index != -1) {
         _recipes[index] = recetaActualizada;
+        notifyListeners(); // Esto actualiza la lista en la pantalla principal
       }
-      return true;
+
+      return recetaActualizada; // ✅ Devolvemos el objeto actualizado
     }, errorPrefix: 'Error al actualizar receta');
 
-    return result ?? false;
+    // runAsync devuelve null si hubo una excepción, lo cual es correcto.
+    return result;
   }
 
   Future<bool> eliminarReceta(String id) async {

@@ -223,6 +223,88 @@ class ApiService {
     }
   }
 
+  /// ✅ NUEVO: PUT Multipart con JSON + Archivos (Para editar)
+  Future<dynamic> putMultipartWithJson(
+    String endpoint,
+    Map<String, dynamic> jsonData,
+    dynamic files,
+  ) async {
+    try {
+      final url = Uri.parse('${ApiConfig.baseUrl}$endpoint');
+      // ⚠️ CAMBIO CLAVE AQUÍ: 'PUT' en lugar de 'POST'
+      final request = http.MultipartRequest('PUT', url);
+
+      // ✅ Añadir headers
+      final headers = Map<String, String>.from(ApiConfig.multipartHeaders);
+      headers.remove('Content-Type');
+      request.headers.addAll(headers);
+
+      // ✅ Añadir campos
+      jsonData.forEach((key, value) {
+        if (value is List) {
+          for (int i = 0; i < value.length; i++) {
+            request.fields['$key[$i]'] = value[i].toString();
+          }
+        } else {
+          request.fields[key] = value.toString();
+        }
+      });
+
+      // ✅ Añadir archivos (Lógica idéntica al POST)
+      if (files != null && files is List && files.isNotEmpty) {
+        if (files.first is File) {
+          for (var file in files) {
+            final stream = http.ByteStream(file.openRead());
+            final length = await file.length();
+
+            // Determinar contentType... (copia la lógica de tu postMultipartWithJson)
+            final extension = file.path.split('.').last.toLowerCase();
+            String contentType = 'image/jpeg';
+            if (extension == 'png')
+              contentType = 'image/png';
+            else if (extension == 'jpg' || extension == 'jpeg')
+              contentType = 'image/jpeg';
+            else if (extension == 'webp')
+              contentType = 'image/webp';
+
+            final multipartFile = http.MultipartFile(
+              'imagenes',
+              stream,
+              length,
+              filename: file.path.split('/').last,
+              contentType: http.MediaType.parse(contentType),
+            );
+            request.files.add(multipartFile);
+          }
+        } else if (files.first is XFile) {
+          // Lógica para Web (XFile)
+          for (var xfile in files) {
+            final bytes = await xfile.readAsBytes();
+            String contentType = xfile.mimeType ?? 'image/jpeg';
+            if (contentType.isEmpty ||
+                contentType == 'application/octet-stream') {
+              // ... lógica de extensión ...
+              contentType = 'image/jpeg';
+            }
+            final multipartFile = http.MultipartFile.fromBytes(
+              'imagenes',
+              bytes,
+              filename: xfile.name,
+              contentType: http.MediaType.parse(contentType),
+            );
+            request.files.add(multipartFile);
+          }
+        }
+      }
+
+      final streamedResponse = await _client.send(request);
+      final response = await http.Response.fromStream(streamedResponse);
+      return _handleResponse(response);
+    } catch (e) {
+      throw _handleError(e);
+    }
+  }
+
   /// PUT Multipart
   Future<dynamic> putMultipart(
     String endpoint,

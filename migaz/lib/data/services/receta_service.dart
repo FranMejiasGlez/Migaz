@@ -59,10 +59,9 @@ class RecetaService {
     }
   }
 
-  /// ✅ NUEVO:  Obtener recetas de un usuario específico
   Future<List<dynamic>> obtenerPorUsuario(String usuario) async {
     try {
-      print('📥 DEBUG - Obteniendo recetas del usuario: $usuario');
+      print('🔥 DEBUG - Obteniendo recetas del usuario: $usuario');
       final response = await _apiService.get(
         ApiConfig.recetasByUserEndPoint(usuario),
       );
@@ -74,7 +73,6 @@ class RecetaService {
       print(
         '⚠️ DEBUG - Endpoint de usuario no disponible, filtrando localmente',
       );
-      // Fallback:  obtener todas y filtrar localmente
       final response = await _apiService.get(ApiConfig.recetasEndpoint);
       final List<dynamic> recetas = response as List<dynamic>;
 
@@ -93,7 +91,6 @@ class RecetaService {
     return response as Map<String, dynamic>;
   }
 
-  /// ✅ ACTUALIZADO: Enviar datos como el backend espera
   Future<Map<String, dynamic>> crear({
     required String nombre,
     required String categoria,
@@ -108,7 +105,6 @@ class RecetaService {
     List<File>? imagenes,
     List<XFile>? imagenesXFile,
   }) async {
-    // ✅ Crear objeto con TODOS los datos
     final datos = {
       'nombre': nombre,
       'categoria': categoria.toLowerCase(),
@@ -116,15 +112,15 @@ class RecetaService {
       'dificultad': dificultad,
       'tiempo': tiempo,
       'comensales': comensales,
-      'instrucciones': instrucciones, // ✅ Array directo
-      'ingredientes': ingredientes, // ✅ Array directo
+      'instrucciones': instrucciones,
+      'ingredientes': ingredientes,
       'user': user,
       if (youtube != null && youtube.isNotEmpty) 'youtube': youtube,
     };
 
-    print('🔍 DEBUG - Datos a enviar: $datos');
+    print('📝 DEBUG - Datos a enviar: $datos');
     print(
-      '🔍 DEBUG - Imágenes: ${kIsWeb ? imagenesXFile?.length : imagenes?.length}',
+      '📝 DEBUG - Imágenes: ${kIsWeb ? imagenesXFile?.length : imagenes?.length}',
     );
 
     final response = await _apiService.postMultipartWithJson(
@@ -136,16 +132,53 @@ class RecetaService {
     return response as Map<String, dynamic>;
   }
 
+  // ✅ CORREGIDO: Método completo para actualizar con todos los campos
   Future<Map<String, dynamic>> actualizar({
     required String id,
-    required Map<String, String> campos,
+    required String nombre,
+    required String categoria,
+    required String descripcion,
+    required int dificultad,
+    required String tiempo,
+    required int comensales,
+    required List<String> instrucciones,
+    required List<String> ingredientes,
+    String? youtube,
     List<File>? imagenes,
+    List<XFile>? imagenesXFile,
+    List<String>? imagenesPrevias,
   }) async {
-    final response = await _apiService.putMultipart(
-      ApiConfig.recetaByIdEndpoint(id),
-      campos,
-      imagenes,
+    print('📝 DEBUG ACTUALIZAR - ID: $id');
+    print('📝 DEBUG ACTUALIZAR - Nombre: $nombre');
+    print('📝 DEBUG ACTUALIZAR - Categoría: $categoria');
+    print(
+      '📝 DEBUG ACTUALIZAR - Imágenes nuevas: ${kIsWeb ? imagenesXFile?.length ?? 0 : imagenes?.length ?? 0}',
     );
+    print(
+      '📝 DEBUG ACTUALIZAR - Imágenes previas: ${imagenesPrevias?.length ?? 0}',
+    );
+
+    final datos = {
+      'nombre': nombre,
+      'categoria': categoria.toLowerCase(),
+      'descripcion': descripcion,
+      'dificultad': dificultad,
+      'tiempo': tiempo,
+      'comensales': comensales,
+      'instrucciones': instrucciones,
+      'ingredientes': ingredientes,
+      if (youtube != null && youtube.isNotEmpty) 'youtube': youtube,
+      if (imagenesPrevias != null && imagenesPrevias.isNotEmpty)
+        'imagenesPrevias': imagenesPrevias,
+    };
+
+    final response = await _apiService.putMultipartWithJson(
+      ApiConfig.recetaByIdEndpoint(id),
+      datos,
+      kIsWeb ? imagenesXFile : imagenes,
+    );
+
+    print('✅ DEBUG ACTUALIZAR - Respuesta recibida');
     return response as Map<String, dynamic>;
   }
 
@@ -160,10 +193,7 @@ class RecetaService {
   ) async {
     final response = await _apiService.post(
       ApiConfig.valorarRecetaEndpoint(id),
-      {
-        'user': usuario, // ✅ Cambiado de 'usuario' a 'user'
-        'puntuacion': puntuacion,
-      },
+      {'user': usuario, 'puntuacion': puntuacion},
     );
     return response as Map<String, dynamic>;
   }
