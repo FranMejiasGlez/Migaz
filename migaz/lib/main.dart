@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kReleaseMode;
+import 'package:device_preview/device_preview.dart';
 import 'package:migaz/core/config/routes.dart';
 import 'package:provider/provider.dart';
 import 'ui/widgets/auth/user_credentials.dart';
@@ -9,15 +11,19 @@ import 'viewmodels/home_viewmodel.dart';
 
 void main() {
   runApp(
-    MultiProvider(
-      providers: [
-        ChangeNotifierProvider(create: (_) => UserCredentials()),
-        ChangeNotifierProvider(create: (_) => AuthViewModel()),
-        ChangeNotifierProvider(create: (_) => RecipeListViewModel()),
-        ChangeNotifierProvider(create: (_) => ComentarioViewModel()),
-        ChangeNotifierProvider(create: (_) => HomeViewModel()),
-      ],
-      child: const MyApp(),
+    // 🎨 NUEVO: Envolver con DevicePreview
+    DevicePreview(
+      enabled: !kReleaseMode, // ✅ Solo en desarrollo, no en producción
+      builder: (context) => MultiProvider(
+        providers: [
+          ChangeNotifierProvider(create: (_) => UserCredentials()),
+          ChangeNotifierProvider(create: (_) => AuthViewModel()),
+          ChangeNotifierProvider(create: (_) => RecipeListViewModel()),
+          ChangeNotifierProvider(create: (_) => ComentarioViewModel()),
+          ChangeNotifierProvider(create: (_) => HomeViewModel()),
+        ],
+        child: const MyApp(),
+      ),
     ),
   );
 }
@@ -30,6 +36,12 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Migaz - App de Recetas',
       debugShowCheckedModeBanner: false,
+
+      // 🎨 NUEVO: Configuración para Device Preview
+      useInheritedMediaQuery: true, // ✅ Necesario para Device Preview
+      locale: DevicePreview.locale(context), // ✅ Soporte de idiomas
+      builder: DevicePreview.appBuilder, // ✅ Wrapper de Device Preview
+
       initialRoute: AppRoutes.login,
       routes: AppRoutes.routes,
     );
