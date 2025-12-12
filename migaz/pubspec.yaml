@@ -50,7 +50,8 @@ dependencies:
   permission_handler: ^11.3.0
   path_provider: ^2.1.5
   mime: ^1.0.4
-
+  youtube_player_flutter: ^9.0.3
+  carousel_slider: ^5.0.0
 dev_dependencies:
   flutter_test:
     sdk: flutter

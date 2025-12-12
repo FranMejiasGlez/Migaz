@@ -8,6 +8,7 @@ import 'package:migaz/ui/widgets/comentarios/comentarios_popup.dart';
 import 'package:migaz/viewmodels/home_viewmodel.dart';
 import 'package:provider/provider.dart';
 import 'package:migaz/ui/widgets/auth/user_credentials.dart';
+import 'package:carousel_slider/carousel_slider.dart';
 
 class RecipeDetailDialog {
   static void show(BuildContext context, Recipe recipe) {
@@ -33,14 +34,18 @@ class _RecipeDetailDialogContentState
   late Recipe _recipe;
   double _myRating = 0;
   bool _isRating = false;
-  bool _showIngredients = false; // ✅ NUEVO: Controlar panel lateral
-  String _currentUser = 'usuario_demo'; //!!
+  bool _showIngredients = false;
+  String _currentUser = 'usuario_demo';
+
+  // 🎨 Para controlar el carrusel de imágenes
+  int _currentImageIndex = 0;
+  final CarouselSliderController _carouselController =
+      CarouselSliderController();
 
   @override
   void initState() {
     super.initState();
     _recipe = widget.recipe;
-    // ✅ NUEVO: Cargar usuario actual
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final credentials = Provider.of<UserCredentials>(context, listen: false);
       setState(() {
@@ -51,9 +56,7 @@ class _RecipeDetailDialogContentState
     });
   }
 
-  // ✅ NUEVO: Botón de guardar (añadir después de _buildCommentsButton)
   Widget _buildSaveButton() {
-    // No mostrar si es mi propia receta
     if (_recipe.esMia(_currentUser)) {
       return const SizedBox.shrink();
     }
@@ -139,7 +142,6 @@ class _RecipeDetailDialogContentState
     );
   }
 
-  // ✅ NUEVO: Manejar guardar/quitar
   Future<void> _handleSaveRecipe(HomeViewModel homeViewModel) async {
     if (_recipe.id == null) return;
 
@@ -231,16 +233,28 @@ class _RecipeDetailDialogContentState
 
   @override
   Widget build(BuildContext context) {
+    // 📐 NUEVO: Obtener dimensiones de la pantalla
+    final screenSize = MediaQuery.of(context).size;
+    final dialogWidth = screenSize.width > 1400
+        ? 1400.0
+        : screenSize.width * 0.9;
+    final dialogHeight = screenSize.height * 0.9;
+
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Container(
-        constraints: const BoxConstraints(maxWidth: 1000, maxHeight: 600),
+        // 📐 MODIFICADO: Nuevo tamaño del diálogo más grande y responsive
+        width: dialogWidth,
+        height: dialogHeight,
+        constraints: BoxConstraints(
+          maxWidth: 1400,
+          maxHeight: dialogHeight,
+          minWidth: 800,
+        ),
         child: Stack(
           children: [
-            // ✅ Contenido principal
             Row(
               children: [
-                // Contenido principal
                 Expanded(
                   child: Column(
                     children: [
@@ -260,11 +274,8 @@ class _RecipeDetailDialogContentState
                               _buildSaveButton(),
                               _buildDescription(),
                               const SizedBox(height: 24),
-
-                              // ✅ NUEVO:  Botón para mostrar/ocultar ingredientes
                               _buildIngredientsToggleButton(),
                               const SizedBox(height: 24),
-
                               _buildInstructions(),
                               if (_recipe.youtube != null &&
                                   _recipe.youtube!.isNotEmpty) ...[
@@ -279,16 +290,12 @@ class _RecipeDetailDialogContentState
                     ],
                   ),
                 ),
-
-                // ✅ NUEVO: Panel lateral de ingredientes
                 if (_showIngredients) _buildIngredientsSidePanel(),
               ],
             ),
-
-            // ✅ NUEVO:  Botón flotante para abrir/cerrar
             Positioned(
               right: _showIngredients ? 310 : 16,
-              top: 220,
+              top: 520, // 📐 AJUSTADO: Nueva posición para carrusel más grande
               child: _buildFloatingIngredientsButton(),
             ),
           ],
@@ -297,7 +304,6 @@ class _RecipeDetailDialogContentState
     );
   }
 
-  // ✅ NUEVO:  Botón flotante para toggle
   Widget _buildFloatingIngredientsButton() {
     return FloatingActionButton.extended(
       onPressed: () {
@@ -320,7 +326,6 @@ class _RecipeDetailDialogContentState
     );
   }
 
-  // ✅ NUEVO: Panel lateral desplegable
   Widget _buildIngredientsSidePanel() {
     return AnimatedContainer(
       duration: const Duration(milliseconds: 300),
@@ -341,7 +346,6 @@ class _RecipeDetailDialogContentState
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header del panel
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
@@ -375,8 +379,6 @@ class _RecipeDetailDialogContentState
               ],
             ),
           ),
-
-          // Lista de ingredientes
           Expanded(
             child: ListView.builder(
               padding: const EdgeInsets.all(12),
@@ -421,7 +423,6 @@ class _RecipeDetailDialogContentState
     );
   }
 
-  // ✅ NUEVO:  Botón en el contenido para mostrar ingredientes
   Widget _buildIngredientsToggleButton() {
     return InkWell(
       onTap: () {
@@ -476,7 +477,21 @@ class _RecipeDetailDialogContentState
     );
   }
 
+  // 🎨 MODIFICADO: Header con altura responsive
   Widget _buildHeader() {
+    if (_recipe.imagenes == null || _recipe.imagenes!.isEmpty) {
+      return _buildSimpleHeader(null);
+    }
+
+    if (_recipe.imagenes!.length == 1) {
+      return _buildSimpleHeader(_recipe.imagenes!.first);
+    }
+
+    return _buildCarouselHeader();
+  }
+
+  // 📐 MODIFICADO: Header simple con altura de 500px
+  Widget _buildSimpleHeader(String? imageUrl) {
     return Stack(
       children: [
         ClipRRect(
@@ -485,17 +500,14 @@ class _RecipeDetailDialogContentState
             topRight: Radius.circular(16),
           ),
           child: RecipeImageWidget(
-            imageUrl: _recipe.imagenes?.isNotEmpty == true
-                ? _recipe.imagenes!.first
-                : null,
+            imageUrl: imageUrl,
             width: double.infinity,
-            height: 200,
-            fit: BoxFit.cover,
+            height: 500, // 📐 MODIFICADO: Aumentado de 200 a 500
+            fit: BoxFit.contain,
           ),
         ),
-
         Container(
-          height: 200,
+          height: 500, // 📐 MODIFICADO: Aumentado de 200 a 500
           decoration: BoxDecoration(
             borderRadius: const BorderRadius.only(
               topLeft: Radius.circular(16),
@@ -504,22 +516,26 @@ class _RecipeDetailDialogContentState
             gradient: LinearGradient(
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
-              colors: [Colors.transparent, Colors.black.withOpacity(0.7)],
+              colors: [
+                Colors.transparent,
+                Colors.transparent,
+                Colors.black.withOpacity(0.7),
+              ],
+              stops: const [0.0, 0.6, 1.0], // 📐 NUEVO: Gradiente más suave
             ),
           ),
         ),
-
         Positioned(
-          bottom: 16,
-          left: 16,
-          right: 16,
+          bottom: 24, // 📐 AJUSTADO: Más espacio desde el borde
+          left: 24,
+          right: 24,
           child: Text(
             _recipe.nombre,
             style: const TextStyle(
               color: Colors.white,
-              fontSize: 28,
+              fontSize: 32, // 📐 AUMENTADO: Texto más grande
               fontWeight: FontWeight.bold,
-              shadows: [Shadow(color: Colors.black, blurRadius: 8)],
+              shadows: [Shadow(color: Colors.black, blurRadius: 10)],
             ),
           ),
         ),
@@ -527,16 +543,292 @@ class _RecipeDetailDialogContentState
     );
   }
 
+  // 📐 MODIFICADO: Carrusel con drag habilitado
+  // 📐 MODIFICADO: Carrusel con drag personalizado habilitado
+  Widget _buildCarouselHeader() {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final carouselHeight = 500.0;
+        double _dragStartX = 0;
+        double _dragDistance = 0;
+
+        return Stack(
+          children: [
+            // 🎯 NUEVO: GestureDetector para capturar drag en desktop/web
+            GestureDetector(
+              onHorizontalDragStart: (details) {
+                _dragStartX = details.globalPosition.dx;
+                _dragDistance = 0;
+              },
+              onHorizontalDragUpdate: (details) {
+                _dragDistance = details.globalPosition.dx - _dragStartX;
+              },
+              onHorizontalDragEnd: (details) {
+                // Si el drag es mayor a 50 pixels, cambiar de imagen
+                if (_dragDistance > 50) {
+                  // Drag hacia la derecha -> imagen anterior
+                  if (_currentImageIndex > 0) {
+                    _carouselController.previousPage(
+                      duration: const Duration(milliseconds: 300),
+                      curve: Curves.easeInOut,
+                    );
+                  }
+                } else if (_dragDistance < -50) {
+                  // Drag hacia la izquierda -> imagen siguiente
+                  if (_currentImageIndex < _recipe.imagenes!.length - 1) {
+                    _carouselController.nextPage(
+                      duration: const Duration(milliseconds: 300),
+                      curve: Curves.easeInOut,
+                    );
+                  }
+                }
+              },
+              child: ClipRRect(
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(16),
+                  topRight: Radius.circular(16),
+                ),
+                child: Container(
+                  width: double.infinity,
+                  height: carouselHeight,
+                  color: Colors.grey[900],
+                  child: CarouselSlider(
+                    carouselController: _carouselController,
+                    options: CarouselOptions(
+                      height: carouselHeight,
+                      viewportFraction: 1.0,
+                      enableInfiniteScroll:
+                          false, // 🎯 Deshabilitado para mejor UX
+                      autoPlay: false,
+                      enlargeCenterPage: false,
+                      scrollDirection: Axis.horizontal,
+                      pageSnapping: true,
+                      // 🎯 IMPORTANTE: Deshabilitar scroll physics para que solo funcione el drag manual
+                      disableCenter: true,
+                      onPageChanged: (index, reason) {
+                        setState(() {
+                          _currentImageIndex = index;
+                        });
+                      },
+                    ),
+                    items: _recipe.imagenes!.map((imageUrl) {
+                      return Builder(
+                        builder: (BuildContext context) {
+                          return Container(
+                            width: constraints.maxWidth,
+                            child: RecipeImageWidget(
+                              imageUrl: imageUrl,
+                              width: double.infinity,
+                              height: carouselHeight,
+                              fit: BoxFit.contain,
+                            ),
+                          );
+                        },
+                      );
+                    }).toList(),
+                  ),
+                ),
+              ),
+            ),
+
+            // Gradiente oscuro para el texto (NO debe capturar eventos)
+            IgnorePointer(
+              child: Container(
+                height: carouselHeight,
+                decoration: BoxDecoration(
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(16),
+                    topRight: Radius.circular(16),
+                  ),
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Colors.transparent,
+                      Colors.transparent,
+                      Colors.black.withOpacity(0.7),
+                    ],
+                    stops: const [0.0, 0.6, 1.0],
+                  ),
+                ),
+              ),
+            ),
+
+            // Título de la receta (NO debe capturar eventos)
+            IgnorePointer(
+              child: Positioned(
+                bottom: 70,
+                left: 24,
+                right: 24,
+                child: Text(
+                  _recipe.nombre,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 32,
+                    fontWeight: FontWeight.bold,
+                    shadows: [Shadow(color: Colors.black, blurRadius: 10)],
+                  ),
+                ),
+              ),
+            ),
+
+            // 🎨 Indicadores de página (dots) - DEBEN capturar eventos
+            if (_recipe.imagenes!.length > 1)
+              Positioned(
+                bottom: 24,
+                left: 0,
+                right: 0,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: _recipe.imagenes!.asMap().entries.map((entry) {
+                    return GestureDetector(
+                      onTap: () {
+                        _carouselController.animateToPage(
+                          entry.key,
+                          duration: const Duration(milliseconds: 300),
+                          curve: Curves.easeInOut,
+                        );
+                      },
+                      child: Container(
+                        width: _currentImageIndex == entry.key ? 14 : 10,
+                        height: _currentImageIndex == entry.key ? 14 : 10,
+                        margin: const EdgeInsets.symmetric(horizontal: 5),
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: _currentImageIndex == entry.key
+                              ? Colors.white
+                              : Colors.white.withOpacity(0.5),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.4),
+                              blurRadius: 5,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ),
+
+            // 🎨 Contador de imágenes (NO debe capturar eventos)
+            if (_recipe.imagenes!.length > 1)
+              IgnorePointer(
+                child: Positioned(
+                  top: 24,
+                  right: 24,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withOpacity(0.7),
+                      borderRadius: BorderRadius.circular(24),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.3),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.image, color: Colors.white, size: 20),
+                        const SizedBox(width: 6),
+                        Text(
+                          '${_currentImageIndex + 1}/${_recipe.imagenes!.length}',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+
+            // 🎯 NUEVO: Flechas de navegación para desktop (aparecen al hover)
+            if (_recipe.imagenes!.length > 1) ...[
+              // Flecha izquierda
+              if (_currentImageIndex > 0)
+                Positioned(
+                  left: 16,
+                  top: carouselHeight / 2 - 24,
+                  child: MouseRegion(
+                    cursor: SystemMouseCursors.click,
+                    child: GestureDetector(
+                      onTap: () {
+                        _carouselController.previousPage(
+                          duration: const Duration(milliseconds: 300),
+                          curve: Curves.easeInOut,
+                        );
+                      },
+                      child: Container(
+                        width: 48,
+                        height: 48,
+                        decoration: BoxDecoration(
+                          color: Colors.black.withOpacity(0.5),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.chevron_left,
+                          color: Colors.white,
+                          size: 32,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+
+              // Flecha derecha
+              if (_currentImageIndex < _recipe.imagenes!.length - 1)
+                Positioned(
+                  right: 16,
+                  top: carouselHeight / 2 - 24,
+                  child: MouseRegion(
+                    cursor: SystemMouseCursors.click,
+                    child: GestureDetector(
+                      onTap: () {
+                        _carouselController.nextPage(
+                          duration: const Duration(milliseconds: 300),
+                          curve: Curves.easeInOut,
+                        );
+                      },
+                      child: Container(
+                        width: 48,
+                        height: 48,
+                        decoration: BoxDecoration(
+                          color: Colors.black.withOpacity(0.5),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.chevron_right,
+                          color: Colors.white,
+                          size: 32,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ],
+        );
+      },
+    );
+  }
+
   Widget _buildBasicInfo() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // ✅ NUEVO:  Mostrar fecha de creación
         if (_recipe.createdAt != null) _buildCreatedAtBanner(),
-
         const SizedBox(height: 12),
-
-        // Chips existentes
         Wrap(
           spacing: 16,
           runSpacing: 8,
@@ -559,7 +851,6 @@ class _RecipeDetailDialogContentState
     );
   }
 
-  // ✅ NUEVO: Banner con fecha completa y tiempo relativo
   Widget _buildCreatedAtBanner() {
     if (_recipe.createdAt == null) return const SizedBox.shrink();
 
@@ -589,7 +880,6 @@ class _RecipeDetailDialogContentState
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Fecha completa
               Text(
                 fechaCompleta,
                 style: const TextStyle(
@@ -599,7 +889,6 @@ class _RecipeDetailDialogContentState
                 ),
               ),
               const SizedBox(height: 2),
-              // Tiempo relativo
               Text(
                 fechaRelativa,
                 style: TextStyle(
@@ -615,7 +904,6 @@ class _RecipeDetailDialogContentState
     );
   }
 
-  // ✅ NUEVO: Formatear fecha completa (15 de diciembre de 2025)
   String _formatearFechaCompleta(String fechaString) {
     try {
       final fecha = DateTime.parse(fechaString);
@@ -642,109 +930,93 @@ class _RecipeDetailDialogContentState
       final hora = fecha.hour.toString().padLeft(2, '0');
       final minuto = fecha.minute.toString().padLeft(2, '0');
 
-      return '$dia de $mes de $anios a las $hora:$minuto';
+      return '$dia de $mes de $anios a las $hora: $minuto';
     } catch (e) {
       print('❌ Error al formatear fecha completa: $e');
       return 'Fecha desconocida';
     }
   }
 
-  // ✅ NUEVO:  Formatear fecha relativa (hace 2 días)
   String _formatearFechaRelativa(String fechaString) {
     try {
       final fecha = DateTime.parse(fechaString);
       final ahora = DateTime.now();
       final diferencia = ahora.difference(fecha);
 
-      // Hace menos de 1 minuto
       if (diferencia.inSeconds < 60) {
         return 'Publicada hace unos segundos';
       }
 
-      // Hace menos de 1 hora
       if (diferencia.inMinutes < 60) {
         final minutos = diferencia.inMinutes;
         return 'Publicada hace $minutos ${minutos == 1 ? "minuto" : "minutos"}';
       }
 
-      // Hace menos de 1 día
       if (diferencia.inHours < 24) {
         final horas = diferencia.inHours;
         return 'Publicada hace $horas ${horas == 1 ? "hora" : "horas"}';
       }
 
-      // Hace menos de 1 semana
       if (diferencia.inDays < 7) {
         final dias = diferencia.inDays;
         return 'Publicada hace $dias ${dias == 1 ? "día" : "días"}';
       }
 
-      // Hace menos de 1 mes
       if (diferencia.inDays < 30) {
         final semanas = (diferencia.inDays / 7).floor();
         return 'Publicada hace $semanas ${semanas == 1 ? "semana" : "semanas"}';
       }
 
-      // Hace menos de 1 anios
       if (diferencia.inDays < 365) {
         final meses = (diferencia.inDays / 30).floor();
         return 'Publicada hace $meses ${meses == 1 ? "mes" : "meses"}';
       }
 
-      // Hace más de 1 anios
       final anios = (diferencia.inDays / 365).floor();
-      return 'Publicada hace $anios ${anios == 1 ? "anios" : "anios"}';
+      return 'Publicada hace $anios ${anios == 1 ? "año" : "años"}';
     } catch (e) {
-      print('❌ Error al formatear fecha relativa:  $e');
+      print('❌ Error al formatear fecha relativa: $e');
       return 'Publicada recientemente';
     }
   }
 
-  // ✅ NUEVO: Método para formatear la fecha
   String _formatearFecha(String fechaString) {
     try {
       final fecha = DateTime.parse(fechaString);
       final ahora = DateTime.now();
       final diferencia = ahora.difference(fecha);
 
-      // Hace menos de 1 minuto
       if (diferencia.inSeconds < 60) {
         return 'hace unos segundos';
       }
 
-      // Hace menos de 1 hora
       if (diferencia.inMinutes < 60) {
         final minutos = diferencia.inMinutes;
         return 'hace $minutos ${minutos == 1 ? "minuto" : "minutos"}';
       }
 
-      // Hace menos de 1 día
       if (diferencia.inHours < 24) {
         final horas = diferencia.inHours;
         return 'hace $horas ${horas == 1 ? "hora" : "horas"}';
       }
 
-      // Hace menos de 1 semana
       if (diferencia.inDays < 7) {
         final dias = diferencia.inDays;
         return 'hace $dias ${dias == 1 ? "día" : "días"}';
       }
 
-      // Hace menos de 1 mes
       if (diferencia.inDays < 30) {
         final semanas = (diferencia.inDays / 7).floor();
         return 'hace $semanas ${semanas == 1 ? "semana" : "semanas"}';
       }
 
-      // Hace menos de 1 anios
       if (diferencia.inDays < 365) {
         final meses = (diferencia.inDays / 30).floor();
         return 'hace $meses ${meses == 1 ? "mes" : "meses"}';
       }
 
-      // Hace más de 1 anios
       final anios = (diferencia.inDays / 365).floor();
-      return 'hace $anios ${anios == 1 ? "anios" : "anios"}';
+      return 'hace $anios ${anios == 1 ? "año" : "años"}';
     } catch (e) {
       print('❌ Error al formatear fecha:  $e');
       return 'Fecha desconocida';
@@ -792,7 +1064,6 @@ class _RecipeDetailDialogContentState
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 12),
-
           Row(
             children: [
               const Text(
@@ -809,15 +1080,12 @@ class _RecipeDetailDialogContentState
               ),
             ],
           ),
-
           const Divider(height: 24),
-
           const Text(
             '¿Qué te ha parecido?',
             style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
           ),
           const SizedBox(height: 8),
-
           Row(
             children: [
               RatingStars(
