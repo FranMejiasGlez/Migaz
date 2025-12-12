@@ -34,8 +34,8 @@ class RecipeSearchBar extends StatelessWidget {
           controller: controller,
           onChanged: onChanged,
           decoration: InputDecoration(
-            hintText: 'Busca una receta o usuario...',
-            hintStyle: TextStyle(color: Colors.white),
+            hintText: 'Busca por nombre, usuario o categoría...',
+            hintStyle: TextStyle(color: Colors.white.withOpacity(0.8)),
             prefixIcon: const Icon(Icons.search),
             prefixIconColor: Colors.white,
             suffixIcon: showClearButton

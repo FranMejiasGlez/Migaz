@@ -1,19 +1,17 @@
 import 'dart:io';
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:migaz/data/models/recipe.dart';
+import 'package:migaz/data/services/categoria_service.dart';
 
 class DialogoEditarReceta extends StatefulWidget {
   final Recipe recetaOriginal;
-  final List<String> categorias;
   final List<String> dificultades;
 
   const DialogoEditarReceta({
     Key? key,
     required this.recetaOriginal,
-    required this.categorias,
     required this.dificultades,
   }) : super(key: key);
 
@@ -30,48 +28,67 @@ class _DialogoEditarRecetaState extends State<DialogoEditarReceta> {
   late TextEditingController _pasoInputController;
   late TextEditingController _youtubeController;
 
+  final CategoriaService _categoriaService = CategoriaService();
+  List<String> _categorias = [];
+  bool _isLoadingCategorias = true;
+
   late String _categoriaSeleccionada;
   late int _dificultadSeleccionada;
 
   late List<String> _ingredientes;
   late List<String> _pasos;
-  late List<XFile> _imagenesEditadas; // Editadas solo durante edición
-  late List<String> _imagenesPreviasUrls; // Imágenes originales si las hay
+  late List<XFile> _imagenesEditadas;
+  late List<String> _imagenesPreviasUrls;
   final ImagePicker _picker = ImagePicker();
 
   @override
   void initState() {
     super.initState();
-    // Inicializar controllers con valores actuales
-    _nombreController = TextEditingController(
-      text: widget.recetaOriginal.nombre,
-    );
-    _descripcionController = TextEditingController(
-      text: widget.recetaOriginal.descripcion,
-    );
-    _tiempoController = TextEditingController(
-      text: widget.recetaOriginal.tiempo,
-    );
-    _servingsController = TextEditingController(
-      text: widget.recetaOriginal.comensales.toString(),
-    );
+    _inicializarControllers();
+    _cargarCategorias();
+  }
+
+  void _inicializarControllers() {
+    _nombreController = TextEditingController(text: widget.recetaOriginal.nombre);
+    _descripcionController = TextEditingController(text: widget.recetaOriginal.descripcion);
+    _tiempoController = TextEditingController(text: widget.recetaOriginal.tiempo);
+    _servingsController = TextEditingController(text: widget.recetaOriginal.comensales.toString());
     _ingredienteInputController = TextEditingController();
     _pasoInputController = TextEditingController();
-    _youtubeController = TextEditingController(
-      text: widget.recetaOriginal.youtube ?? '',
-    );
+    _youtubeController = TextEditingController(text: widget.recetaOriginal.youtube ?? '');
 
-    _categoriaSeleccionada = widget.categorias.firstWhere(
-      (c) => c.toLowerCase() == widget.recetaOriginal.categoria.toLowerCase(),
-      orElse: () => widget.categorias[0],
-    );
+    _categoriaSeleccionada = widget.recetaOriginal.categoria;
     _dificultadSeleccionada = widget.recetaOriginal.dificultad;
     _ingredientes = List<String>.from(widget.recetaOriginal.ingredientes);
     _pasos = List<String>.from(widget.recetaOriginal.pasos);
-
-    // Convertir URLs originales en lista, si las usas. Aquí ignoramos su edición.
     _imagenesPreviasUrls = widget.recetaOriginal.imagenes ?? [];
     _imagenesEditadas = [];
+  }
+
+  // ✅ NUEVO: Cargar categorías desde la BD
+  Future<void> _cargarCategorias() async {
+    try {
+      final categorias = await _categoriaService.obtenerCategorias();
+      setState(() {
+        _categorias = categorias.where((c) => c != 'Todos').toList();
+        
+        // Verificar si la categoría actual existe en la lista
+        if (!_categorias.contains(_categoriaSeleccionada) && _categorias.isNotEmpty) {
+          _categoriaSeleccionada = _categorias[0];
+        }
+        
+        _isLoadingCategorias = false;
+      });
+    } catch (e) {
+      print('❌ Error al cargar categorías: $e');
+      setState(() {
+        _categorias = ['Española', 'Italiana', 'Mexicana', 'Asiática', 'Postre'];
+        if (!_categorias.contains(_categoriaSeleccionada)) {
+          _categoriaSeleccionada = _categorias[0];
+        }
+        _isLoadingCategorias = false;
+      });
+    }
   }
 
   @override
@@ -151,9 +168,9 @@ class _DialogoEditarRecetaState extends State<DialogoEditarReceta> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error al tomar foto: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error al tomar foto: $e')),
+        );
       }
     }
   }
@@ -220,10 +237,7 @@ class _DialogoEditarRecetaState extends State<DialogoEditarReceta> {
                   },
                 ),
               ListTile(
-                leading: const Icon(
-                  Icons.photo_library_outlined,
-                  color: Colors.orange,
-                ),
+                leading: const Icon(Icons.photo_library_outlined, color: Colors.orange),
                 title: const Text('Múltiples imágenes'),
                 onTap: () {
                   Navigator.pop(context);
@@ -265,7 +279,6 @@ class _DialogoEditarRecetaState extends State<DialogoEditarReceta> {
       pasos: List<String>.from(_pasos),
       ingredientes: List<String>.from(_ingredientes),
       youtube: _youtubeController.text.trim(),
-      // Comentarios y valoración se mantienen
     );
 
     Navigator.of(context).pop({
@@ -281,150 +294,160 @@ class _DialogoEditarRecetaState extends State<DialogoEditarReceta> {
       title: const Text('Editar receta'),
       content: SizedBox(
         width: double.maxFinite,
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: _nombreController,
-                decoration: const InputDecoration(labelText: 'Nombre'),
-              ),
-              const SizedBox(height: 8),
-
-              // Categoría
-              DropdownButtonFormField<String>(
-                value: _categoriaSeleccionada,
-                items: widget.categorias
-                    .map((c) => DropdownMenuItem(value: c, child: Text(c)))
-                    .toList(),
-                onChanged: (v) => setState(
-                  () => _categoriaSeleccionada = v ?? _categoriaSeleccionada,
+        child: _isLoadingCategorias
+            ? const Center(
+                child: Padding(
+                  padding: EdgeInsets.all(32.0),
+                  child: CircularProgressIndicator(),
                 ),
-                decoration: const InputDecoration(labelText: 'Categoría'),
-              ),
-              const SizedBox(height: 8),
+              )
+            : SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextField(
+                      controller: _nombreController,
+                      decoration: const InputDecoration(labelText: 'Nombre'),
+                    ),
+                    const SizedBox(height: 8),
 
-              // Dificultad
-              DropdownButtonFormField<int>(
-                value: _dificultadSeleccionada,
-                decoration: const InputDecoration(labelText: 'Dificultad'),
-                items: const [
-                  DropdownMenuItem(value: 1, child: Text('⭐ Muy Fácil')),
-                  DropdownMenuItem(value: 2, child: Text('⭐⭐ Fácil')),
-                  DropdownMenuItem(value: 3, child: Text('⭐⭐⭐ Medio')),
-                  DropdownMenuItem(value: 4, child: Text('⭐⭐⭐⭐ Difícil')),
-                  DropdownMenuItem(value: 5, child: Text('⭐⭐⭐⭐⭐ Muy Difícil')),
-                ],
-                onChanged: (v) => setState(
-                  () => _dificultadSeleccionada = v ?? _dificultadSeleccionada,
-                ),
-              ),
-              TextField(
-                controller: _tiempoController,
-                decoration: const InputDecoration(labelText: 'Tiempo total'),
-              ),
-              const SizedBox(height: 8),
+                    // ✅ Categoría con datos dinámicos
+                    DropdownButtonFormField<String>(
+                      value: _categoriaSeleccionada,
+                      items: _categorias
+                          .map((c) => DropdownMenuItem(value: c, child: Text(c)))
+                          .toList(),
+                      onChanged: (v) => setState(
+                        () => _categoriaSeleccionada = v ?? _categoriaSeleccionada,
+                      ),
+                      decoration: const InputDecoration(labelText: 'Categoría'),
+                    ),
+                    const SizedBox(height: 8),
 
-              TextField(
-                controller: _servingsController,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(labelText: 'Comensales'),
-              ),
-              const SizedBox(height: 8),
-
-              TextField(
-                controller: _descripcionController,
-                maxLines: 3,
-                decoration: const InputDecoration(labelText: 'Descripción'),
-              ),
-              const SizedBox(height: 8),
-
-              TextField(
-                controller: _youtubeController,
-                decoration: const InputDecoration(
-                  labelText: 'Video YouTube (opcional)',
-                  hintText: 'https://youtube.com/.. .',
-                ),
-              ),
-              const SizedBox(height: 16),
-
-              // Sección de imágenes
-              _buildImagenesSection(),
-              const SizedBox(height: 16),
-
-              // Ingredientes
-              const Text(
-                'Ingredientes',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-              Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _ingredienteInputController,
-                      decoration: const InputDecoration(
-                        hintText: 'Añadir ingrediente',
+                    // Dificultad
+                    DropdownButtonFormField<int>(
+                      value: _dificultadSeleccionada,
+                      decoration: const InputDecoration(labelText: 'Dificultad'),
+                      items: const [
+                        DropdownMenuItem(value: 1, child: Text('⭐ Muy Fácil')),
+                        DropdownMenuItem(value: 2, child: Text('⭐⭐ Fácil')),
+                        DropdownMenuItem(value: 3, child: Text('⭐⭐⭐ Medio')),
+                        DropdownMenuItem(value: 4, child: Text('⭐⭐⭐⭐ Difícil')),
+                        DropdownMenuItem(value: 5, child: Text('⭐⭐⭐⭐⭐ Muy Difícil')),
+                      ],
+                      onChanged: (v) => setState(
+                        () => _dificultadSeleccionada = v ?? _dificultadSeleccionada,
                       ),
                     ),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.add),
-                    onPressed: _agregarIngrediente,
-                  ),
-                ],
-              ),
-              ..._ingredientes.asMap().entries.map((entry) {
-                return ListTile(
-                  title: Text(entry.value),
-                  trailing: IconButton(
-                    icon: const Icon(Icons.delete),
-                    onPressed: () => _quitarIngrediente(entry.key),
-                  ),
-                );
-              }).toList(),
-              const SizedBox(height: 16),
+                    TextField(
+                      controller: _tiempoController,
+                      decoration: const InputDecoration(labelText: 'Tiempo total'),
+                    ),
+                    const SizedBox(height: 8),
 
-              // Pasos
-              const Text(
-                'Pasos',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-              Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _pasoInputController,
+                    TextField(
+                      controller: _servingsController,
+                      keyboardType: TextInputType.number,
+                      decoration: const InputDecoration(labelText: 'Comensales'),
+                    ),
+                    const SizedBox(height: 8),
+
+                    TextField(
+                      controller: _descripcionController,
+                      maxLines: 3,
+                      decoration: const InputDecoration(labelText: 'Descripción'),
+                    ),
+                    const SizedBox(height: 8),
+
+                    TextField(
+                      controller: _youtubeController,
                       decoration: const InputDecoration(
-                        hintText: 'Añadir paso',
+                        labelText: 'Video YouTube (opcional)',
+                        hintText: 'https://youtube.com/...',
                       ),
                     ),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.add),
-                    onPressed: _agregarPaso,
-                  ),
-                ],
+                    const SizedBox(height: 16),
+
+                    // Sección de imágenes
+                    _buildImagenesSection(),
+                    const SizedBox(height: 16),
+
+                    // Ingredientes
+                    const Text(
+                      'Ingredientes',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: _ingredienteInputController,
+                            decoration: const InputDecoration(
+                              hintText: 'Añadir ingrediente',
+                            ),
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.add),
+                          onPressed: _agregarIngrediente,
+                        ),
+                      ],
+                    ),
+                    ..._ingredientes.asMap().entries.map((entry) {
+                      return ListTile(
+                        title: Text(entry.value),
+                        trailing: IconButton(
+                          icon: const Icon(Icons.delete),
+                          onPressed: () => _quitarIngrediente(entry.key),
+                        ),
+                      );
+                    }).toList(),
+                    const SizedBox(height: 16),
+
+                    // Pasos
+                    const Text(
+                      'Pasos',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: _pasoInputController,
+                            decoration: const InputDecoration(
+                              hintText: 'Añadir paso',
+                            ),
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.add),
+                          onPressed: _agregarPaso,
+                        ),
+                      ],
+                    ),
+                    ..._pasos.asMap().entries.map((entry) {
+                      return ListTile(
+                        leading: Text('${entry.key + 1}. '),
+                        title: Text(entry.value),
+                        trailing: IconButton(
+                          icon: const Icon(Icons.delete),
+                          onPressed: () => _quitarPaso(entry.key),
+                        ),
+                      );
+                    }).toList(),
+                  ],
+                ),
               ),
-              ..._pasos.asMap().entries.map((entry) {
-                return ListTile(
-                  leading: Text('${entry.key + 1}.  '),
-                  title: Text(entry.value),
-                  trailing: IconButton(
-                    icon: const Icon(Icons.delete),
-                    onPressed: () => _quitarPaso(entry.key),
-                  ),
-                );
-              }).toList(),
-            ],
-          ),
-        ),
       ),
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
           child: const Text('Cancelar'),
         ),
-        ElevatedButton(onPressed: _onGuardar, child: const Text('Guardar')),
+        ElevatedButton(
+          onPressed: _isLoadingCategorias ? null : _onGuardar,
+          child: const Text('Guardar'),
+        ),
       ],
     );
   }
@@ -447,10 +470,7 @@ class _DialogoEditarRecetaState extends State<DialogoEditarReceta> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.teal,
                 foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 8,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               ),
             ),
           ],

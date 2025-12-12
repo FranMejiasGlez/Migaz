@@ -4,6 +4,7 @@ import 'package:migaz/core/utils/recipe_utils.dart';
 import 'package:migaz/data/models/recipe.dart';
 import 'package:migaz/data/repositories/receta_repository.dart';
 import 'package:migaz/ui/widgets/recipe/recipe_detail_dialog.dart';
+import 'package:migaz/ui/widgets/recipe/recipe_grid_view.dart';
 import 'package:migaz/ui/widgets/recipe/recipe_search_section.dart';
 import 'package:migaz/ui/widgets/recipe/user_avatar.dart';
 import 'package:migaz/core/theme/app_theme.dart';
@@ -196,7 +197,6 @@ class _PantallaBibliotecaState extends State<PantallaBiblioteca> {
     return RecipeSearchSection(
       searchController: _searchController,
       selectedFilter: _filtroSeleccionado,
-      categories: RecipeConstants.categories,
       onSearchChanged: (value) => setState(() => _searchQuery = value),
       onClearSearch: () => setState(() {
         _searchController.clear();
@@ -269,41 +269,15 @@ class _PantallaBibliotecaState extends State<PantallaBiblioteca> {
   }
 
   Widget _buildSearchResults() {
-    if (_recetasFiltradas.isEmpty) {
-      return _buildEmptyState(
-        icon: Icons.search_off,
-        message: 'No se encontraron recetas',
-      );
-    }
-
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final screenWidth = constraints.maxWidth;
-        final cardWidth = (screenWidth - 36) / 2;
-        final cardHeight = cardWidth * 1.2;
-
-        return Padding(
-          padding: const EdgeInsets.all(12),
-          child: GridView.builder(
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              crossAxisSpacing: RecipeConstants.gridCrossAxisSpacing,
-              mainAxisSpacing: RecipeConstants.gridMainAxisSpacing,
-              childAspectRatio: cardWidth / cardHeight,
-            ),
-            itemCount: _recetasFiltradas.length,
-            itemBuilder: (context, index) {
-              final receta = _recetasFiltradas[index];
-              return RecipeCard(
-                recipe: receta,
-                onTap: () => RecipeDetailDialog.show(context, receta),
-              );
-            },
-          ),
-        );
-      },
+  if (_recetasFiltradas.isEmpty) {
+    return _buildEmptyState(
+      icon: Icons.search_off,
+      message: 'No se encontraron recetas',
     );
   }
+
+  return RecipeGridView(recipes: _recetasFiltradas);
+}
 
   Widget _buildHomeContent() {
     if (_isLoading) {

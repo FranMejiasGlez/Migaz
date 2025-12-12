@@ -11,6 +11,7 @@ import 'package:flutter/material.dart';
 import 'package:migaz/ui/widgets/recipe/recipe_card.dart';
 import 'package:migaz/viewmodels/home_viewmodel.dart';
 import 'package:provider/provider.dart';
+import 'package:migaz/ui/widgets/recipe/recipe_grid_view.dart';
 
 class PantallaGuardados extends StatefulWidget {
   const PantallaGuardados({Key? key}) : super(key: key);
@@ -26,7 +27,7 @@ class _PantallaGuardadosState extends State<PantallaGuardados> {
   bool _isLoading = true;
 
   // ✅ Usuario actual
-  final String _currentUser = 'usuario_demo'; 
+  final String _currentUser = 'usuario_demo';
 
   @override
   void initState() {
@@ -132,7 +133,6 @@ class _PantallaGuardadosState extends State<PantallaGuardados> {
     return RecipeSearchSection(
       searchController: _searchController,
       selectedFilter: _filtroSeleccionado,
-      categories: RecipeConstants.categories,
       onSearchChanged: (value) => setState(() => _searchQuery = value),
       onClearSearch: () => setState(() {
         _searchController.clear();
@@ -183,34 +183,7 @@ class _PantallaGuardadosState extends State<PantallaGuardados> {
   }
 
   Widget _buildGridView(List<Recipe> recetas) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final screenWidth = constraints.maxWidth;
-        final cardWidth = (screenWidth - 100) / 4;
-        final cardHeight = cardWidth * 1.2;
-
-        return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-          child: GridView.builder(
-            physics: const AlwaysScrollableScrollPhysics(),
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: RecipeConstants.gridCrossAxisCount,
-              crossAxisSpacing: RecipeConstants.gridCrossAxisSpacing,
-              mainAxisSpacing: RecipeConstants.gridMainAxisSpacing,
-              childAspectRatio: cardWidth / cardHeight,
-            ),
-            itemCount: recetas.length,
-            itemBuilder: (context, index) {
-              final receta = recetas[index];
-              return RecipeCard(
-                recipe: receta,
-                onTap: () => RecipeDetailDialog.show(context, receta),
-              );
-            },
-          ),
-        );
-      },
-    );
+    return RecipeGridView(recipes: recetas, onRefresh: _cargarGuardadas);
   }
 
   Widget _buildEmptyState({required IconData icon, required String message}) {

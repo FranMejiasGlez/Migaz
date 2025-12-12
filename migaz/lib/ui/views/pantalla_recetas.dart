@@ -5,6 +5,7 @@ import 'package:migaz/core/config/routes.dart';
 import 'package:migaz/core/constants/recipe_constants.dart';
 import 'package:migaz/data/models/recipe.dart';
 import 'package:migaz/ui/widgets/recipe/recipe_detail_dialog.dart';
+import 'package:migaz/ui/widgets/recipe/recipe_grid_view.dart';
 import 'package:migaz/ui/widgets/recipe/recipe_search_section.dart';
 import 'package:migaz/ui/widgets/recipe/user_avatar.dart';
 import 'package:migaz/ui/widgets/recipe/ventana_crear_receta.dart';
@@ -14,7 +15,6 @@ import 'package:migaz/core/utils/recipe_utils.dart';
 import 'package:migaz/viewmodels/recipe_list_viewmodel.dart';
 import 'package:migaz/viewmodels/home_viewmodel.dart';
 import 'package:provider/provider.dart';
-import '../widgets/recipe/recipe_card.dart';
 import '../widgets/recipe/recipe_carousel.dart';
 
 class PantallaRecetas extends StatelessWidget {
@@ -40,25 +40,13 @@ class _PantallaRecetasViewState extends State<_PantallaRecetasView> {
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
   String _selectedFilter = 'Todos';
-  /*
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<HomeViewModel>().cargarHome();
-    });
-  }
-*/
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      // ✅ Añadir async
       final homeViewModel = context.read<HomeViewModel>();
-      await homeViewModel.cargarHome(); // ✅ Esperar a que termine
-
-      // ✅ NUEVO: Cargar guardadas DESPUÉS de cargar home
+      await homeViewModel.cargarHome();
       await homeViewModel.cargarGuardadas('usuario_demo');
     });
   }
@@ -69,9 +57,10 @@ class _PantallaRecetasViewState extends State<_PantallaRecetasView> {
     super.dispose();
   }
 
-  List<Recipe> _getFilteredRecipes(RecipeListViewModel viewModel) {
+  // ✅ ACTUALIZADO: Filtrar sobre HomeViewModel.todasLasRecetas
+  List<Recipe> _getFilteredRecipes(HomeViewModel homeViewModel) {
     return RecipeUtils.filterRecipes(
-      recipes: viewModel.recipes,
+      recipes: homeViewModel.todasLasRecetas,
       searchQuery: _searchQuery,
       selectedFilter: _selectedFilter,
     );
@@ -94,12 +83,12 @@ class _PantallaRecetasViewState extends State<_PantallaRecetasView> {
             child: SafeArea(
               child: Column(
                 children: [
-                  _buildHeader(context, recipeListViewModel),
+                  _buildHeader(context),
                   _buildSearchSection(),
                   const SizedBox(height: 16),
                   Expanded(
                     child: _hasActiveFilters()
-                        ? _buildSearchResults(recipeListViewModel)
+                        ? _buildSearchResults()
                         : _buildHomeContent(),
                   ),
                   _buildCreateRecipeButton(context, recipeListViewModel),
@@ -112,16 +101,15 @@ class _PantallaRecetasViewState extends State<_PantallaRecetasView> {
     );
   }
 
-  Widget _buildHeader(BuildContext context, RecipeListViewModel viewModel) {
+  Widget _buildHeader(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          _buildLibraryButton(context, viewModel),
+          _buildLibraryButton(context),
           const SizedBox(width: 12),
           _buildUserNameDisplay(),
-          // ✅ AÑADIR: UserAvatar
           UserAvatar(
             imageUrl: RecipeConstants.defaultAvatarUrl,
             onTap: () => Navigator.pushNamed(context, AppRoutes.perfilUser),
@@ -131,18 +119,11 @@ class _PantallaRecetasViewState extends State<_PantallaRecetasView> {
     );
   }
 
-  Widget _buildLibraryButton(
-    BuildContext context,
-    RecipeListViewModel viewModel,
-  ) {
+  Widget _buildLibraryButton(BuildContext context) {
     return SizedBox(
       child: ElevatedButton(
         onPressed: () {
-          Navigator.pushNamed(
-            context,
-            AppRoutes.biblioteca,
-            arguments: viewModel.recipes,
-          );
+          Navigator.pushNamed(context, AppRoutes.biblioteca);
         },
         style: ElevatedButton.styleFrom(
           backgroundColor: const Color(0xFF25CCAD),
@@ -183,7 +164,6 @@ class _PantallaRecetasViewState extends State<_PantallaRecetasView> {
     return RecipeSearchSection(
       searchController: _searchController,
       selectedFilter: _selectedFilter,
-      categories: RecipeConstants.categories,
       onSearchChanged: (value) => setState(() => _searchQuery = value),
       onClearSearch: () => setState(() {
         _searchController.clear();
@@ -198,26 +178,24 @@ class _PantallaRecetasViewState extends State<_PantallaRecetasView> {
     );
   }
 
-  Widget _buildSearchResults(RecipeListViewModel viewModel) {
-    final filteredRecipes = _getFilteredRecipes(viewModel);
+  // ✅ ACTUALIZADO: Usar Consumer<HomeViewModel>
+  Widget _buildSearchResults() {
+    return Consumer<HomeViewModel>(
+      builder: (context, homeViewModel, child) {
+        if (homeViewModel.isLoading) {
+          return const Center(child: CircularProgressIndicator());
+        }
 
-    if (filteredRecipes.isEmpty) {
-      return _buildEmptyState(
-        icon: Icons.search_off,
-        message: 'No se encontraron recetas',
-      );
-    }
+        final filteredRecipes = _getFilteredRecipes(homeViewModel);
 
-    // En _buildSearchResults
-    return ListView.builder(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      itemCount: filteredRecipes.length,
-      itemBuilder: (context, index) {
-        final receta = filteredRecipes[index];
-        return RecipeCard(
-          recipe: receta, // ✅ Solo pasa el objeto completo
-          onTap: () => RecipeDetailDialog.show(context, receta),
-        );
+        if (filteredRecipes.isEmpty) {
+          return _buildEmptyState(
+            icon: Icons.search_off,
+            message: 'No se encontraron recetas',
+          );
+        }
+
+        return RecipeGridView(recipes: filteredRecipes);
       },
     );
   }
@@ -433,9 +411,6 @@ class _PantallaRecetasViewState extends State<_PantallaRecetasView> {
     final result = await showDialog<Map<String, dynamic>>(
       context: context,
       builder: (context) => DialogoCrearReceta(
-        categorias: RecipeConstants.categories
-            .where((c) => c != 'Todos')
-            .toList(),
         dificultades: RecipeConstants.dificultadLabels,
       ),
     );
@@ -446,23 +421,15 @@ class _PantallaRecetasViewState extends State<_PantallaRecetasView> {
     final String? youtube = result['youtube'] as String?;
     final List<XFile> imagenesXFile = result['imagenes'] as List<XFile>? ?? [];
 
-    // ✅ DEBUGGING:  Verificar que lleguen las imágenes
-    print('🔍 DEBUG - Imágenes recibidas del diálogo: ${imagenesXFile.length}');
-
-    // Convertir XFile a File solo en móvil/desktop
     List<File>? imagenes;
     List<XFile>? imagenesWeb;
 
     if (imagenesXFile.isNotEmpty) {
       if (kIsWeb) {
         imagenesWeb = imagenesXFile;
-        print('🌐 DEBUG - Usando imagenesWeb (${imagenesWeb.length} archivos)');
       } else {
         imagenes = imagenesXFile.map((xfile) => File(xfile.path)).toList();
-        print('📱 DEBUG - Usando imagenes File (${imagenes.length} archivos)');
       }
-    } else {
-      print('⚠️ DEBUG - No hay imágenes seleccionadas');
     }
 
     if (context.mounted) {
@@ -472,10 +439,6 @@ class _PantallaRecetasViewState extends State<_PantallaRecetasView> {
         builder: (context) => const Center(child: CircularProgressIndicator()),
       );
     }
-
-    print('📤 DEBUG - Llamando a crearReceta con: ');
-    print('  - imagenes (File): ${imagenes?.length ?? 0}');
-    print('  - imagenesXFile (XFile): ${imagenesWeb?.length ?? 0}');
 
     final exito = await viewModel.crearReceta(
       nueva,
@@ -498,7 +461,6 @@ class _PantallaRecetasViewState extends State<_PantallaRecetasView> {
     }
   }
 
-  // ✅ MÉTODO AÑADIDO
   void _showCreateRecipeResult(
     BuildContext context,
     bool success,

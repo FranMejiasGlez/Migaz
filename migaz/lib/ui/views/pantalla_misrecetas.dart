@@ -4,6 +4,7 @@ import 'package:migaz/core/utils/recipe_utils.dart';
 import 'package:migaz/data/models/recipe.dart';
 import 'package:migaz/data/repositories/receta_repository.dart';
 import 'package:migaz/ui/widgets/recipe/recipe_detail_dialog.dart';
+import 'package:migaz/ui/widgets/recipe/recipe_grid_view.dart';
 import 'package:migaz/ui/widgets/recipe/recipe_search_section.dart';
 import 'package:migaz/ui/widgets/recipe/user_avatar.dart';
 import 'package:migaz/core/theme/app_theme.dart';
@@ -171,7 +172,6 @@ class _PantallaMisRecetasState extends State<PantallaMisRecetas> {
     return RecipeSearchSection(
       searchController: _searchController,
       selectedFilter: _filtroSeleccionado,
-      categories: RecipeConstants.categories,
       onSearchChanged: (value) => setState(() => _searchQuery = value),
       onClearSearch: () => setState(() {
         _searchController.clear();
@@ -230,46 +230,17 @@ class _PantallaMisRecetasState extends State<PantallaMisRecetas> {
 
   /// ✅ ACTUALIZADO:  Grid simplificado (RecipeCard maneja el Consumer)
   Widget _buildGridView() {
-    final recetasAMostrar = _hasActiveFilters ? _recetasFiltradas : _misRecetas;
+  final recetasAMostrar = _hasActiveFilters ? _recetasFiltradas : _misRecetas;
 
-    if (recetasAMostrar.isEmpty) {
-      return _buildEmptyState();
-    }
-
-    return RefreshIndicator(
-      onRefresh: _cargarMisRecetas,
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final screenWidth = constraints.maxWidth;
-          final cardWidth = (screenWidth - 100) / 4;
-          final cardHeight = cardWidth * 1.2;
-
-          return Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-            child: GridView.builder(
-              physics: const AlwaysScrollableScrollPhysics(),
-              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: RecipeConstants.gridCrossAxisCount,
-                crossAxisSpacing: RecipeConstants.gridCrossAxisSpacing,
-                mainAxisSpacing: RecipeConstants.gridMainAxisSpacing,
-                childAspectRatio: cardWidth / cardHeight,
-              ),
-              itemCount: recetasAMostrar.length,
-              itemBuilder: (context, index) {
-                final receta = recetasAMostrar[index];
-
-                // ✅ RecipeCard se encarga de buscar la versión actualizada
-                return RecipeCard(
-                  recipe: receta,
-                  onTap: () => RecipeDetailDialog.show(context, receta),
-                );
-              },
-            ),
-          );
-        },
-      ),
-    );
+  if (recetasAMostrar.isEmpty) {
+    return _buildEmptyState();
   }
+
+  return RecipeGridView(
+    recipes: recetasAMostrar,
+    onRefresh: _cargarMisRecetas,
+  );
+}
 
   Widget _buildEmptyState() {
     final bool hasFilters = _hasActiveFilters;

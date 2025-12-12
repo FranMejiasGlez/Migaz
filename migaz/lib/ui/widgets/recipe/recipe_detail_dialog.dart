@@ -1310,7 +1310,6 @@ class _RecipeDetailDialogContentState
         context: context,
         builder: (context) => DialogoEditarReceta(
           recetaOriginal: _recipe,
-          categorias: ['Española', 'Italiana', 'Japonesa', 'Mexicana'],
           dificultades: [
             'Muy Fácil',
             'Fácil',

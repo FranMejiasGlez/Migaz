@@ -9,6 +9,7 @@ class RecetaRepository {
   RecetaRepository({RecetaService? recetaService})
     : _recetaService = recetaService ?? RecetaService();
 
+
   Future<List<Recipe>> obtenerTodas() async {
     try {
       final jsonList = await _recetaService.obtenerTodas();
