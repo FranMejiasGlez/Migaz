@@ -8,6 +8,7 @@ import 'viewmodels/auth_viewmodel.dart';
 import 'viewmodels/recipe_list_viewmodel.dart';
 import 'viewmodels/comentario_viewmodel.dart';
 import 'viewmodels/home_viewmodel.dart';
+import 'viewmodels/biblioteca_viewmodel.dart';
 
 void main() {
   runApp(
@@ -21,6 +22,7 @@ void main() {
           ChangeNotifierProvider(create: (_) => RecipeListViewModel()),
           ChangeNotifierProvider(create: (_) => ComentarioViewModel()),
           ChangeNotifierProvider(create: (_) => HomeViewModel()),
+          ChangeNotifierProvider(create: (_) => BibliotecaViewModel()),
         ],
         child: const MyApp(),
       ),

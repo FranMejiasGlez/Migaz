@@ -68,7 +68,7 @@ class RecetaService {
       print(
         '✅ DEBUG - Recetas del usuario obtenidas: ${(response as List).length}',
       );
-      return response as List<dynamic>;
+      return response;
     } catch (e) {
       print(
         '⚠️ DEBUG - Endpoint de usuario no disponible, filtrando localmente',

@@ -3,12 +3,10 @@ import 'package:migaz/core/config/routes.dart';
 import 'package:migaz/core/constants/recipe_constants.dart';
 import 'package:migaz/core/utils/recipe_utils.dart';
 import 'package:migaz/data/models/recipe.dart';
-import 'package:migaz/ui/widgets/recipe/recipe_detail_dialog.dart';
 import 'package:migaz/ui/widgets/recipe/recipe_search_section.dart';
 import 'package:migaz/ui/widgets/recipe/user_avatar.dart';
 import 'package:migaz/core/theme/app_theme.dart';
 import 'package:flutter/material.dart';
-import 'package:migaz/ui/widgets/recipe/recipe_card.dart';
 import 'package:migaz/viewmodels/home_viewmodel.dart';
 import 'package:provider/provider.dart';
 import 'package:migaz/ui/widgets/recipe/recipe_grid_view.dart';
@@ -82,13 +80,15 @@ class _PantallaGuardadosState extends State<PantallaGuardados> {
 
   Widget _buildHeader() {
     return Padding(
-      padding: const EdgeInsets.all(16.0),
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
       child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           _buildBackButton(),
-          const SizedBox(width: 12),
-          _buildTitle(),
-          const SizedBox(width: 12),
+          const SizedBox(width: 8),
+          // El título ahora es flexible
+          Expanded(child: _buildTitle()),
+          const SizedBox(width: 8),
           UserAvatar(
             imageUrl: RecipeConstants.defaultAvatarUrl,
             onTap: () => Navigator.pushNamed(context, AppRoutes.perfilUser),
@@ -106,26 +106,58 @@ class _PantallaGuardadosState extends State<PantallaGuardados> {
   }
 
   Widget _buildTitle() {
-    return Expanded(
-      child: Consumer<HomeViewModel>(
-        builder: (context, homeViewModel, child) {
-          final count = homeViewModel.recetasGuardadas.length;
-          return Column(
+    // 1. Usar Consumer para escuchar cambios en HomeViewModel
+    return Consumer<HomeViewModel>(
+      builder: (context, viewModel, child) {
+        // 2. Obtener el conteo y el estado de carga del ViewModel
+        final int count =
+            viewModel.recetasGuardadas.length; // ✅ Conteo de recetas guardadas
+        final bool isLoading = viewModel
+            .isLoading; // Asumimos que isLoading viene del BaseViewModel/HomeViewModel
+
+        return Container(
+          decoration: BoxDecoration(
+            color: const Color(0xFFEA7317).withOpacity(0.5),
+            borderRadius: BorderRadius.circular(20),
+          ),
+          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+          child: Column(
             children: [
-              const Text(
-                'Recetas Guardadas',
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              const FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  // ✅ Título actualizado para reflejar la pantalla de guardados
+                  'Recetas Guardadas',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                ),
               ),
-              if (!_isLoading)
-                Text(
-                  '$count ${count == 1 ? "receta" : "recetas"}',
-                  style: TextStyle(fontSize: 14, color: Colors.grey[700]),
+
+              // 3. Mostrar el conteo solo si no está cargando
+              if (!isLoading)
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    // ✅ Usamos la variable 'count' obtenida del ViewModel
+                    '$count ${count == 1 ? "receta" : "recetas"}',
+                    style: TextStyle(fontSize: 12, color: Colors.grey[800]),
+                  ),
+                ),
+
+              // Opcional: Mostrar un indicador de carga si los datos se están cargando
+              if (isLoading)
+                const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                  ),
                 ),
             ],
-          );
-        },
-      ),
+          ),
+        );
+      },
     );
   }
 

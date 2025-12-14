@@ -102,14 +102,20 @@ class _PantallaRecetasViewState extends State<_PantallaRecetasView> {
   }
 
   Widget _buildHeader(BuildContext context) {
+    // Usamos LayoutBuilder o simplemente confiamos en el Expanded
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+      padding: const EdgeInsets.symmetric(
+        horizontal: 16.0,
+        vertical: 16.0,
+      ), // Reduje padding horizontal a 16 para móviles
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween, // Mejor distribución
         children: [
           _buildLibraryButton(context),
-          const SizedBox(width: 12),
-          _buildUserNameDisplay(),
+          const SizedBox(width: 8), // Espaciado flexible
+          // Expanded obliga al widget a ocupar solo el espacio sobrante
+          Expanded(child: _buildUserNameDisplay()),
+          const SizedBox(width: 8),
           UserAvatar(
             imageUrl: RecipeConstants.defaultAvatarUrl,
             onTap: () => Navigator.pushNamed(context, AppRoutes.perfilUser),
@@ -120,7 +126,9 @@ class _PantallaRecetasViewState extends State<_PantallaRecetasView> {
   }
 
   Widget _buildLibraryButton(BuildContext context) {
-    return SizedBox(
+    // Agregamos constraints para que el botón no sea excesivamente ancho
+    return ConstrainedBox(
+      constraints: const BoxConstraints(maxWidth: 120), // Límite máximo
       child: ElevatedButton(
         onPressed: () {
           Navigator.pushNamed(context, AppRoutes.biblioteca);
@@ -146,12 +154,17 @@ class _PantallaRecetasViewState extends State<_PantallaRecetasView> {
   }
 
   Widget _buildUserNameDisplay() {
-    return SizedBox(
-      width: 300,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        child: const Text(
-          'Nombre de usuario',
+    const String currentUser = 'usuario_demo';
+    // ELIMINADO: width: 300
+    // ELIMINADO: SizedBox wrapper con ancho fijo
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+      alignment: Alignment.center,
+      child: const FittedBox(
+        // Escala el texto si no cabe
+        fit: BoxFit.scaleDown,
+        child: Text(
+          currentUser,
           textAlign: TextAlign.center,
           overflow: TextOverflow.ellipsis,
           style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
@@ -256,21 +269,15 @@ class _PantallaRecetasViewState extends State<_PantallaRecetasView> {
           child: Column(
             children: [
               _buildRecipeSection(
-                title: 'Todas las Recetas',
-                recipes: homeViewModel.todasLasRecetas,
-                emptyMessage: '',
-              ),
-              const SizedBox(height: 24),
-              _buildRecipeSection(
                 title: 'Más Valoradas',
                 recipes: homeViewModel.recetasMasValoradas,
-                emptyMessage: 'No hay recetas valoradas aún',
+                emptyMessage: 'No hay imagen',
               ),
               const SizedBox(height: 24),
               _buildRecipeSection(
-                title: 'Nuevas',
+                title: 'Mas Nuevas',
                 recipes: homeViewModel.recetasMasNuevas,
-                emptyMessage: 'No hay recetas nuevas aún',
+                emptyMessage: 'No hay imagen',
               ),
             ],
           ),
@@ -410,9 +417,8 @@ class _PantallaRecetasViewState extends State<_PantallaRecetasView> {
   ) async {
     final result = await showDialog<Map<String, dynamic>>(
       context: context,
-      builder: (context) => DialogoCrearReceta(
-        dificultades: RecipeConstants.dificultadLabels,
-      ),
+      builder: (context) =>
+          DialogoCrearReceta(dificultades: RecipeConstants.dificultadLabels),
     );
 
     if (result == null) return;

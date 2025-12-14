@@ -1,4 +1,3 @@
-// lib/ui/widgets/recipe/recipe_detail_dialog.dart
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
@@ -18,8 +17,8 @@ import 'package:migaz/ui/widgets/auth/user_credentials.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 
 class RecipeDetailDialog {
-  static void show(BuildContext context, Recipe recipe) {
-    showDialog(
+  static Future<bool?> show(BuildContext context, Recipe recipe) {
+    return showDialog<bool>(
       context: context,
       builder: (context) => _RecipeDetailDialogContent(recipe: recipe),
     );
@@ -39,6 +38,7 @@ class _RecipeDetailDialogContent extends StatefulWidget {
 class _RecipeDetailDialogContentState
     extends State<_RecipeDetailDialogContent> {
   late Recipe _recipe;
+  bool _hasChanged = false;
   double _myRating = 0;
   bool _isRating = false;
   bool _showIngredients = false;
@@ -240,76 +240,107 @@ class _RecipeDetailDialogContentState
 
   @override
   Widget build(BuildContext context) {
-    // 📐 NUEVO: Obtener dimensiones de la pantalla
     final screenSize = MediaQuery.of(context).size;
-    final dialogWidth = screenSize.width > 1400
-        ? 1400.0
-        : screenSize.width * 0.9;
-    final dialogHeight = screenSize.height * 0.9;
+    final isMobile = screenSize.width < 600;
+    final isTablet = screenSize.width >= 600 && screenSize.width < 1024;
+    final isDesktop = screenSize.width >= 1024;
+
+    // Responsive dialog width/height
+    double dialogWidth = screenSize.width * 0.98;
+    double dialogHeight = screenSize.height * 0.98;
+    if (isDesktop) {
+      dialogWidth = screenSize.width > 1400 ? 1200 : screenSize.width * 0.8;
+      dialogHeight = screenSize.height * 0.9;
+    } else if (isTablet) {
+      dialogWidth = screenSize.width * 0.95;
+      dialogHeight = screenSize.height * 0.95;
+    } else {
+      dialogWidth = screenSize.width * 0.99;
+      dialogHeight = screenSize.height * 0.99;
+    }
 
     return Dialog(
+      insetPadding: EdgeInsets.symmetric(
+        horizontal: isMobile ? 2 : 24,
+        vertical: isMobile ? 8 : 24,
+      ),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Container(
-        // 📐 MODIFICADO: Nuevo tamaño del diálogo más grande y responsive
         width: dialogWidth,
         height: dialogHeight,
         constraints: BoxConstraints(
           maxWidth: 1400,
-          maxHeight: dialogHeight,
-          minWidth: 800,
+          maxHeight: screenSize.height * 0.99,
+          minWidth: isMobile ? 0 : 350,
         ),
-        child: Stack(
-          children: [
-            Row(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            // Decide layout based on width
+            final showSidePanel = !isMobile && _showIngredients;
+            return Stack(
               children: [
-                Expanded(
-                  child: Column(
-                    children: [
-                      _buildHeader(),
-                      Expanded(
-                        child: SingleChildScrollView(
-                          padding: const EdgeInsets.all(24),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              _buildBasicInfo(),
-                              const SizedBox(height: 24),
-                              _buildRatingSection(),
-                              const SizedBox(height: 16),
-                              _buildCommentsButton(),
-                              const SizedBox(height: 24),
-                              _buildEditRecipeButton(),
-                              const SizedBox(height: 24),
-                              _buildDeleteRecipeButton(),
-                              const SizedBox(height: 24),
-                              _buildSaveButton(),
-                              _buildDescription(),
-                              const SizedBox(height: 24),
-                              _buildIngredientsToggleButton(),
-                              const SizedBox(height: 24),
-                              _buildInstructions(),
-                              if (_recipe.youtube != null &&
-                                  _recipe.youtube!.isNotEmpty) ...[
-                                const SizedBox(height: 24),
-                                _buildYoutubeLink(),
-                              ],
-                            ],
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Main content
+                    Expanded(
+                      child: Column(
+                        children: [
+                          _buildHeader(),
+                          Expanded(
+                            child: SingleChildScrollView(
+                              padding: EdgeInsets.all(isMobile ? 10 : 24),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  _buildBasicInfo(),
+                                  SizedBox(height: isMobile ? 12 : 24),
+                                  _buildRatingSection(),
+                                  SizedBox(height: isMobile ? 8 : 16),
+                                  _buildCommentsButton(),
+                                  SizedBox(height: isMobile ? 12 : 24),
+                                  _buildEditRecipeButton(),
+                                  SizedBox(height: isMobile ? 12 : 24),
+                                  _buildDeleteRecipeButton(),
+                                  SizedBox(height: isMobile ? 12 : 24),
+                                  _buildSaveButton(),
+                                  _buildDescription(),
+                                  SizedBox(height: isMobile ? 12 : 24),
+                                  if (isMobile)
+                                    _showIngredients
+                                        ? _buildIngredientsSidePanel()
+                                        : _buildIngredientsToggleButton()
+                                  else
+                                    _buildIngredientsToggleButton(),
+                                  SizedBox(height: isMobile ? 12 : 24),
+                                  _buildInstructions(),
+                                  if (_recipe.youtube != null &&
+                                      _recipe.youtube!.isNotEmpty) ...[
+                                    SizedBox(height: isMobile ? 12 : 24),
+                                    _buildYoutubeLink(),
+                                  ],
+                                ],
+                              ),
+                            ),
                           ),
-                        ),
+                          _buildFooter(),
+                        ],
                       ),
-                      _buildFooter(),
-                    ],
-                  ),
+                    ),
+                    // Side panel only on tablet/desktop
+                    if (showSidePanel) _buildIngredientsSidePanel(),
+                  ],
                 ),
-                if (_showIngredients) _buildIngredientsSidePanel(),
+                // Floating button only on desktop/tablet
+                if (!isMobile)
+                  Positioned(
+                    right: _showIngredients ? 310 : 16,
+                    top: 520,
+                    child: _buildFloatingIngredientsButton(),
+                  ),
               ],
-            ),
-            Positioned(
-              right: _showIngredients ? 310 : 16,
-              top: 520, // 📐 AJUSTADO: Nueva posición para carrusel más grande
-              child: _buildFloatingIngredientsButton(),
-            ),
-          ],
+            );
+          },
         ),
       ),
     );
@@ -991,49 +1022,6 @@ class _RecipeDetailDialogContentState
     }
   }
 
-  String _formatearFecha(String fechaString) {
-    try {
-      final fecha = DateTime.parse(fechaString);
-      final ahora = DateTime.now();
-      final diferencia = ahora.difference(fecha);
-
-      if (diferencia.inSeconds < 60) {
-        return 'hace unos segundos';
-      }
-
-      if (diferencia.inMinutes < 60) {
-        final minutos = diferencia.inMinutes;
-        return 'hace $minutos ${minutos == 1 ? "minuto" : "minutos"}';
-      }
-
-      if (diferencia.inHours < 24) {
-        final horas = diferencia.inHours;
-        return 'hace $horas ${horas == 1 ? "hora" : "horas"}';
-      }
-
-      if (diferencia.inDays < 7) {
-        final dias = diferencia.inDays;
-        return 'hace $dias ${dias == 1 ? "día" : "días"}';
-      }
-
-      if (diferencia.inDays < 30) {
-        final semanas = (diferencia.inDays / 7).floor();
-        return 'hace $semanas ${semanas == 1 ? "semana" : "semanas"}';
-      }
-
-      if (diferencia.inDays < 365) {
-        final meses = (diferencia.inDays / 30).floor();
-        return 'hace $meses ${meses == 1 ? "mes" : "meses"}';
-      }
-
-      final anios = (diferencia.inDays / 365).floor();
-      return 'hace $anios ${anios == 1 ? "año" : "años"}';
-    } catch (e) {
-      print('❌ Error al formatear fecha:  $e');
-      return 'Fecha desconocida';
-    }
-  }
-
   Widget _buildInfoChip(IconData icon, String label, Color color) {
     return Chip(
       avatar: Icon(icon, size: 18, color: color),
@@ -1223,26 +1211,26 @@ class _RecipeDetailDialogContentState
     final shouldDelete = await _confirmDelete();
 
     if (!shouldDelete) {
+      // ignore: avoid_print
       print('⚪ Eliminación cancelada por el usuario.');
       return;
     }
 
     try {
-      print('🚀 Llamando a eliminarReceta...');
-
       final recipeVM = Provider.of<RecipeListViewModel>(context, listen: false);
-
       final exito = await recipeVM.eliminarReceta(_recipe.id!);
 
       if (!mounted) return;
 
       if (exito) {
-        print('✅ Receta eliminada correctamente');
+        // Es buena práctica actualizar HomeViewModel también
+        if (mounted) {
+          await context.read<HomeViewModel>().cargarHome();
+        }
 
-        // Cierra el diálogo de detalle de la receta
-        Navigator.of(context).pop();
+        // 2️⃣ CLAVE: Cerramos el diálogo pasando 'true' para indicar éxito en la eliminación
+        Navigator.of(context).pop(true);
 
-        // Muestra un mensaje de éxito en la pantalla principal
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('🗑️ Receta eliminada correctamente'),
@@ -1377,7 +1365,10 @@ class _RecipeDetailDialogContentState
           _recipe =
               updatedRecipe; // Sincronizamos la receta con la nueva versión
         });
-
+        if (mounted) {
+          await context.read<HomeViewModel>().cargarHome();
+          print('✅ HomeViewModel recargado');
+        }
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('✅ Receta editada correctamente'),

@@ -1,6 +1,6 @@
 // lib/core/utils/responsive_helper.dart
 import 'package:flutter/material.dart';
-import 'package:migaz/core/utils/resonsive_breakpoints.dart';
+import 'package:migaz/core/utils/responsive_breakpoints.dart';
 
 class ResponsiveHelper {
   final BuildContext context;

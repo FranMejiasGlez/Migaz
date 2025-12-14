@@ -1,5 +1,5 @@
 // lib/ui/views/login_screen.dart
-import 'package:migaz/core/utils/resonsive_breakpoints.dart';
+import 'package:migaz/core/utils/responsive_breakpoints.dart';
 import 'package:migaz/ui/widgets/auth/user_credentials.dart';
 import 'package:flutter/material.dart';
 import '../widgets/auth/auth_logo.dart';

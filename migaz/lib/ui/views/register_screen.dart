@@ -1,6 +1,6 @@
 // lib/ui/views/register_screen.dart
 import 'package:flutter/material.dart';
-import 'package:migaz/core/utils/resonsive_breakpoints.dart';
+import 'package:migaz/core/utils/responsive_breakpoints.dart';
 import 'package:provider/provider.dart';
 import 'package:migaz/ui/widgets/auth/auth_logo.dart';
 import 'package:migaz/ui/widgets/auth/auth_form_field.dart';

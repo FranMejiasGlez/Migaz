@@ -37,6 +37,19 @@ class Recipe {
     this.createdAt,
     this.isGuardada = false,
   });
+  //GETTER: Conversión segura a DateTime
+  DateTime? get fechaCreacion {
+    if (createdAt == null) {
+      return null;
+    }
+    try {
+      // Asume que createdAt es un String en formato ISO 8601 (el estándar de Firestore/MongoDB)
+      return DateTime.tryParse(createdAt!);
+    } catch (e) {
+      print('Error al parsear fecha $createdAt: $e');
+      return null;
+    }
+  }
 
   // ✅ MÉTODO AUXILIAR: Convertir dificultad texto a número
   static int dificultadToInt(dynamic value) {

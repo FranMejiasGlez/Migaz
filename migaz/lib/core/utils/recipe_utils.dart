@@ -10,22 +10,24 @@ class RecipeUtils {
   }) {
     return recipes.where((recipe) {
       // Filtro por categoría
-      final matchesCategory = selectedFilter == 'Todos' || 
-                             recipe.categoria?.toLowerCase() == selectedFilter.toLowerCase();
-      
+      final matchesCategory =
+          selectedFilter == 'Todos' ||
+          recipe.categoria.toLowerCase() == selectedFilter.toLowerCase();
+
       // Si no hay query de búsqueda, solo aplicar filtro de categoría
       if (searchQuery.isEmpty) {
         return matchesCategory;
       }
-      
+
       // Filtro por búsqueda (nombre, usuario o categoría)
       final query = searchQuery.toLowerCase();
-      final matchesName = recipe.nombre?.toLowerCase().contains(query) ?? false;
+      final matchesName = recipe.nombre.toLowerCase().contains(query);
       final matchesUser = recipe.user?.toLowerCase().contains(query) ?? false;
-      final matchesCategoria = recipe.categoria?.toLowerCase().contains(query) ?? false;
-      
+      final matchesCategoria = recipe.categoria.toLowerCase().contains(query);
+
       // Debe cumplir AMBOS: categoría seleccionada Y búsqueda
-      return matchesCategory && (matchesName || matchesUser || matchesCategoria);
+      return matchesCategory &&
+          (matchesName || matchesUser || matchesCategoria);
     }).toList();
   }
 

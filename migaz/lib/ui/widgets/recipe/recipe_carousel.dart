@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
-import 'package:migaz/core/theme/app_theme.dart';
-import 'package:migaz/data/models/recipe.dart'; // ✅ IMPORTAR
-import 'package:migaz/ui/widgets/recipe/recipe_image_widget.dart';
+import 'package:migaz/core/utils/responsive_breakpoints.dart';
+import 'package:migaz/data/models/recipe.dart';
+import 'package:migaz/core/config/api_config.dart';
+import 'package:migaz/core/utils/responsive_helper.dart';
 
-class RecipeCarousel extends StatelessWidget {
+class RecipeCarousel extends StatefulWidget {
   final String title;
-  final List<Recipe> recipes; // ✅ CAMBIADO: List<String> → List<Recipe>
+  final List<Recipe> recipes;
   final Function(int)? onRecipeTap;
   final String? emptyMessage;
   final bool showEmptyState;
@@ -21,230 +22,214 @@ class RecipeCarousel extends StatelessWidget {
   }) : super(key: key);
 
   @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        if (title.isNotEmpty)
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Text(
-              title,
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-          ),
+  State<RecipeCarousel> createState() => _RecipeCarouselState();
+}
 
-        if (recipes.isEmpty && showEmptyState)
-          _buildEmptyState()
-        else if (recipes.isNotEmpty)
-          _buildCarousel(context),
-      ],
-    );
+class _RecipeCarouselState extends State<RecipeCarousel> {
+  PageController? _pageController;
+  static const int _infiniteMultiplier = 10000;
+
+  @override
+  void initState() {
+    super.initState();
+    // Inicializamos después del primer frame para tener acceso seguro al context/mediaquery
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _initializePageController();
+    });
   }
 
-  Widget _buildEmptyState() {
+  @override
+  void didUpdateWidget(RecipeCarousel oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Si la lista cambia o el tamaño de pantalla cambia drásticamente, reinicializamos
+    if (oldWidget.recipes.length != widget.recipes.length) {
+      _initializePageController();
+    }
+  }
+
+  void _initializePageController() {
+    if (!mounted) return;
+
+    final viewportFraction = _getViewportFraction(context);
+
+    // Si hay más de 1 receta, usamos scroll infinito
+    if (widget.recipes.isNotEmpty && _needsInfiniteScroll) {
+      final initialPage = _infiniteMultiplier * widget.recipes.length;
+      _pageController = PageController(
+        viewportFraction: viewportFraction,
+        initialPage: initialPage,
+      );
+    } else if (widget.recipes.isNotEmpty) {
+      // Si hay pocas recetas o 1 sola, scroll normal
+      _pageController = PageController(
+        viewportFraction: viewportFraction,
+        initialPage: 0,
+      );
+    }
+
+    setState(() {});
+  }
+
+  @override
+  void dispose() {
+    _pageController?.dispose();
+    super.dispose();
+  }
+
+  // ---------------------------------------------------------------------------
+  // LÓGICA RESPONSIVE
+  // ---------------------------------------------------------------------------
+
+  /// Calcula qué porcentaje de la pantalla ocupa cada tarjeta.
+  /// - En móviles: 85% para ver la actual y un trozo ("hint") de la siguiente.
+  /// - En Tablets: 50% (2 tarjetas).
+  /// - En Desktop: 33% (3 tarjetas).
+  double _getViewportFraction(BuildContext context) {
+    final width = MediaQuery.of(context).size.width;
+
+    if (width < 360) {
+      return 0.95; // Pantallas muy pequeñas: casi pantalla completa
+    }
+    if (width < ResponsiveBreakpoints.mobile) {
+      return 0.85; // Móvil estándar: deja ver un borde de la siguiente
+    }
+    if (width < ResponsiveBreakpoints.desktop) {
+      return 0.5; // Tablet: 2 tarjetas
+    }
+    return 0.33; // Desktop: 3 tarjetas
+  }
+
+  /// Calcula la altura del carrusel para mantener la proporción de las tarjetas
+  double _getCarouselHeight() {
+    final responsive = ResponsiveHelper(context);
+    final width = MediaQuery.of(context).size.width;
+
+    if (responsive.isDesktop) return 320.0;
+    if (responsive.isTablet) return 300.0;
+
+    // Para móvil, calculamos altura basada en el ancho de la tarjeta
+    // Ancho tarjeta = Ancho pantalla * Viewport (0.85)
+    final cardWidth = width * 0.85;
+    // Relación de aspecto aprox 1.2 (alto = ancho * 1.2)
+    return (cardWidth * 1.2).clamp(280.0, 360.0);
+  }
+
+  bool get _needsInfiniteScroll => widget.recipes.length > 1;
+
+  // ---------------------------------------------------------------------------
+  // BUILD
+  // ---------------------------------------------------------------------------
+
+  @override
+  Widget build(BuildContext context) {
+    if (widget.recipes.isEmpty) {
+      if (!widget.showEmptyState) return const SizedBox.shrink();
+      return _buildEmptyState();
+    }
+
     return SizedBox(
-      height: 500,
-      child: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                width: 250,
-                height: 250,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [Colors.grey[100]!, Colors.grey[200]!],
-                  ),
-                  borderRadius: BorderRadius.circular(20),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.grey.withOpacity(0.3),
-                      blurRadius: 10,
-                      offset: const Offset(0, 5),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.grey.withOpacity(0.2),
-                            blurRadius: 8,
-                            offset: const Offset(0, 3),
-                          ),
-                        ],
-                      ),
-                      child: Icon(
-                        Icons.restaurant_menu,
-                        size: 60,
-                        color: AppTheme.primaryYellow,
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.coffee, size: 24, color: Colors.grey[400]),
-                        const SizedBox(width: 12),
-                        Icon(
-                          Icons.local_pizza,
-                          size: 24,
-                          color: Colors.grey[400],
-                        ),
-                        const SizedBox(width: 12),
-                        Icon(Icons.cake, size: 24, color: Colors.grey[400]),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 20),
-              Text(
-                emptyMessage ?? 'No hay recetas disponibles',
-                style: TextStyle(
-                  color: Colors.grey[700],
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                '¡No hay imagenes aún!',
-                style: TextStyle(color: Colors.grey[500], fontSize: 14),
-                textAlign: TextAlign.center,
-              ),
-            ],
-          ),
+      height: _getCarouselHeight(),
+      child: PageView.builder(
+        controller: _pageController,
+        // Permite arrastrar con el ratón en Web/Desktop
+        scrollBehavior: const MaterialScrollBehavior().copyWith(
+          dragDevices: {PointerDeviceKind.touch, PointerDeviceKind.mouse},
         ),
+        itemCount: _needsInfiniteScroll ? null : widget.recipes.length,
+        itemBuilder: (context, index) {
+          final int recipeIndex = _needsInfiniteScroll
+              ? index % widget.recipes.length
+              : index;
+
+          return _buildRecipeCard(widget.recipes[recipeIndex], recipeIndex);
+        },
       ),
     );
   }
 
-  Widget _buildCarousel(BuildContext context) {
-    return SizedBox(
-      height: 500,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-        child: ScrollConfiguration(
-          behavior: ScrollConfiguration.of(context).copyWith(
-            dragDevices: {PointerDeviceKind.touch, PointerDeviceKind.mouse},
-          ),
-          child: PageView.builder(
-            physics: const BouncingScrollPhysics(),
-            controller: PageController(viewportFraction: 0.5),
-            itemCount: recipes.length,
-            itemBuilder: (context, index) {
-              final recipe = recipes[index]; // ✅ AHORA ES UN OBJETO Recipe
-
-              return Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                child: Card(
-                  clipBehavior: Clip.antiAlias,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  elevation: 4,
+  Widget _buildRecipeCard(Recipe recipe, int index) {
+    return AnimatedBuilder(
+      animation: _pageController ?? AlwaysStoppedAnimation(0),
+      builder: (context, child) {
+        return Center(
+          child: Container(
+            // Margen para separar las tarjetas entre sí
+            margin: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.2),
+                  blurRadius: 8,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(20),
+              child: Material(
+                color: Colors.white,
+                child: InkWell(
+                  onTap: () => widget.onRecipeTap?.call(index),
                   child: Stack(
                     fit: StackFit.expand,
                     children: [
-                      // ✅ IMAGEN REAL DE LA RECETA
+                      // Imagen
                       _buildRecipeImage(recipe),
 
-                      // CAPA 2: CONTENIDO CON FONDO OSCURO
-                      Center(
-                        child: Container(
-                          margin: const EdgeInsets.all(16.0),
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16.0,
-                            vertical: 12.0,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.black.withOpacity(0.6),
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                recipe.nombre, // ✅ NOMBRE DE LA RECETA
-                                textAlign: TextAlign.center,
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 22,
-                                  fontWeight: FontWeight.bold,
-                                  shadows: [
-                                    Shadow(
-                                      offset: Offset(1, 1),
-                                      blurRadius: 3.0,
-                                      color: Colors.black26,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              // ✅ MOSTRAR CATEGORÍA
-                              Text(
-                                recipe.categoria,
-                                style: TextStyle(
-                                  color: Colors.white.withOpacity(0.9),
-                                  fontSize: 14,
-                                ),
-                              ),
+                      // Gradiente Oscuro para el texto
+                      Container(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [
+                              Colors.transparent,
+                              Colors.black.withOpacity(0.7),
                             ],
+                            stops: const [0.6, 1.0],
                           ),
                         ),
                       ),
 
-                      // CAPA 3: INTERACCIÓN
-                      Positioned.fill(
-                        child: Material(
-                          color: Colors.transparent,
-                          child: InkWell(
-                            onTap: () {
-                              if (onRecipeTap != null) {
-                                onRecipeTap!(index);
-                              }
-                            },
+                      // Título
+                      Positioned(
+                        bottom: 12,
+                        left: 12,
+                        right: 12,
+                        child: Text(
+                          recipe.nombre,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
                       ),
                     ],
                   ),
                 ),
-              );
-            },
+              ),
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 
-  // ✅ MÉTODO CORREGIDO:  Construir imagen de la receta
   Widget _buildRecipeImage(Recipe recipe) {
-    // Si tiene imágenes, usar la primera
+    const baseUrl = ApiConfig.baseUrl;
+
     if (recipe.imagenes != null && recipe.imagenes!.isNotEmpty) {
-      // ✅ CORREGIDO: Construir URL completa
       final imageUrl = recipe.imagenes!.first.startsWith('http')
-          ? recipe
-                .imagenes!
-                .first // Ya tiene URL completa
-          : 'http://localhost:3000/${recipe.imagenes!.first}'; // Añadir prefijo del servidor
+          ? recipe.imagenes!.first
+          : baseUrl + recipe.imagenes!.first;
 
       return Image.network(
         imageUrl,
-        fit: BoxFit.contain,
+        fit: BoxFit.cover,
         loadingBuilder: (context, child, loadingProgress) {
           if (loadingProgress == null) return child;
           return Container(
@@ -260,15 +245,38 @@ class RecipeCarousel extends StatelessWidget {
           );
         },
         errorBuilder: (context, error, stackTrace) {
-          // ✅ Añadir logging para debugging
           print('❌ Error cargando imagen: $imageUrl');
-          print('   Error: $error');
-          return _buildRecipeImage(recipe);
+          return _buildPlaceholder();
         },
       );
     }
 
-    // Si no tiene imágenes, mostrar placeholder
-    return _buildEmptyState();
+    return _buildPlaceholder();
+  }
+
+  Widget _buildPlaceholder() {
+    final responsive = ResponsiveHelper(context);
+    return Container(
+      color: Colors.grey[300],
+      child: Center(
+        child: Icon(
+          Icons.restaurant_menu,
+          size: responsive.isDesktop ? 100 : 80,
+          color: Colors.grey[400],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Container(
+      height: 200,
+      alignment: Alignment.center,
+      child: Text(
+        widget.emptyMessage ?? '',
+        style: TextStyle(color: Colors.grey[600], fontSize: 16),
+        textAlign: TextAlign.center,
+      ),
+    );
   }
 }

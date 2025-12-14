@@ -3,13 +3,11 @@ import 'package:migaz/core/constants/recipe_constants.dart';
 import 'package:migaz/core/utils/recipe_utils.dart';
 import 'package:migaz/data/models/recipe.dart';
 import 'package:migaz/data/repositories/receta_repository.dart';
-import 'package:migaz/ui/widgets/recipe/recipe_detail_dialog.dart';
 import 'package:migaz/ui/widgets/recipe/recipe_grid_view.dart';
 import 'package:migaz/ui/widgets/recipe/recipe_search_section.dart';
 import 'package:migaz/ui/widgets/recipe/user_avatar.dart';
 import 'package:migaz/core/theme/app_theme.dart';
 import 'package:flutter/material.dart';
-import 'package:migaz/ui/widgets/recipe/recipe_card.dart';
 import 'package:migaz/viewmodels/home_viewmodel.dart';
 import 'package:provider/provider.dart';
 
@@ -115,14 +113,15 @@ class _PantallaMisRecetasState extends State<PantallaMisRecetas> {
 
   Widget _buildHeader() {
     return Padding(
-      padding: const EdgeInsets.all(16.0),
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           _buildBackButton(),
-          const SizedBox(width: 12),
-          _buildTitle(),
-          const SizedBox(width: 12),
+          const SizedBox(width: 8),
+          // El título ahora es flexible
+          Expanded(child: _buildTitle()),
+          const SizedBox(width: 8),
           UserAvatar(
             imageUrl: RecipeConstants.defaultAvatarUrl,
             onTap: () => Navigator.pushNamed(context, AppRoutes.perfilUser),
@@ -136,34 +135,38 @@ class _PantallaMisRecetasState extends State<PantallaMisRecetas> {
     return SizedBox(
       child: IconButton(
         icon: const Icon(Icons.arrow_back),
-        onPressed: () => Navigator.pushNamed(context, AppRoutes.home),
+        onPressed: () => Navigator.pushNamed(context, AppRoutes.biblioteca),
       ),
     );
   }
 
   Widget _buildTitle() {
-    return SizedBox(
-      width: 300,
-      child: Container(
-        decoration: BoxDecoration(
-          color: const Color(0xFFEA7317).withOpacity(0.5),
-          borderRadius: BorderRadius.circular(20),
-        ),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        child: Column(
-          children: [
-            const Text(
+    // ELIMINADO: SizedBox con width: 300
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFFEA7317).withOpacity(0.5),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+      child: Column(
+        children: [
+          const FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
               'Mis Recetas',
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
-            if (!_isLoading)
-              Text(
+          ),
+          if (!_isLoading)
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
                 '${_misRecetas.length} ${_misRecetas.length == 1 ? "receta" : "recetas"}',
-                style: TextStyle(fontSize: 14, color: Colors.grey[700]),
+                style: TextStyle(fontSize: 12, color: Colors.grey[800]),
               ),
-          ],
-        ),
+            ),
+        ],
       ),
     );
   }
@@ -228,19 +231,19 @@ class _PantallaMisRecetasState extends State<PantallaMisRecetas> {
     );
   }
 
-  /// ✅ ACTUALIZADO:  Grid simplificado (RecipeCard maneja el Consumer)
+  ///  Grid simplificado (RecipeCard maneja el Consumer)
   Widget _buildGridView() {
-  final recetasAMostrar = _hasActiveFilters ? _recetasFiltradas : _misRecetas;
+    final recetasAMostrar = _hasActiveFilters ? _recetasFiltradas : _misRecetas;
 
-  if (recetasAMostrar.isEmpty) {
-    return _buildEmptyState();
+    if (recetasAMostrar.isEmpty) {
+      return _buildEmptyState();
+    }
+
+    return RecipeGridView(
+      recipes: recetasAMostrar,
+      onRefresh: _cargarMisRecetas,
+    );
   }
-
-  return RecipeGridView(
-    recipes: recetasAMostrar,
-    onRefresh: _cargarMisRecetas,
-  );
-}
 
   Widget _buildEmptyState() {
     final bool hasFilters = _hasActiveFilters;
