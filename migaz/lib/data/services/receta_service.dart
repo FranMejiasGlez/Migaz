@@ -132,7 +132,7 @@ class RecetaService {
     return response as Map<String, dynamic>;
   }
 
-  // ✅ CORREGIDO: Método completo para actualizar con todos los campos
+  // ✅ CORREGIDO: Método híbrido (JSON o Multipart según necesidad)
   Future<Map<String, dynamic>> actualizar({
     required String id,
     required String nombre,
@@ -149,15 +149,8 @@ class RecetaService {
     List<String>? imagenesPrevias,
   }) async {
     print('📝 DEBUG ACTUALIZAR - ID: $id');
-    print('📝 DEBUG ACTUALIZAR - Nombre: $nombre');
-    print('📝 DEBUG ACTUALIZAR - Categoría: $categoria');
-    print(
-      '📝 DEBUG ACTUALIZAR - Imágenes nuevas: ${kIsWeb ? imagenesXFile?.length ?? 0 : imagenes?.length ?? 0}',
-    );
-    print(
-      '📝 DEBUG ACTUALIZAR - Imágenes previas: ${imagenesPrevias?.length ?? 0}',
-    );
 
+    // 1. Preparamos los datos
     final datos = {
       'nombre': nombre,
       'categoria': categoria.toLowerCase(),
@@ -165,18 +158,33 @@ class RecetaService {
       'dificultad': dificultad,
       'tiempo': tiempo,
       'comensales': comensales,
-      'instrucciones': instrucciones,
-      'ingredientes': ingredientes,
+      'instrucciones': instrucciones, // En JSON se envía como array directo
+      'ingredientes': ingredientes, // En JSON se envía como array directo
       if (youtube != null && youtube.isNotEmpty) 'youtube': youtube,
-      if (imagenesPrevias != null && imagenesPrevias.isNotEmpty)
-        'imagenesPrevias': imagenesPrevias,
+      if (imagenesPrevias != null) 'imagenesPrevias': imagenesPrevias,
     };
 
-    final response = await _apiService.putMultipartWithJson(
-      ApiConfig.recetaByIdEndpoint(id),
-      datos,
-      kIsWeb ? imagenesXFile : imagenes,
-    );
+    // 2. Detectamos si hay imágenes NUEVAS para subir
+    final bool hayImagenesNuevas = kIsWeb
+        ? (imagenesXFile != null && imagenesXFile.isNotEmpty)
+        : (imagenes != null && imagenes.isNotEmpty);
+
+    dynamic response;
+
+    if (hayImagenesNuevas) {
+      // CASO A: Hay fotos nuevas -> Usamos Multipart (tu lógica actual)
+      print('📸 Subiendo con imágenes nuevas (Multipart)...');
+      response = await _apiService.putMultipartWithJson(
+        ApiConfig.recetaByIdEndpoint(id),
+        datos,
+        kIsWeb ? imagenesXFile : imagenes,
+      );
+    } else {
+      // CASO B: Solo texto/borrado -> Usamos JSON normal (Solución 1)
+      // Esto envía los arrays [instrucciones] y [imagenesPrevias] correctamente
+      print('📄 Actualizando solo datos (JSON simple)...');
+      response = await _apiService.put(ApiConfig.recetaByIdEndpoint(id), datos);
+    }
 
     print('✅ DEBUG ACTUALIZAR - Respuesta recibida');
     return response as Map<String, dynamic>;

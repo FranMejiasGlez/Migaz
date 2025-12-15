@@ -5,6 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:migaz/data/models/recipe.dart';
 import 'package:migaz/data/services/categoria_service.dart';
 import 'package:migaz/core/utils/responsive_helper.dart';
+import 'package:migaz/core/config/api_config.dart';
 
 class DialogoEditarReceta extends StatefulWidget {
   final Recipe recetaOriginal;
@@ -76,7 +77,12 @@ class _DialogoEditarRecetaState extends State<DialogoEditarReceta> {
     _dificultadSeleccionada = widget.recetaOriginal.dificultad;
     _ingredientes = List<String>.from(widget.recetaOriginal.ingredientes);
     _pasos = List<String>.from(widget.recetaOriginal.pasos);
-    _imagenesPreviasUrls = widget.recetaOriginal.imagenes ?? [];
+
+    // ✅ CAMBIO 1: Crear una copia nueva de la lista para romper la referencia
+    _imagenesPreviasUrls = List<String>.from(
+      widget.recetaOriginal.imagenes ?? [],
+    );
+
     _imagenesEditadas = [];
   }
 
@@ -97,11 +103,12 @@ class _DialogoEditarRecetaState extends State<DialogoEditarReceta> {
       //print('❌ Error al cargar categorías: $e');
       setState(() {
         _categorias = [
-          'Española',
-          'Italiana',
-          'Mexicana',
-          'Asiática',
-          'Postre',
+          'española',
+          'italiana',
+          'mexicana',
+          'japonesa',
+          'china',
+          'vegetariana',
         ];
         if (!_categorias.contains(_categoriaSeleccionada)) {
           _categoriaSeleccionada = _categorias[0];
@@ -318,6 +325,9 @@ class _DialogoEditarRecetaState extends State<DialogoEditarReceta> {
       pasos: List<String>.from(_pasos),
       ingredientes: List<String>.from(_ingredientes),
       youtube: _youtubeController.text.trim(),
+
+      // ✅ CAMBIO 2: Asignar la lista de imágenes modificada al objeto
+      imagenes: List<String>.from(_imagenesPreviasUrls),
     );
 
     Navigator.of(context).pop({
@@ -607,6 +617,7 @@ class _DialogoEditarRecetaState extends State<DialogoEditarReceta> {
     );
   }
 
+  // ✅ CAMBIO 3: Método reconstruido con validación de URL y manejo de errores
   Widget _buildImagenesSection() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -664,7 +675,12 @@ class _DialogoEditarRecetaState extends State<DialogoEditarReceta> {
               children: [
                 ..._imagenesPreviasUrls.asMap().entries.map((entry) {
                   final idx = entry.key;
-                  final url = entry.value;
+                  final rawUrl = entry.value;
+
+                  // ✅ SOLUCIÓN: Usamos el método centralizado.
+                  // Esto funcionará en Web (localhost) y Android (10.0.2.2) automáticamente.
+                  final fullUrl = ApiConfig.getImageUrl(rawUrl);
+
                   return Padding(
                     padding: const EdgeInsets.only(right: 8),
                     child: Stack(
@@ -672,12 +688,35 @@ class _DialogoEditarRecetaState extends State<DialogoEditarReceta> {
                         ClipRRect(
                           borderRadius: BorderRadius.circular(8),
                           child: Image.network(
-                            url,
+                            fullUrl,
                             width: 120,
                             height: 120,
                             fit: BoxFit.cover,
+                            // Agregamos manejo de errores visual para depurar
+                            errorBuilder: (context, error, stackTrace) {
+                              // print('Error cargando: $fullUrl'); // Descomenta para ver la URL exacta en consola
+                              return Container(
+                                width: 120,
+                                height: 120,
+                                color: Colors.grey[300],
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: const [
+                                    Icon(
+                                      Icons.broken_image,
+                                      color: Colors.grey,
+                                    ),
+                                    Text(
+                                      'Error',
+                                      style: TextStyle(fontSize: 10),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
                           ),
                         ),
+                        // ... (resto del código del botón de borrar igual que antes) ...
                         Positioned(
                           top: 4,
                           right: 4,

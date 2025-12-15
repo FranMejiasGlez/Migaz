@@ -435,6 +435,7 @@ class _RecipeDetailDialogContentState
 
             // LISTA DE INGREDIENTES
             Flexible(
+              flex: 3,
               child: ListView.separated(
                 padding: const EdgeInsets.all(12),
                 shrinkWrap: true,
