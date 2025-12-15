@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:migaz/core/config/api_config.dart';
 import 'package:migaz/core/config/routes.dart';
 import 'package:migaz/core/constants/recipe_constants.dart';
 import 'package:migaz/data/models/recipe.dart';
@@ -66,6 +67,7 @@ class _PantallaRecetasViewState extends State<_PantallaRecetasView> {
     );
   }
 
+  final String _currentUser = ApiConfig.currentUser; //!!
   bool _hasActiveFilters() {
     return RecipeUtils.hasActiveFilters(
       searchQuery: _searchQuery,
@@ -154,20 +156,19 @@ class _PantallaRecetasViewState extends State<_PantallaRecetasView> {
   }
 
   Widget _buildUserNameDisplay() {
-    const String currentUser = 'usuario_demo';
     // ELIMINADO: width: 300
     // ELIMINADO: SizedBox wrapper con ancho fijo
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
       alignment: Alignment.center,
-      child: const FittedBox(
+      child: FittedBox(
         // Escala el texto si no cabe
         fit: BoxFit.scaleDown,
         child: Text(
-          currentUser,
+          _currentUser,
           textAlign: TextAlign.center,
           overflow: TextOverflow.ellipsis,
-          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
         ),
       ),
     );

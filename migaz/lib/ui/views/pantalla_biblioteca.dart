@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:migaz/core/config/api_config.dart';
 import 'package:migaz/core/config/routes.dart';
 import 'package:migaz/core/constants/recipe_constants.dart';
 import 'package:migaz/core/utils/recipe_utils.dart';
@@ -40,7 +41,7 @@ class _PantallaBibliotecaState extends State<PantallaBiblioteca> {
   bool _isLoading = true;
   String? _errorMessage;
 
-  final String _currentUser = 'usuario_demo'; //!!
+  final String _currentUser = ApiConfig.currentUser; //!!
 
   @override
   void initState() {

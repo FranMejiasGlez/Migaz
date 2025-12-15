@@ -32,7 +32,6 @@ class _RecipeCarouselState extends State<RecipeCarousel> {
   @override
   void initState() {
     super.initState();
-    // Inicializamos después del primer frame para tener acceso seguro al context/mediaquery
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _initializePageController();
     });
@@ -41,7 +40,6 @@ class _RecipeCarouselState extends State<RecipeCarousel> {
   @override
   void didUpdateWidget(RecipeCarousel oldWidget) {
     super.didUpdateWidget(oldWidget);
-    // Si la lista cambia o el tamaño de pantalla cambia drásticamente, reinicializamos
     if (oldWidget.recipes.length != widget.recipes.length) {
       _initializePageController();
     }
@@ -52,7 +50,6 @@ class _RecipeCarouselState extends State<RecipeCarousel> {
 
     final viewportFraction = _getViewportFraction(context);
 
-    // Si hay más de 1 receta, usamos scroll infinito
     if (widget.recipes.isNotEmpty && _needsInfiniteScroll) {
       final initialPage = _infiniteMultiplier * widget.recipes.length;
       _pageController = PageController(
@@ -60,7 +57,6 @@ class _RecipeCarouselState extends State<RecipeCarousel> {
         initialPage: initialPage,
       );
     } else if (widget.recipes.isNotEmpty) {
-      // Si hay pocas recetas o 1 sola, scroll normal
       _pageController = PageController(
         viewportFraction: viewportFraction,
         initialPage: 0,
@@ -76,30 +72,21 @@ class _RecipeCarouselState extends State<RecipeCarousel> {
     super.dispose();
   }
 
-  // ---------------------------------------------------------------------------
-  // LÓGICA RESPONSIVE
-  // ---------------------------------------------------------------------------
-
-  /// Calcula qué porcentaje de la pantalla ocupa cada tarjeta.
-  /// - En móviles: 85% para ver la actual y un trozo ("hint") de la siguiente.
-  /// - En Tablets: 50% (2 tarjetas).
-  /// - En Desktop: 33% (3 tarjetas).
   double _getViewportFraction(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
 
     if (width < 360) {
-      return 0.95; // Pantallas muy pequeñas: casi pantalla completa
+      return 0.95;
     }
     if (width < ResponsiveBreakpoints.mobile) {
-      return 0.85; // Móvil estándar: deja ver un borde de la siguiente
+      return 0.85;
     }
     if (width < ResponsiveBreakpoints.desktop) {
-      return 0.5; // Tablet: 2 tarjetas
+      return 0.5;
     }
-    return 0.33; // Desktop: 3 tarjetas
+    return 0.33;
   }
 
-  /// Calcula la altura del carrusel para mantener la proporción de las tarjetas
   double _getCarouselHeight() {
     final responsive = ResponsiveHelper(context);
     final width = MediaQuery.of(context).size.width;
@@ -107,18 +94,11 @@ class _RecipeCarouselState extends State<RecipeCarousel> {
     if (responsive.isDesktop) return 320.0;
     if (responsive.isTablet) return 300.0;
 
-    // Para móvil, calculamos altura basada en el ancho de la tarjeta
-    // Ancho tarjeta = Ancho pantalla * Viewport (0.85)
     final cardWidth = width * 0.85;
-    // Relación de aspecto aprox 1.2 (alto = ancho * 1.2)
     return (cardWidth * 1.2).clamp(280.0, 360.0);
   }
 
   bool get _needsInfiniteScroll => widget.recipes.length > 1;
-
-  // ---------------------------------------------------------------------------
-  // BUILD
-  // ---------------------------------------------------------------------------
 
   @override
   Widget build(BuildContext context) {
@@ -131,7 +111,6 @@ class _RecipeCarouselState extends State<RecipeCarousel> {
       height: _getCarouselHeight(),
       child: PageView.builder(
         controller: _pageController,
-        // Permite arrastrar con el ratón en Web/Desktop
         scrollBehavior: const MaterialScrollBehavior().copyWith(
           dragDevices: {PointerDeviceKind.touch, PointerDeviceKind.mouse},
         ),
@@ -153,7 +132,6 @@ class _RecipeCarouselState extends State<RecipeCarousel> {
       builder: (context, child) {
         return Center(
           child: Container(
-            // Margen para separar las tarjetas entre sí
             margin: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(20),
@@ -174,10 +152,8 @@ class _RecipeCarouselState extends State<RecipeCarousel> {
                   child: Stack(
                     fit: StackFit.expand,
                     children: [
-                      // Imagen
                       _buildRecipeImage(recipe),
 
-                      // Gradiente Oscuro para el texto
                       Container(
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
@@ -192,7 +168,6 @@ class _RecipeCarouselState extends State<RecipeCarousel> {
                         ),
                       ),
 
-                      // Título
                       Positioned(
                         bottom: 12,
                         left: 12,
@@ -219,39 +194,54 @@ class _RecipeCarouselState extends State<RecipeCarousel> {
     );
   }
 
+  // ✅ CORREGIDO: Construcción correcta de la URL
   Widget _buildRecipeImage(Recipe recipe) {
-    const baseUrl = ApiConfig.baseUrl;
-
-    if (recipe.imagenes != null && recipe.imagenes!.isNotEmpty) {
-      final imageUrl = recipe.imagenes!.first.startsWith('http')
-          ? recipe.imagenes!.first
-          : baseUrl + recipe.imagenes!.first;
-
-      return Image.network(
-        imageUrl,
-        fit: BoxFit.cover,
-        loadingBuilder: (context, child, loadingProgress) {
-          if (loadingProgress == null) return child;
-          return Container(
-            color: Colors.grey[300],
-            child: Center(
-              child: CircularProgressIndicator(
-                value: loadingProgress.expectedTotalBytes != null
-                    ? loadingProgress.cumulativeBytesLoaded /
-                          loadingProgress.expectedTotalBytes!
-                    : null,
-              ),
-            ),
-          );
-        },
-        errorBuilder: (context, error, stackTrace) {
-          print('❌ Error cargando imagen: $imageUrl');
-          return _buildPlaceholder();
-        },
-      );
+    // Verificar si la receta tiene imágenes
+    if (recipe.imagenes == null || recipe.imagenes!.isEmpty) {
+      print('⚠️ Receta "${recipe.nombre}" sin imágenes');
+      return _buildPlaceholder();
     }
 
-    return _buildPlaceholder();
+    final firstImage = recipe.imagenes!.first;
+
+    // ✅ Construir URL correctamente usando serverUrl (sin /api)
+    String imageUrl = 'http://localhost:3000/img';
+    if (firstImage.startsWith('http://') || firstImage.startsWith('https://')) {
+      // Ya es una URL completa
+      imageUrl = firstImage;
+    } else if (firstImage.startsWith('/')) {
+      // Ruta absoluta desde el servidor (sin /api)
+      imageUrl = '${ApiConfig.baseUrl}$firstImage';
+    } else {
+      // Ruta relativa
+      imageUrl = '${ApiConfig.baseUrl}/$firstImage';
+    }
+
+    print('🖼️ Cargando imagen: $imageUrl');
+
+    return Image.network(
+      imageUrl,
+      fit: BoxFit.cover,
+      loadingBuilder: (context, child, loadingProgress) {
+        if (loadingProgress == null) return child;
+        return Container(
+          color: Colors.grey[300],
+          child: Center(
+            child: CircularProgressIndicator(
+              value: loadingProgress.expectedTotalBytes != null
+                  ? loadingProgress.cumulativeBytesLoaded /
+                        loadingProgress.expectedTotalBytes!
+                  : null,
+            ),
+          ),
+        );
+      },
+      errorBuilder: (context, error, stackTrace) {
+        print('❌ Error cargando imagen de "${recipe.nombre}": $imageUrl');
+        print('   Error: $error');
+        return _buildPlaceholder();
+      },
+    );
   }
 
   Widget _buildPlaceholder() {

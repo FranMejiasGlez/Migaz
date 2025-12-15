@@ -1,4 +1,5 @@
 // lib/ui/views/pantalla_guardados.dart
+import 'package:migaz/core/config/api_config.dart';
 import 'package:migaz/core/config/routes.dart';
 import 'package:migaz/core/constants/recipe_constants.dart';
 import 'package:migaz/core/utils/recipe_utils.dart';
@@ -25,7 +26,7 @@ class _PantallaGuardadosState extends State<PantallaGuardados> {
   bool _isLoading = true;
 
   // ✅ Usuario actual
-  final String _currentUser = 'usuario_demo';
+  final String _currentUser = ApiConfig.currentUser; //!!
 
   @override
   void initState() {

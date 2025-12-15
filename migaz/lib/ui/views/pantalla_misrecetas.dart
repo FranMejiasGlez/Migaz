@@ -1,3 +1,4 @@
+import 'package:migaz/core/config/api_config.dart';
 import 'package:migaz/core/config/routes.dart';
 import 'package:migaz/core/constants/recipe_constants.dart';
 import 'package:migaz/core/utils/recipe_utils.dart';
@@ -29,7 +30,7 @@ class _PantallaMisRecetasState extends State<PantallaMisRecetas> {
   String? _errorMessage;
 
   // ✅ Usuario actual (temporal, luego vendrá de autenticación)
-  final String _currentUser = 'usuario_demo';
+  final String _currentUser = ApiConfig.currentUser; //!!
 
   @override
   void initState() {

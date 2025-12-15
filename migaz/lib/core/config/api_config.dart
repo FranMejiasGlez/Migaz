@@ -1,6 +1,12 @@
 class ApiConfig {
-  // 🔧 CAMBIA ESTA URL POR LA DE TU API
-  static const String baseUrl = 'http://localhost:3000/api';
+  // 🔧 URL base del servidor (sin /api)
+  static const String serverUrl = 'http://localhost:3000';
+
+  // 🔧 URL de la API
+  static const String baseUrl = '$serverUrl/api';
+
+  // 🔧 URL para imágenes
+  static const String imageUrl = '$serverUrl/img';
 
   // Endpoints de Recetas
   static const String recetasEndpoint = '/recetas';
@@ -26,4 +32,20 @@ class ApiConfig {
   static Map<String, String> get multipartHeaders => {
     'Accept': 'application/json',
   };
+
+  //Usuarios estaticos
+  static String currentUser = "Cocinero Experto";
+
+  // ✅ NUEVO: Helper para construir URLs de imágenes
+  static String getImageUrl(String imagePath) {
+    if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+      return imagePath;
+    }
+    // Si la ruta empieza con /img, usar serverUrl
+    if (imagePath.startsWith('/img/')) {
+      return '$serverUrl$imagePath';
+    }
+    // Si solo es el nombre del archivo, agregar /img/
+    return '$imageUrl/$imagePath';
+  }
 }
