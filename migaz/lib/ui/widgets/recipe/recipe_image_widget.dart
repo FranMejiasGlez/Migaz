@@ -53,8 +53,8 @@ class RecipeImageWidget extends StatelessWidget {
           );
         },
         errorBuilder: (context, error, stackTrace) {
-          print('❌ Error cargando imagen: $fullUrl');
-          print('   Error: $error');
+          //print('❌ Error cargando imagen: $fullUrl');
+          //print('   Error: $error');
           // Si falla la carga, mostrar placeholder de error
           return _buildErrorPlaceholder();
         },

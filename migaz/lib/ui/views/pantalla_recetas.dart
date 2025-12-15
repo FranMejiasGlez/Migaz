@@ -48,7 +48,7 @@ class _PantallaRecetasViewState extends State<_PantallaRecetasView> {
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final homeViewModel = context.read<HomeViewModel>();
       await homeViewModel.cargarHome();
-      await homeViewModel.cargarGuardadas('usuario_demo');
+      await homeViewModel.cargarGuardadas(ApiConfig.currentUser);
     });
   }
 
@@ -449,7 +449,7 @@ class _PantallaRecetasViewState extends State<_PantallaRecetasView> {
 
     final exito = await viewModel.crearReceta(
       nueva,
-      usuario: 'usuario_demo',
+      usuario: ApiConfig.currentUser,
       youtube: youtube?.isNotEmpty == true ? youtube : null,
       imagenes: imagenes,
       imagenesXFile: imagenesWeb,

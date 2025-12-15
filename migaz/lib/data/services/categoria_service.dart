@@ -20,7 +20,7 @@ class CategoriaService {
         throw Exception('Error al obtener categorías');
       }
     } catch (e) {
-      print('❌ Error en obtenerCategorias: $e');
+      //print('❌ Error en obtenerCategorias: $e');
       return ['Todos']; // Fallback
     }
   }

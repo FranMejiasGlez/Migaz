@@ -16,11 +16,11 @@ class ComentarioService {
   }) async {
     final data = {'usuario': usuario, 'receta': recetaId, 'contenido': texto};
 
-    print('📤 DEBUG - Enviando comentario: ');
-    print('   recetaId: $recetaId');
-    print('   texto: $texto');
-    print('   usuario: $usuario');
-    print('   Data completa: $data');
+    //print('📤 DEBUG - Enviando comentario: ');
+    //print('   recetaId: $recetaId');
+    //print('   texto: $texto');
+    //print('   usuario: $usuario');
+    //print('   Data completa: $data');
 
     try {
       final response = await _apiService.post(
@@ -28,10 +28,10 @@ class ComentarioService {
         data,
       );
 
-      print('✅ DEBUG - Respuesta del servidor:  $response');
+      //print('✅ DEBUG - Respuesta del servidor:  $response');
       return response as Map<String, dynamic>;
     } catch (e) {
-      print('❌ DEBUG - Error al crear comentario: $e');
+      //print('❌ DEBUG - Error al crear comentario: $e');
       rethrow;
     }
   }
@@ -44,7 +44,7 @@ class ComentarioService {
       );
       return response as List<dynamic>;
     } catch (e) {
-      print('❌ DEBUG - Error al obtener comentarios: $e');
+      //print('❌ DEBUG - Error al obtener comentarios: $e');
       rethrow;
     }
   }

@@ -126,7 +126,7 @@ class RecipeCard extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: () {
-          print('👆 CLICK en comentarios de:  ${recetaActual.nombre}');
+          //print('👆 CLICK en comentarios de:  ${recetaActual.nombre}');
           _showComments(context, recetaActual);
         },
         borderRadius: BorderRadius.circular(8),
@@ -171,7 +171,7 @@ class RecipeCard extends StatelessWidget {
   }
 
   void _showComments(BuildContext context, Recipe recetaActual) {
-    final credentials = Provider.of<UserCredentials>(context, listen: false);
+    //  final credentials = Provider.of<UserCredentials>(context, listen: false);
     final currentUser = ApiConfig.currentUser;
 
     ComentariosPopup.show(

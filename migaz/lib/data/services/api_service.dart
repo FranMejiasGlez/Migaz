@@ -136,9 +136,9 @@ class ApiService {
         }
       });
 
-      print('📤 DEBUG - Fields enviados: ');
+      //print('📤 DEBUG - Fields enviados: ');
       request.fields.forEach((key, value) {
-        print('  $key: $value');
+        //print('  $key: $value');
       });
 
       // ✅ Añadir archivos CON contentType explícito
@@ -203,22 +203,22 @@ class ApiService {
               contentType: http.MediaType.parse(contentType), // ✅ AÑADIDO
             );
             request.files.add(multipartFile);
-            print('📎 DEBUG - Archivo añadido: ${xfile.name} (${contentType})');
+            //print('📎 DEBUG - Archivo añadido: ${xfile.name} (${contentType})');
           }
         }
       }
 
-      print('📤 DEBUG - Total archivos:  ${request.files.length}');
+      //print('📤 DEBUG - Total archivos:  ${request.files.length}');
 
       final streamedResponse = await _client.send(request);
       final response = await http.Response.fromStream(streamedResponse);
 
-      print('📥 DEBUG - Status: ${response.statusCode}');
-      print('📥 DEBUG - Body: ${response.body}');
+      //print('📥 DEBUG - Status: ${response.statusCode}');
+      //print('📥 DEBUG - Body: ${response.body}');
 
       return _handleResponse(response);
     } catch (e) {
-      print('❌ DEBUG - Error: $e');
+      //print('❌ DEBUG - Error: $e');
       throw _handleError(e);
     }
   }

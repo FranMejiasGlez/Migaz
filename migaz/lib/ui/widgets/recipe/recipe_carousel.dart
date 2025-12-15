@@ -218,11 +218,11 @@ class _RecipeCarouselState extends State<RecipeCarousel> {
       imageUrl = '${ApiConfig.serverUrl}/$cleanPath';
     }
 
-    print('🖼️ Cargando imagen: $imageUrl');
+    //print('🖼️ Cargando imagen: $imageUrl');
 
     return Image.network(
       imageUrl,
-      fit: BoxFit.cover,
+      fit: BoxFit.contain,
       loadingBuilder: (context, child, loadingProgress) {
         if (loadingProgress == null) return child;
         return Container(
@@ -238,8 +238,8 @@ class _RecipeCarouselState extends State<RecipeCarousel> {
         );
       },
       errorBuilder: (context, error, stackTrace) {
-        print('❌ Error cargando imagen de "${recipe.nombre}": $imageUrl');
-        print('   Error: $error');
+        //   print('❌ Error cargando imagen de "${recipe.nombre}": $imageUrl');
+        //  print('   Error: $error');
         return _buildPlaceholder();
       },
     );

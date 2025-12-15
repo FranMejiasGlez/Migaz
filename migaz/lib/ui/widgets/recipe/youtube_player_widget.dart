@@ -47,17 +47,17 @@ class _YoutubePlayerWidgetState extends State<YoutubePlayerWidget> {
       // Extraer el ID del video de la URL
       final videoId = YoutubePlayerController.convertUrlToId(widget.youtubeUrl);
 
-      print('🎬 URL recibida: ${widget.youtubeUrl}');
-      print('🎬 Video ID extraído: $videoId');
-      print('🎬 Plataforma:  ${Theme.of(context).platform}');
-      print('🎬 Es Web: $kIsWeb');
+      //print('🎬 URL recibida: ${widget.youtubeUrl}');
+      //print('🎬 Video ID extraído: $videoId');
+      //print('🎬 Plataforma:  ${Theme.of(context).platform}');
+      //print('🎬 Es Web: $kIsWeb');
 
       if (videoId == null || videoId.isEmpty) {
         setState(() {
           _hasError = true;
           _errorMessage = 'No se pudo extraer el ID del video de la URL';
         });
-        print('❌ Video ID es null o vacío');
+        //print('❌ Video ID es null o vacío');
         return;
       }
 
@@ -79,13 +79,13 @@ class _YoutubePlayerWidgetState extends State<YoutubePlayerWidget> {
         _isPlayerReady = true;
       });
 
-      print('✅ YouTube Player inicializado correctamente');
+      //print('✅ YouTube Player inicializado correctamente');
     } catch (e) {
       setState(() {
         _hasError = true;
         _errorMessage = 'Error al cargar el video: $e';
       });
-      print('❌ Error al inicializar YouTube Player: $e');
+      //print('❌ Error al inicializar YouTube Player: $e');
     }
   }
 
@@ -94,9 +94,9 @@ class _YoutubePlayerWidgetState extends State<YoutubePlayerWidget> {
       final uri = Uri.parse(widget.youtubeUrl);
       if (await canLaunchUrl(uri)) {
         await launchUrl(uri, mode: LaunchMode.externalApplication);
-        print('✅ Abriendo YouTube en navegador/app externa');
+        //print('✅ Abriendo YouTube en navegador/app externa');
       } else {
-        print('❌ No se puede abrir la URL:  ${widget.youtubeUrl}');
+        //print('❌ No se puede abrir la URL:  ${widget.youtubeUrl}');
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -107,7 +107,7 @@ class _YoutubePlayerWidgetState extends State<YoutubePlayerWidget> {
         }
       }
     } catch (e) {
-      print('❌ Error al abrir URL: $e');
+      //print('❌ Error al abrir URL: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error:  $e'), backgroundColor: Colors.red),

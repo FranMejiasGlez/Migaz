@@ -45,7 +45,7 @@ class _RecipeSearchSectionState extends State<RecipeSearchSection> {
         _isLoadingCategories = false;
       });
     } catch (e) {
-      print('❌ Error al cargar categorías: $e');
+      //print('❌ Error al cargar categorías: $e');
       setState(() {
         _categories = ['Todos']; // Fallback
         _isLoadingCategories = false;

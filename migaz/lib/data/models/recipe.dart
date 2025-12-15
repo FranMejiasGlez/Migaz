@@ -1,3 +1,5 @@
+import 'package:migaz/core/config/api_config.dart';
+
 class Recipe {
   final String? id;
   final String nombre;
@@ -144,8 +146,8 @@ class Recipe {
     );
   }
   // ✅ NUEVO:  Método para verificar si es del usuario actual
-  bool esMia(String currentUser) {
-    return user?.toLowerCase() == currentUser.toLowerCase();
+  bool esMia(String user) {
+    return user == ApiConfig.currentUser;
   }
 
   static int _parseIntSafely(dynamic value) {

@@ -62,7 +62,7 @@ class _PantallaBibliotecaState extends State<PantallaBiblioteca> {
     });
 
     try {
-      print('🔥 Cargando recetas de: $_currentUser');
+      //print('🔥 Cargando recetas de: $_currentUser');
 
       final misRecetas = await _recetaRepository.obtenerPorUsuario(
         _currentUser,
@@ -81,11 +81,11 @@ class _PantallaBibliotecaState extends State<PantallaBiblioteca> {
           _isLoading = false;
         });
 
-        print('✅ Mis recetas cargadas: ${misRecetas.length}');
-        print('✅ Recetas guardadas: ${recetasGuardadas.length}');
+        //print('✅ Mis recetas cargadas: ${misRecetas.length}');
+        //print('✅ Recetas guardadas: ${recetasGuardadas.length}');
       }
     } catch (e) {
-      print('❌ Error al cargar datos de biblioteca: $e');
+      //print('❌ Error al cargar datos de biblioteca: $e');
       setState(() {
         _errorMessage = 'Error al cargar tu biblioteca';
         _isLoading = false;

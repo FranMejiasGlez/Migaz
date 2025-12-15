@@ -4,6 +4,10 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:migaz/core/config/api_config.dart';
+import 'package:migaz/core/config/routes.dart';
+import 'package:migaz/core/constants/recipe_constants.dart';
+import 'package:migaz/core/utils/responsive_breakpoints.dart';
+import 'package:migaz/core/utils/responsive_helper.dart';
 import 'package:migaz/data/models/recipe.dart';
 import 'package:migaz/ui/widgets/recipe/rating_stars.dart';
 import 'package:migaz/ui/widgets/recipe/rating_display.dart';
@@ -11,6 +15,7 @@ import 'package:migaz/ui/widgets/recipe/recipe_image_widget.dart';
 import 'package:migaz/ui/widgets/comentarios/comentarios_popup.dart';
 import 'package:migaz/ui/widgets/recipe/ventana_editar_receta.dart';
 import 'package:migaz/ui/widgets/recipe/youtube_player_widget.dart';
+import 'package:migaz/viewmodels/biblioteca_viewmodel.dart';
 import 'package:migaz/viewmodels/home_viewmodel.dart';
 import 'package:migaz/viewmodels/recipe_list_viewmodel.dart';
 import 'package:provider/provider.dart';
@@ -39,7 +44,7 @@ class _RecipeDetailDialogContent extends StatefulWidget {
 class _RecipeDetailDialogContentState
     extends State<_RecipeDetailDialogContent> {
   late Recipe _recipe;
-  bool _hasChanged = false;
+  // bool _hasChanged = false;
   double _myRating = 0;
   bool _isRating = false;
   bool _showIngredients = false;
@@ -55,7 +60,7 @@ class _RecipeDetailDialogContentState
     super.initState();
     _recipe = widget.recipe;
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final credentials = Provider.of<UserCredentials>(context, listen: false);
+      // final credentials = Provider.of<UserCredentials>(context, listen: false);
       setState(() {
         _currentUser = ApiConfig.currentUser;
       });
@@ -63,10 +68,8 @@ class _RecipeDetailDialogContentState
   }
 
   Widget _buildSaveButton() {
-    if (_recipe.esMia(_currentUser)) {
-      return const SizedBox.shrink();
-    }
-
+    if (_isCurrentUserRecipeOwner()) return const SizedBox.shrink();
+    //print(!_isCurrentUserRecipeOwner());
     return Consumer<HomeViewModel>(
       builder: (context, homeViewModel, child) {
         final isGuardada = _recipe.isGuardada;
@@ -241,21 +244,18 @@ class _RecipeDetailDialogContentState
   Widget build(BuildContext context) {
     final screenSize = MediaQuery.of(context).size;
     final isMobile = screenSize.width < 600;
-    final isTablet = screenSize.width >= 600 && screenSize.width < 1024;
-    final isDesktop = screenSize.width >= 1024;
+    final responsive = ResponsiveHelper(context);
 
-    // Responsive dialog width/height
+    // Dimensiones del diálogo
     double dialogWidth = screenSize.width * 0.98;
     double dialogHeight = screenSize.height * 0.98;
-    if (isDesktop) {
+
+    if (responsive.isDesktop) {
       dialogWidth = screenSize.width > 1400 ? 1200 : screenSize.width * 0.8;
       dialogHeight = screenSize.height * 0.9;
-    } else if (isTablet) {
+    } else if (responsive.isTablet) {
       dialogWidth = screenSize.width * 0.95;
       dialogHeight = screenSize.height * 0.95;
-    } else {
-      dialogWidth = screenSize.width * 0.99;
-      dialogHeight = screenSize.height * 0.99;
     }
 
     return Dialog(
@@ -274,69 +274,89 @@ class _RecipeDetailDialogContentState
         ),
         child: LayoutBuilder(
           builder: (context, constraints) {
-            // Decide layout based on width
-            final showSidePanel = !isMobile && _showIngredients;
             return Stack(
               children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                // 1. CONTENIDO PRINCIPAL (Scrollable)
+                Column(
                   children: [
-                    // Main content
+                    _buildHeader(), // Imagen de cabecera
                     Expanded(
-                      child: Column(
-                        children: [
-                          _buildHeader(),
-                          Expanded(
-                            child: SingleChildScrollView(
-                              padding: EdgeInsets.all(isMobile ? 10 : 24),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  _buildBasicInfo(),
-                                  SizedBox(height: isMobile ? 12 : 24),
-                                  _buildRatingSection(),
-                                  SizedBox(height: isMobile ? 8 : 16),
-                                  _buildCommentsButton(),
-                                  SizedBox(height: isMobile ? 12 : 24),
-                                  _buildEditRecipeButton(),
-                                  SizedBox(height: isMobile ? 12 : 24),
-                                  _buildDeleteRecipeButton(),
-                                  SizedBox(height: isMobile ? 12 : 24),
-                                  _buildSaveButton(),
-                                  _buildDescription(),
-                                  SizedBox(height: isMobile ? 12 : 24),
-                                  if (isMobile)
-                                    _showIngredients
-                                        ? _buildIngredientsSidePanel()
-                                        : _buildIngredientsToggleButton()
-                                  else
-                                    _buildIngredientsToggleButton(),
-                                  SizedBox(height: isMobile ? 12 : 24),
-                                  _buildInstructions(),
-                                  if (_recipe.youtube != null &&
-                                      _recipe.youtube!.isNotEmpty) ...[
-                                    SizedBox(height: isMobile ? 12 : 24),
-                                    _buildYoutubeLink(),
-                                  ],
-                                ],
-                              ),
-                            ),
-                          ),
-                          _buildFooter(),
-                        ],
+                      child: SingleChildScrollView(
+                        padding: EdgeInsets.all(isMobile ? 12 : 24),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _buildBasicInfo(),
+                            const SizedBox(height: 16),
+
+                            // --- 🔴 RESTAURADO: Botones de Acción ---
+                            _buildSaveButton(),
+                            const SizedBox(height: 12),
+                            // Solo se muestran si es el dueño
+                            _buildEditRecipeButton(),
+                            _buildDeleteRecipeButton(),
+                            const SizedBox(height: 16),
+
+                            // ----------------------------------------
+                            _buildRatingSection(),
+                            const SizedBox(height: 16),
+                            _buildCommentsButton(),
+
+                            // (Eliminamos la lista de ingredientes inline anterior
+                            // para forzar el uso del panel flotante en todos los casos)
+                            const SizedBox(height: 24),
+                            _buildDescription(),
+                            const SizedBox(height: 24),
+                            _buildInstructions(),
+                            const SizedBox(height: 24),
+                            _buildYoutubeLink(),
+                          ],
+                        ),
                       ),
                     ),
-                    // Side panel only on tablet/desktop
-                    if (showSidePanel) _buildIngredientsSidePanel(),
+                    _buildFooter(),
                   ],
                 ),
-                // Floating button only on desktop/tablet
-                if (!isMobile)
+
+                // 2. PANEL DE INGREDIENTES FLOTANTE (Para TODOS los dispositivos)
+                // Se muestra condicionalmente con _showIngredients
+                if (_showIngredients)
                   Positioned(
-                    right: _showIngredients ? 310 : 16,
-                    top: 520,
-                    child: _buildFloatingIngredientsButton(),
+                    top: 20, // 📍 Encima de la fotografía (parte superior)
+                    right: 20,
+                    // Usamos un ancho seguro para que en móviles muy estrechos no se salga
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(
+                        maxWidth:
+                            screenSize.width *
+                            0.85, // Max 85% del ancho en móvil
+                      ),
+                      child: _buildIngredientsFloatingCard(
+                        constraints.maxHeight,
+                      ),
+                    ),
                   ),
+
+                // 3. BOTÓN FLOTANTE (FAB)
+                // Siempre visible para poder abrir/cerrar los ingredientes
+                Positioned(
+                  bottom: 10,
+                  left: 20,
+                  child: FloatingActionButton(
+                    backgroundColor: Colors.green[400],
+                    // Más pequeño en desktop, normal en móvil para facilitar el toque
+                    mini: responsive.isDesktop,
+                    elevation: 6,
+                    onPressed: () =>
+                        setState(() => _showIngredients = !_showIngredients),
+                    child: Icon(
+                      _showIngredients
+                          ? Icons.visibility_off
+                          : Icons.restaurant_menu,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
               ],
             );
           },
@@ -345,172 +365,126 @@ class _RecipeDetailDialogContentState
     );
   }
 
-  Widget _buildFloatingIngredientsButton() {
-    return FloatingActionButton.extended(
-      onPressed: () {
-        setState(() {
-          _showIngredients = !_showIngredients;
-        });
-      },
-      backgroundColor: Colors.green,
-      icon: Icon(
-        _showIngredients ? Icons.close : Icons.restaurant_menu,
-        color: Colors.white,
-      ),
-      label: Text(
-        _showIngredients ? 'Ocultar' : 'Ingredientes',
-        style: const TextStyle(
-          color: Colors.white,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-    );
-  }
+  Widget _buildIngredientsFloatingCard(double parentHeight) {
+    // Obtenemos el ancho de pantalla para validar
+    final screenWidth = MediaQuery.of(context).size.width;
+    // Si la pantalla es muy pequeña (<320), ajustamos el ancho de la tarjeta
+    final cardWidth = screenWidth < 320 ? screenWidth - 40 : 280.0;
 
-  Widget _buildIngredientsSidePanel() {
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 300),
-      width: 300,
-      decoration: BoxDecoration(
-        color: Colors.green.shade50,
-        border: Border(
-          left: BorderSide(color: Colors.green.shade300, width: 2),
+    return Material(
+      elevation: 8,
+      borderRadius: BorderRadius.circular(16),
+      color: Colors.transparent,
+      child: Container(
+        width: cardWidth, // ✅ Ancho adaptado
+        constraints: BoxConstraints(
+          maxHeight: parentHeight * 0.60, // Máximo 60% de la altura del diálogo
         ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 10,
-            offset: const Offset(-5, 0),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.green,
-              borderRadius: const BorderRadius.only(
-                topRight: Radius.circular(16),
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(
+            0.96,
+          ), // Casi opaco para mejor lectura sobre fotos
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.green.shade200),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // CABECERA
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: const BoxDecoration(
+                color: Colors.green,
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(15),
+                  topRight: Radius.circular(15),
+                ),
               ),
-            ),
-            child: Row(
-              children: [
-                const Icon(Icons.restaurant_menu, color: Colors.white),
-                const SizedBox(width: 8),
-                const Expanded(
-                  child: Text(
-                    'Ingredientes',
-                    style: TextStyle(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.restaurant_menu,
+                        color: Colors.white,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 8),
+                      const Text(
+                        'Ingredientes',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
+                    ],
+                  ),
+                  InkWell(
+                    onTap: () => setState(() => _showIngredients = false),
+                    child: const Icon(
+                      Icons.close,
                       color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
+                      size: 20,
                     ),
                   ),
-                ),
-                Text(
-                  '${_recipe.ingredientes.length}',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-          Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.all(12),
-              itemCount: _recipe.ingredientes.length,
-              itemBuilder: (context, index) {
-                final ingrediente = _recipe.ingredientes[index];
-                return Container(
-                  margin: const EdgeInsets.only(bottom: 8),
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.green.shade200),
-                  ),
-                  child: Row(
+
+            // LISTA DE INGREDIENTES
+            Flexible(
+              child: ListView.separated(
+                padding: const EdgeInsets.all(12),
+                shrinkWrap: true,
+                itemCount: _recipe.ingredientes.length,
+                separatorBuilder: (_, __) => const Divider(height: 12),
+                itemBuilder: (context, index) {
+                  final ingrediente = _recipe.ingredientes[index];
+                  return Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Container(
-                        width: 6,
-                        height: 6,
-                        margin: const EdgeInsets.only(top: 6),
-                        decoration: BoxDecoration(
-                          color: Colors.green,
-                          shape: BoxShape.circle,
+                      Padding(
+                        padding: const EdgeInsets.only(top: 6),
+                        child: Icon(
+                          Icons.circle,
+                          size: 6,
+                          color: Colors.green.shade400,
                         ),
                       ),
                       const SizedBox(width: 10),
                       Expanded(
                         child: Text(
                           ingrediente,
-                          style: const TextStyle(fontSize: 14, height: 1.4),
+                          style: const TextStyle(
+                            fontSize: 14,
+                            color: Colors.black87,
+                          ),
                         ),
                       ),
                     ],
-                  ),
-                );
-              },
+                  );
+                },
+              ),
             ),
-          ),
-        ],
-      ),
-    );
-  }
 
-  Widget _buildIngredientsToggleButton() {
-    return InkWell(
-      onTap: () {
-        setState(() {
-          _showIngredients = !_showIngredients;
-        });
-      },
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.green.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.green.withOpacity(0.3)),
-        ),
-        child: Row(
-          children: [
+            // PIE CON CONTADOR
             Container(
-              padding: const EdgeInsets.all(10),
+              padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: Colors.green,
-                shape: BoxShape.circle,
+                color: Colors.green.shade50,
+                borderRadius: const BorderRadius.only(
+                  bottomLeft: Radius.circular(15),
+                  bottomRight: Radius.circular(15),
+                ),
               ),
-              child: const Icon(
-                Icons.restaurant_menu,
-                color: Colors.white,
-                size: 20,
+              child: Center(
+                child: Text(
+                  '${_recipe.ingredientes.length} items',
+                  style: TextStyle(fontSize: 12, color: Colors.green.shade700),
+                ),
               ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Ver ingredientes',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                  ),
-                  Text(
-                    '${_recipe.ingredientes.length} ingredientes necesarios',
-                    style: TextStyle(fontSize: 14, color: Colors.grey[600]),
-                  ),
-                ],
-              ),
-            ),
-            Icon(
-              _showIngredients ? Icons.visibility_off : Icons.visibility,
-              color: Colors.green,
             ),
           ],
         ),
@@ -886,9 +860,29 @@ class _RecipeDetailDialogContentState
               _getDifficultyLabel(_recipe.dificultad),
               Colors.purple,
             ),
+            InkWell(
+              onTap: () {
+                if (_recipe.user != null && _recipe.user!.isNotEmpty) {
+                  _goToUserProfile(_recipe.user!);
+                }
+              },
+              child: _buildInfoChip(
+                Icons.person,
+                _recipe.user ?? 'Desconocido',
+                Colors.teal,
+              ),
+            ),
           ],
         ),
       ],
+    );
+  }
+
+  void _goToUserProfile(String user) {
+    // Ejemplo de navegación (ajusta la ruta y argumentos según tu app)
+    Navigator.pushNamed(
+      BibliotecaViewModel().cargarDatos(user) as BuildContext,
+      AppRoutes.perfilUser,
     );
   }
 
@@ -1108,8 +1102,7 @@ class _RecipeDetailDialogContentState
   }
 
   Widget _buildEditRecipeButton() {
-    final esCreador = _recipe.esMia(_currentUser);
-    if (!esCreador) return const SizedBox.shrink();
+    if (!_isCurrentUserRecipeOwner()) return const SizedBox.shrink();
 
     return Container(
       width: double.infinity,
@@ -1157,8 +1150,7 @@ class _RecipeDetailDialogContentState
   }
 
   Widget _buildDeleteRecipeButton() {
-    final esCreador = _recipe.esMia(_currentUser);
-    if (!esCreador) return const SizedBox.shrink();
+    if (!_isCurrentUserRecipeOwner()) return const SizedBox.shrink();
 
     return Container(
       width: double.infinity,
@@ -1206,12 +1198,19 @@ class _RecipeDetailDialogContentState
     );
   }
 
+  /// Devuelve true si el usuario actual es el creador original de la receta
+  bool _isCurrentUserRecipeOwner() {
+    // Compara el usuario actual con el campo user de la receta
+    // (ajusta si el campo en la base de datos es diferente)
+    return (_recipe.user != null && _recipe.user == _currentUser);
+  }
+
   Future<void> _handleDeleteRecipe() async {
     final shouldDelete = await _confirmDelete();
 
     if (!shouldDelete) {
       // ignore: avoid_print
-      print('⚪ Eliminación cancelada por el usuario.');
+      // print('⚪ Eliminación cancelada por el usuario.');
       return;
     }
 
@@ -1238,7 +1237,7 @@ class _RecipeDetailDialogContentState
           ),
         );
       } else {
-        print('❌ Error al eliminar: ${recipeVM.errorMessage}');
+        // print('❌ Error al eliminar: ${recipeVM.errorMessage}');
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
@@ -1250,8 +1249,8 @@ class _RecipeDetailDialogContentState
         );
       }
     } catch (e, stackTrace) {
-      print('💥 ERROR INESPERADO en _handleDeleteRecipe: $e');
-      print('Stack trace: $stackTrace');
+      // print('💥 ERROR INESPERADO en _handleDeleteRecipe: $e');
+      // print('Stack trace: $stackTrace');
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -1275,6 +1274,18 @@ class _RecipeDetailDialogContentState
             ),
             actions: [
               TextButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.orange.withOpacity(0.3),
+                  foregroundColor: Colors.black,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 10,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  elevation: RecipeConstants.buttonElevation,
+                ),
                 onPressed: () => Navigator.of(context).pop(false),
                 child: const Text('Cancelar'),
               ),
@@ -1291,7 +1302,7 @@ class _RecipeDetailDialogContentState
 
   Future<void> _handleEditRecipe() async {
     try {
-      print('🔵 Iniciando edición de receta...');
+      //print('🔵 Iniciando edición de receta...');
 
       final edited = await showDialog<Map<String, dynamic>>(
         context: context,
@@ -1308,7 +1319,7 @@ class _RecipeDetailDialogContentState
       );
 
       if (edited == null) {
-        print('⚪ Edición cancelada por el usuario');
+        // print('⚪ Edición cancelada por el usuario');
         return;
       }
 
@@ -1320,9 +1331,9 @@ class _RecipeDetailDialogContentState
       final List<String>? imagenesPrevias =
           edited['imagenesPrevias'] as List<String>?;
 
-      print('📝 Receta editada: ${recetaEditada.nombre}');
-      print('📸 Imágenes nuevas: ${imagenesNuevas?.length ?? 0}');
-      print('📸 Imágenes previas: ${imagenesPrevias?.length ?? 0}');
+      //  print('📝 Receta editada: ${recetaEditada.nombre}');
+      //  print('📸 Imágenes nuevas: ${imagenesNuevas?.length ?? 0}');
+      // print('📸 Imágenes previas: ${imagenesPrevias?.length ?? 0}');
 
       // Manejo de imágenes nuevas: XFile -> File si no es web
       List<File>? imagenes;
@@ -1331,17 +1342,17 @@ class _RecipeDetailDialogContentState
       if (imagenesNuevas != null && imagenesNuevas.isNotEmpty) {
         if (kIsWeb) {
           imagenesWeb = imagenesNuevas;
-          print('🌐 Usando imágenes web: ${imagenesWeb.length}');
+          //    print('🌐 Usando imágenes web: ${imagenesWeb.length}');
         } else {
           imagenes = imagenesNuevas.map((xfile) => File(xfile.path)).toList();
-          print('📱 Usando imágenes móvil: ${imagenes.length}');
+          //    print('📱 Usando imágenes móvil: ${imagenes.length}');
         }
       }
 
       // Llama al ViewModel
       final recipeVM = Provider.of<RecipeListViewModel>(context, listen: false);
 
-      print('🚀 Llamando a actualizarReceta...');
+      //  print('🚀 Llamando a actualizarReceta...');
 
       // 🔴 CAMBIO CLAVE 1: Capturamos la receta actualizada (Recipe?)
       final Recipe? updatedRecipe = await recipeVM.actualizarReceta(
@@ -1357,7 +1368,7 @@ class _RecipeDetailDialogContentState
 
       // 🔴 CAMBIO CLAVE 2: Comprobamos si el resultado NO es nulo (éxito)
       if (updatedRecipe != null) {
-        print('✅ Receta actualizada correctamente');
+        //  print('✅ Receta actualizada correctamente');
 
         // 🔴 CAMBIO CLAVE 3: Actualizamos el estado local del diálogo
         setState(() {
@@ -1366,7 +1377,7 @@ class _RecipeDetailDialogContentState
         });
         if (mounted) {
           await context.read<HomeViewModel>().cargarHome();
-          print('✅ HomeViewModel recargado');
+          //   print('✅ HomeViewModel recargado');
         }
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -1377,7 +1388,7 @@ class _RecipeDetailDialogContentState
         );
       } else {
         // La actualización falló, usamos el mensaje de error del ViewModel
-        print('❌ Error al actualizar: ${recipeVM.errorMessage}');
+        //   print('❌ Error al actualizar: ${recipeVM.errorMessage}');
 
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -1390,8 +1401,8 @@ class _RecipeDetailDialogContentState
         );
       }
     } catch (e, stackTrace) {
-      print('💥 ERROR INESPERADO en _handleEditRecipe: $e');
-      print('Stack trace: $stackTrace');
+      // print('💥 ERROR INESPERADO en _handleEditRecipe: $e');
+      //  print('Stack trace: $stackTrace');
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -1472,7 +1483,7 @@ class _RecipeDetailDialogContentState
   }
 
   void _showComments() {
-    final credentials = Provider.of<UserCredentials>(context, listen: false);
+    //  final credentials = Provider.of<UserCredentials>(context, listen: false);
     final currentUser = ApiConfig.currentUser;
 
     ComentariosPopup.show(
@@ -1566,11 +1577,24 @@ class _RecipeDetailDialogContentState
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
           TextButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF25CCAD),
+              foregroundColor: Colors.black,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
+              elevation: RecipeConstants.buttonElevation,
+            ),
             onPressed: () => Navigator.of(context).pop(),
             child: const Text('Cerrar'),
           ),
         ],
       ),
     );
+  }
+
+  String? userOwner(Recipe recipe) {
+    return _recipe.user;
   }
 }

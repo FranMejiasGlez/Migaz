@@ -16,7 +16,7 @@ class GuardadosService {
       final List<dynamic> guardadasList = json.decode(guardadasJson);
       return guardadasList.cast<String>();
     } catch (e) {
-      print('❌ Error al obtener guardadas: $e');
+      //print('❌ Error al obtener guardadas: $e');
       return [];
     }
   }
@@ -29,13 +29,13 @@ class GuardadosService {
       if (!guardadas.contains(recetaId)) {
         guardadas.add(recetaId);
         await _guardarLista(usuario, guardadas);
-        print('✅ Receta $recetaId guardada para $usuario');
+        //print('✅ Receta $recetaId guardada para $usuario');
         return true;
       }
 
       return false;
     } catch (e) {
-      print('❌ Error al guardar receta: $e');
+      //print('❌ Error al guardar receta: $e');
       return false;
     }
   }
@@ -48,13 +48,13 @@ class GuardadosService {
       if (guardadas.contains(recetaId)) {
         guardadas.remove(recetaId);
         await _guardarLista(usuario, guardadas);
-        print('✅ Receta $recetaId eliminada de guardadas para $usuario');
+        //print('✅ Receta $recetaId eliminada de guardadas para $usuario');
         return true;
       }
 
       return false;
     } catch (e) {
-      print('❌ Error al quitar guardada: $e');
+      //print('❌ Error al quitar guardada: $e');
       return false;
     }
   }

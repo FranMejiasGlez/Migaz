@@ -208,7 +208,7 @@ class _PantallaConfiguracionViewState
             onPressed: () {
               Navigator.pop(context);
               // Aquí iría la lógica para cerrar sesión
-              print('Sesión cerrada');
+              //print('Sesión cerrada');
             },
             child: const Text('Cerrar Sesión'),
           ),

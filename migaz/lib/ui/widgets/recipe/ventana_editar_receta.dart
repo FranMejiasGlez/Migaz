@@ -94,7 +94,7 @@ class _DialogoEditarRecetaState extends State<DialogoEditarReceta> {
         _isLoadingCategorias = false;
       });
     } catch (e) {
-      print('❌ Error al cargar categorías: $e');
+      //print('❌ Error al cargar categorías: $e');
       setState(() {
         _categorias = [
           'Española',

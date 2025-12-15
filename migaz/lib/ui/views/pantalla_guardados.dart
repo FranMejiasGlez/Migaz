@@ -51,11 +51,11 @@ class _PantallaGuardadosState extends State<PantallaGuardados> {
 
       setState(() => _isLoading = false);
 
-      print(
+      /*print(
         '✅ Recetas guardadas cargadas:  ${homeViewModel.recetasGuardadas.length}',
-      );
+      );*/
     } catch (e) {
-      print('❌ Error al cargar guardadas: $e');
+      //print('❌ Error al cargar guardadas: $e');
       setState(() => _isLoading = false);
     }
   }

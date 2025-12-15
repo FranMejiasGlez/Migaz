@@ -52,7 +52,7 @@ class _PantallaMisRecetasState extends State<PantallaMisRecetas> {
     });
 
     try {
-      print('📥 Cargando recetas de: $_currentUser');
+      //print('📥 Cargando recetas de: $_currentUser');
       final recetas = await _recetaRepository.obtenerPorUsuario(_currentUser);
 
       setState(() {
@@ -66,9 +66,9 @@ class _PantallaMisRecetasState extends State<PantallaMisRecetas> {
         await homeViewModel.cargarHome();
       }
 
-      print('✅ Recetas cargadas: ${recetas.length}');
+      //print('✅ Recetas cargadas: ${recetas.length}');
     } catch (e) {
-      print('❌ Error al cargar mis recetas: $e');
+      //print('❌ Error al cargar mis recetas: $e');
       setState(() {
         _errorMessage = 'Error al cargar tus recetas';
         _isLoading = false;
