@@ -496,7 +496,7 @@ class _PantallaBibliotecaState extends State<PantallaBiblioteca> {
     return Center(
       child: Transform.scale(
         // Opcional: un pequeño ajuste extra si quieres que todo el botón crezca más
-        scale: 1,
+        scale: 0.7,
         child: ElevatedButton(
           onPressed: () => _handleCreateRecipe(context, viewModel),
           style: ElevatedButton.styleFrom(

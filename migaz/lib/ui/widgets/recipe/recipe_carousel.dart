@@ -196,25 +196,26 @@ class _RecipeCarouselState extends State<RecipeCarousel> {
 
   // ✅ CORREGIDO: Construcción correcta de la URL
   Widget _buildRecipeImage(Recipe recipe) {
-    // Verificar si la receta tiene imágenes
     if (recipe.imagenes == null || recipe.imagenes!.isEmpty) {
-      print('⚠️ Receta "${recipe.nombre}" sin imágenes');
       return _buildPlaceholder();
     }
 
     final firstImage = recipe.imagenes!.first;
+    String imageUrl;
 
-    // ✅ Construir URL correctamente usando serverUrl (sin /api)
-    String imageUrl = 'http://localhost:3000/img';
-    if (firstImage.startsWith('http://') || firstImage.startsWith('https://')) {
-      // Ya es una URL completa
+    // 1. Si ya es una URL completa (ej: Firebase, AWS S3)
+    if (firstImage.startsWith('http')) {
       imageUrl = firstImage;
-    } else if (firstImage.startsWith('/')) {
-      // Ruta absoluta desde el servidor (sin /api)
-      imageUrl = '${ApiConfig.baseUrl}$firstImage';
-    } else {
-      // Ruta relativa
-      imageUrl = '${ApiConfig.baseUrl}/$firstImage';
+    }
+    // 2. Si es una imagen local servida por Node (viene como "img/archivo.jpeg")
+    else {
+      // Usamos serverUrl (http://localhost:3000) directamente
+      // porque 'firstImage' ya contiene "img/" al principio.
+      // .replaceAll para evitar dobles slashes si los hubiera
+      final cleanPath = firstImage.startsWith('/')
+          ? firstImage.substring(1)
+          : firstImage;
+      imageUrl = '${ApiConfig.serverUrl}/$cleanPath';
     }
 
     print('🖼️ Cargando imagen: $imageUrl');

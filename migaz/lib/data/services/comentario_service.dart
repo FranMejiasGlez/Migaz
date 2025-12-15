@@ -14,11 +14,7 @@ class ComentarioService {
     required String texto,
     required String usuario,
   }) async {
-    final data = {
-      'usuario': usuario, // ✅ Correcto
-      'receta': recetaId, // ✅ CAMBIADO: recetaId → receta
-      'contenido': texto,
-    };
+    final data = {'usuario': usuario, 'receta': recetaId, 'contenido': texto};
 
     print('📤 DEBUG - Enviando comentario: ');
     print('   recetaId: $recetaId');

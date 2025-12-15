@@ -34,7 +34,7 @@ class ApiConfig {
   };
 
   //Usuarios estaticos
-  static String currentUser = "Cocinero Experto";
+  static const String currentUser = "franciscomejias.24";
 
   // ✅ NUEVO: Helper para construir URLs de imágenes
   static String getImageUrl(String imagePath) {

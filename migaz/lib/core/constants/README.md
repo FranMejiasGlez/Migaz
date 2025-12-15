@@ -1,1 +1,0 @@
-Colores, rutas, strings fijos, API keys

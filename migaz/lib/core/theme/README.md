@@ -1,1 +1,0 @@
- Configuración del tema (Light/Dark mode)

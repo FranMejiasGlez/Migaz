@@ -53,7 +53,7 @@ class RecipeGridView extends StatelessWidget {
               // 4. Relación de aspecto: 0.8 significa que el alto es un poco mayor que el ancho.
               // Ajusta este valor si tus tarjetas se ven muy cortadas o muy largas.
               // 0.75 = más alta | 0.85 = más cuadrada
-              childAspectRatio: 0.8,
+              childAspectRatio: 0.7,
             ),
             itemCount: recipes.length,
             itemBuilder: (context, index) {

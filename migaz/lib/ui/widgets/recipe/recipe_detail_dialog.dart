@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:migaz/core/config/api_config.dart';
 import 'package:migaz/data/models/recipe.dart';
 import 'package:migaz/ui/widgets/recipe/rating_stars.dart';
 import 'package:migaz/ui/widgets/recipe/rating_display.dart';
@@ -42,7 +43,7 @@ class _RecipeDetailDialogContentState
   double _myRating = 0;
   bool _isRating = false;
   bool _showIngredients = false;
-  String _currentUser = 'usuario_demo';
+  String _currentUser = ApiConfig.currentUser;
 
   // 🎨 Para controlar el carrusel de imágenes
   int _currentImageIndex = 0;
@@ -56,9 +57,7 @@ class _RecipeDetailDialogContentState
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final credentials = Provider.of<UserCredentials>(context, listen: false);
       setState(() {
-        _currentUser = credentials.email.isNotEmpty
-            ? credentials.email.split('@').first
-            : 'usuario_demo';
+        _currentUser = ApiConfig.currentUser;
       });
     });
   }
@@ -191,7 +190,7 @@ class _RecipeDetailDialogContentState
     final success = await homeViewModel.valorarReceta(
       _recipe.id!,
       rating,
-      'usuario_demo',
+      ApiConfig.currentUser, //!
     );
 
     if (success) {
@@ -1474,9 +1473,7 @@ class _RecipeDetailDialogContentState
 
   void _showComments() {
     final credentials = Provider.of<UserCredentials>(context, listen: false);
-    final currentUser = credentials.email.isNotEmpty
-        ? credentials.email.split('@').first
-        : 'usuario_demo';
+    final currentUser = ApiConfig.currentUser;
 
     ComentariosPopup.show(
       context: context,

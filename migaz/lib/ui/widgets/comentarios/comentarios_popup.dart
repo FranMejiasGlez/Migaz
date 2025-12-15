@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:migaz/core/config/api_config.dart';
 import 'package:migaz/viewmodels/home_viewmodel.dart';
 import 'package:provider/provider.dart';
 import 'package:migaz/data/models/recipe.dart';
@@ -16,7 +17,7 @@ class ComentariosPopup extends StatefulWidget {
 
   @override
   State<ComentariosPopup> createState() => _ComentariosPopupState();
-
+  static const currentUsername = ApiConfig.currentUser;
   static void show({
     required BuildContext context,
     required Recipe recipe,

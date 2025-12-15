@@ -1,5 +1,6 @@
 // lib/ui/widgets/recipe/recipe_card.dart
 import 'package:flutter/material.dart';
+import 'package:migaz/core/config/api_config.dart';
 import 'package:migaz/data/models/recipe.dart';
 import 'package:migaz/ui/widgets/recipe/rating_display.dart';
 import 'package:migaz/ui/widgets/recipe/recipe_image_widget.dart';
@@ -171,9 +172,7 @@ class RecipeCard extends StatelessWidget {
 
   void _showComments(BuildContext context, Recipe recetaActual) {
     final credentials = Provider.of<UserCredentials>(context, listen: false);
-    final currentUser = credentials.email.isNotEmpty
-        ? credentials.email.split('@').first
-        : 'usuario_demo';
+    final currentUser = ApiConfig.currentUser;
 
     ComentariosPopup.show(
       context: context,
