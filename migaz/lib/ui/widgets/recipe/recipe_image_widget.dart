@@ -1,5 +1,6 @@
 // lib/ui/widgets/recipe/recipe_image_widget.dart
 import 'package:flutter/material.dart';
+import 'package:migaz/core/config/api_config.dart';
 
 class RecipeImageWidget extends StatelessWidget {
   final String? imageUrl;
@@ -64,18 +65,8 @@ class RecipeImageWidget extends StatelessWidget {
 
   /// Construir URL completa de la imagen
   String _buildImageUrl(String imagePath) {
-    // Si ya es una URL completa (http/https), devolverla
-    if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
-      return imagePath;
-    }
-
-    // Si es una ruta relativa del servidor, añadir base URL
-    const baseUrl = 'http://localhost:3000';
-
-    // Asegurarse de que no haya doble slash
-    final cleanPath = imagePath.startsWith('/') ? imagePath : '/$imagePath';
-
-    return '$baseUrl$cleanPath';
+    // ✅ Usar el método centralizado de ApiConfig para consistencia
+    return ApiConfig.getImageUrl(imagePath);
   }
 
   /// ✅ NUEVO: Placeholder cuando NO hay imagen

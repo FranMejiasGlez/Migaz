@@ -11,6 +11,7 @@ import 'package:migaz/core/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:migaz/viewmodels/home_viewmodel.dart';
 import 'package:provider/provider.dart';
+import 'package:migaz/viewmodels/auth_viewmodel.dart';
 
 class PantallaMisRecetas extends StatefulWidget {
   const PantallaMisRecetas({Key? key}) : super(key: key);
@@ -96,9 +97,7 @@ class _PantallaMisRecetasState extends State<PantallaMisRecetas> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(gradient: AppTheme.appGradient),
-        child: SafeArea(
+      body: SafeArea(
           child: Column(
             children: [
               _buildHeader(),
@@ -108,11 +107,11 @@ class _PantallaMisRecetasState extends State<PantallaMisRecetas> {
             ],
           ),
         ),
-      ),
     );
   }
 
   Widget _buildHeader() {
+    final authVM = context.watch<AuthViewModel>();
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
       child: Row(
@@ -124,7 +123,7 @@ class _PantallaMisRecetasState extends State<PantallaMisRecetas> {
           Expanded(child: _buildTitle()),
           const SizedBox(width: 8),
           UserAvatar(
-            imageUrl: RecipeConstants.defaultAvatarUrl,
+            imageUrl: authVM.currentUserImage ?? RecipeConstants.defaultAvatarUrl,
             onTap: () => Navigator.pushNamed(context, AppRoutes.perfilUser),
           ),
         ],

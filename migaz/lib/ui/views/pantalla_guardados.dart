@@ -11,6 +11,7 @@ import 'package:flutter/material.dart';
 import 'package:migaz/viewmodels/home_viewmodel.dart';
 import 'package:provider/provider.dart';
 import 'package:migaz/ui/widgets/recipe/recipe_grid_view.dart';
+import 'package:migaz/viewmodels/auth_viewmodel.dart';
 
 class PantallaGuardados extends StatefulWidget {
   const PantallaGuardados({Key? key}) : super(key: key);
@@ -63,9 +64,7 @@ class _PantallaGuardadosState extends State<PantallaGuardados> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(gradient: AppTheme.appGradient),
-        child: SafeArea(
+      body: SafeArea(
           child: Column(
             children: [
               _buildHeader(),
@@ -75,11 +74,11 @@ class _PantallaGuardadosState extends State<PantallaGuardados> {
             ],
           ),
         ),
-      ),
     );
   }
 
   Widget _buildHeader() {
+    final authVM = context.watch<AuthViewModel>();
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
       child: Row(
@@ -91,7 +90,7 @@ class _PantallaGuardadosState extends State<PantallaGuardados> {
           Expanded(child: _buildTitle()),
           const SizedBox(width: 8),
           UserAvatar(
-            imageUrl: RecipeConstants.defaultAvatarUrl,
+            imageUrl: authVM.currentUserImage ?? RecipeConstants.defaultAvatarUrl,
             onTap: () => Navigator.pushNamed(context, AppRoutes.perfilUser),
           ),
         ],

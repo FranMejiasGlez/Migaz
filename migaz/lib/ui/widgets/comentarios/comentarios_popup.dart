@@ -17,7 +17,7 @@ class ComentariosPopup extends StatefulWidget {
 
   @override
   State<ComentariosPopup> createState() => _ComentariosPopupState();
-  static const currentUsername = ApiConfig.currentUser;
+
   static void show({
     required BuildContext context,
     required Recipe recipe,

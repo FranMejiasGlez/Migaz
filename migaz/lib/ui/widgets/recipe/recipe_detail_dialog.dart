@@ -9,6 +9,8 @@ import 'package:migaz/core/constants/recipe_constants.dart';
 import 'package:migaz/core/utils/responsive_breakpoints.dart';
 import 'package:migaz/core/utils/responsive_helper.dart';
 import 'package:migaz/data/models/recipe.dart';
+import 'package:migaz/ui/views/pantalla_cargar_recetas_distinto_user.dart';
+import 'package:migaz/ui/widgets/recipe/recipe_carousel.dart';
 import 'package:migaz/ui/widgets/recipe/rating_stars.dart';
 import 'package:migaz/ui/widgets/recipe/rating_display.dart';
 import 'package:migaz/ui/widgets/recipe/recipe_image_widget.dart';
@@ -867,10 +869,12 @@ class _RecipeDetailDialogContentState
                   _goToUserProfile(_recipe.user!);
                 }
               },
+              borderRadius: BorderRadius.circular(16), // Match chip radius
               child: _buildInfoChip(
                 Icons.person,
                 _recipe.user ?? 'Desconocido',
                 Colors.teal,
+                isAction: true,
               ),
             ),
           ],
@@ -880,10 +884,15 @@ class _RecipeDetailDialogContentState
   }
 
   void _goToUserProfile(String user) {
-    // Ejemplo de navegación (ajusta la ruta y argumentos según tu app)
-    Navigator.pushNamed(
-      BibliotecaViewModel().cargarDatos(user) as BuildContext,
-      AppRoutes.perfilUser,
+    // Cerramos el diálogo actual
+    Navigator.of(context).pop();
+
+    // Navegamos a la pantalla del perfil del usuario
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => PantallaRecetasDistinctUser(nombreUsuario: user),
+      ),
     );
   }
 
@@ -968,7 +977,7 @@ class _RecipeDetailDialogContentState
 
       return '$dia de $mes de $anios a las $hora: $minuto';
     } catch (e) {
-      print('❌ Error al formatear fecha completa: $e');
+      // print('❌ Error al formatear fecha completa: $e');
       return 'Fecha desconocida';
     }
   }
@@ -1011,16 +1020,34 @@ class _RecipeDetailDialogContentState
       final anios = (diferencia.inDays / 365).floor();
       return 'Publicada hace $anios ${anios == 1 ? "año" : "años"}';
     } catch (e) {
-      print('❌ Error al formatear fecha relativa: $e');
+      // print('❌ Error al formatear fecha relativa: $e');
       return 'Publicada recientemente';
     }
   }
 
-  Widget _buildInfoChip(IconData icon, String label, Color color) {
+  Widget _buildInfoChip(
+    IconData icon,
+    String label,
+    Color color, {
+    bool isAction = false,
+  }) {
     return Chip(
       avatar: Icon(icon, size: 18, color: color),
-      label: Text(label),
+      label: Text(
+        label,
+        style: isAction
+            ? TextStyle(
+                fontWeight: FontWeight.bold,
+                decoration: TextDecoration.underline,
+                decorationColor: color,
+              )
+            : null,
+      ),
       backgroundColor: color.withOpacity(0.1),
+      side: isAction
+          ? BorderSide(color: color.withOpacity(0.5))
+          : BorderSide.none,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
     );
   }
 

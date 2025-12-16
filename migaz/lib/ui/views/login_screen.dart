@@ -1,10 +1,9 @@
 // lib/ui/views/login_screen.dart
 import 'package:migaz/core/utils/responsive_breakpoints.dart';
-import 'package:migaz/ui/widgets/auth/user_credentials.dart';
 import 'package:flutter/material.dart';
+import 'package:migaz/viewmodels/auth_viewmodel.dart';
 import '../widgets/auth/auth_logo.dart';
 import '../widgets/auth/auth_form_field.dart';
-import '../../core/theme/gradient_scaffold.dart';
 import '../../core/utils/responsive_helper.dart';
 import '../../core/config/routes.dart';
 import 'package:provider/provider.dart';
@@ -14,11 +13,11 @@ class LoginScreen extends StatefulWidget {
   const LoginScreen({Key? key}) : super(key: key);
 
   @override
-  State<LoginScreen> createState() => _LoginPruebaState();
+  State<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginPruebaState extends State<LoginScreen> {
-  late TextEditingController _emailController;
+class _LoginScreenState extends State<LoginScreen> {
+  late TextEditingController _identifierController;
   late TextEditingController _passwordController;
   final _formKey = GlobalKey<FormState>();
   bool _isSubmitting = false;
@@ -26,23 +25,26 @@ class _LoginPruebaState extends State<LoginScreen> {
   @override
   void initState() {
     super.initState();
-    _emailController = TextEditingController();
+    _identifierController = TextEditingController();
     _passwordController = TextEditingController();
+
+    // Verificar sesión al inicio
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkSession();
+    });
   }
 
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    final credentials = Provider.of<UserCredentials>(context);
-    if (credentials.hasCredentials) {
-      _emailController.text = credentials.email;
-      _passwordController.text = credentials.password;
+  Future<void> _checkSession() async {
+    final authViewModel = context.read<AuthViewModel>();
+    final hasSession = await authViewModel.checkSession();
+    if (hasSession && mounted) {
+      Navigator.pushReplacementNamed(context, AppRoutes.home);
     }
   }
 
   @override
   void dispose() {
-    _emailController.dispose();
+    _identifierController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
@@ -54,16 +56,32 @@ class _LoginPruebaState extends State<LoginScreen> {
     setState(() => _isSubmitting = true);
 
     try {
-      // TODO: llamar al ViewModel / autenticación real
-      await Future.delayed(const Duration(milliseconds: 350));
+      final authViewModel = context.read<AuthViewModel>();
+      final success = await authViewModel.login(
+        _identifierController.text,
+        _passwordController.text,
+      );
 
       if (!mounted) return;
-      Navigator.pushNamed(context, AppRoutes.home);
+
+      if (success) {
+        Navigator.pushReplacementNamed(context, AppRoutes.home);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error al iniciar sesión'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error al iniciar sesión: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error inesperado: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
       }
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
@@ -93,8 +111,8 @@ class _LoginPruebaState extends State<LoginScreen> {
       textStyle: TextStyle(fontSize: 14 * responsive.scale),
     );
 
-    return GradientScaffold(
-      child: Center(
+    return Scaffold(
+      body: Center(
         child: LayoutBuilder(
           builder: (context, constraints) {
             final contentWidth = constraints.maxWidth > responsive.maxWidth
@@ -182,12 +200,12 @@ class _LoginPruebaState extends State<LoginScreen> {
 
           // Campos
           AuthFormField(
-            controller: _emailController,
-            labelText: 'Correo electrónico',
+            controller: _identifierController,
+            labelText: 'Correo electrónico o Usuario',
             keyboardType: TextInputType.emailAddress,
             validator: (value) {
               if (value == null || value.trim().isEmpty)
-                return 'Introduce tu correo';
+                return 'Introduce tu correo o usuario';
               return null;
             },
           ),
@@ -199,13 +217,12 @@ class _LoginPruebaState extends State<LoginScreen> {
             validator: (value) {
               if (value == null || value.trim().isEmpty)
                 return 'Introduce tu contraseña';
-              if (value.trim().length < 4) return 'Mínimo 4 caracteres';
               return null;
             },
           ),
           SizedBox(height: 20 * responsive.scale),
 
-          // BOTÓN INICIAR SESIÓN (mantener estilo)
+          // BOTÓN INICIAR SESIÓN
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
@@ -225,7 +242,7 @@ class _LoginPruebaState extends State<LoginScreen> {
           ),
           SizedBox(height: 12 * responsive.scale),
 
-          // BOTÓN REGISTRARSE (mantener estilo visual)
+          // BOTÓN REGISTRARSE
           SizedBox(
             width: double.infinity,
             child: TextButton(

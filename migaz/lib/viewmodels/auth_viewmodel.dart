@@ -1,54 +1,48 @@
+import 'package:migaz/data/services/auth_service.dart';
 import 'package:migaz/viewmodels/base_viewmodel.dart';
 
 /// ViewModel para autenticación (Login y Registro)
-/// Maneja el estado y lógica de negocio relacionada con autenticación de usuarios
 class AuthViewModel extends BaseViewModel {
-  String _email = '';
-  String _password = '';
-  String _username = '';
+  final AuthService _authService = AuthService();
+  
+  String _currentUser = '';
+  String _currentUserId = '';
+  String? _currentUserImage;
   bool _isLoggedIn = false;
 
   // Getters
-  String get email => _email;
-  String get password => _password;
-  String get username => _username;
   bool get isLoggedIn => _isLoggedIn;
-  bool get hasCredentials => _email.isNotEmpty && _password.isNotEmpty;
+  String get currentUser => _currentUser;
+  String get currentUserId => _currentUserId;
+  String? get currentUserImage => _currentUserImage;
 
-  /// Actualiza el email
-  void setEmail(String email) {
-    _email = email;
-    notifyListeners();
-  }
-
-  /// Actualiza la contraseña
-  void setPassword(String password) {
-    _password = password;
-    notifyListeners();
-  }
-
-  /// Actualiza el nombre de usuario
-  void setUsername(String username) {
-    _username = username;
-    notifyListeners();
+  /// Verifica si hay sesión al iniciar la app
+  Future<bool> checkSession() async {
+    final userData = await _authService.checkSession();
+    if (userData != null) {
+      _currentUser = userData['username'] ?? '';
+      _currentUserId = userData['id'] ?? '';
+      _currentUserImage = userData['image'];
+      _isLoggedIn = true;
+      notifyListeners();
+      return true;
+    }
+    return false;
   }
 
   /// Realiza el login
-  Future<bool> login(String email, String password) async {
-    if (email.trim().isEmpty || password.trim().isEmpty) {
+  Future<bool> login(String identificador, String password) async {
+    if (identificador.trim().isEmpty || password.trim().isEmpty) {
       setError('Por favor completa todos los campos');
       return false;
     }
 
     final result = await runAsync(() async {
-      // Simular llamada a API
-      await Future.delayed(const Duration(seconds: 1));
-      
-      // En producción, aquí se haría la llamada real al servicio de autenticación
-      _email = email;
-      _password = password;
+      final data = await _authService.login(identificador, password);
+      _currentUser = data['username'];
+      _currentUserId = data['_id'];
+      _currentUserImage = data['profile_image'];
       _isLoggedIn = true;
-      
       return true;
     }, errorPrefix: 'Error al iniciar sesión');
 
@@ -63,26 +57,34 @@ class AuthViewModel extends BaseViewModel {
     }
 
     final result = await runAsync(() async {
-      // Simular llamada a API
-      await Future.delayed(const Duration(seconds: 1));
-      
-      // En producción, aquí se haría la llamada real al servicio de registro
-      _email = email;
-      _password = password;
-      _username = username;
+      final data = await _authService.register(
+        email: email, 
+        password: password, 
+        username: username,
+      );
+      _currentUser = data['username'];
+      _currentUserId = data['_id'];
+      _currentUserImage = data['profile_image'];
       _isLoggedIn = true;
-      
       return true;
     }, errorPrefix: 'Error al registrar usuario');
 
     return result ?? false;
   }
 
+  /// Actualizar imagen de usuario en sesión (sin relogin)
+  Future<void> updateUserImage(String imageUrl) async {
+    _currentUserImage = imageUrl;
+    await _authService.updateImageSession(imageUrl);
+    notifyListeners();
+  }
+
   /// Cierra sesión
-  void logout() {
-    _email = '';
-    _password = '';
-    _username = '';
+  Future<void> logout() async {
+    await _authService.logout();
+    _currentUser = '';
+    _currentUserId = '';
+    _currentUserImage = null;
     _isLoggedIn = false;
     clearError();
     notifyListeners();

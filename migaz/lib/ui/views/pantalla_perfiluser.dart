@@ -1,86 +1,12 @@
-/*import 'package:flutter/material.dart';
-
-class PantallaPerfilUser extends StatefulWidget {
-  const PantallaPerfilUser({super.key});
-
-  @override
-  State<PantallaPerfilUser> createState() => _PantallaPerfilUserState();
-}
-
-class _PantallaPerfilUserState extends State<PantallaPerfilUser> {
-  @override
-  Widget build(BuildContext context) {
-    return const Placeholder();
-  }
-}*/
 import 'package:migaz/core/config/routes.dart';
 import 'package:flutter/material.dart';
 import 'package:migaz/ui/widgets/recipe/user_avatar.dart';
-
-// ---------------------------------------------------------------------------
-// ✅ ZONA GLOBAL: DATOS INICIALES
-// ---------------------------------------------------------------------------
-
-List<Map<String, dynamic>> listaIzquierdaSeguidores = [
-  {
-    "name": "Pablo",
-    "img": "https://robohash.org/pablo?set=set5",
-    "loSigo": false,
-  },
-  {
-    "name": "Maria",
-    "img": "https://robohash.org/maria?set=set5",
-    "loSigo": false,
-  },
-  {
-    "name": "Carlos",
-    "img": "https://robohash.org/carlos?set=set5",
-    "loSigo": true,
-  },
-  {
-    "name": "Lucia",
-    "img": "https://robohash.org/lucia?set=set5",
-    "loSigo": false,
-  },
-  {
-    "name": "Andy",
-    "img": "https://robohash.org/andy?set=set5",
-    "loSigo": false,
-  },
-  {
-    "name": "Sofia",
-    "img": "https://robohash.org/sofia?set=set5",
-    "loSigo": true,
-  },
-];
-
-List<Map<String, dynamic>> listaDerechaSeguidos = [
-  {
-    "name": "Chef Ramsay",
-    "img": "https://robohash.org/ramsay?set=set5",
-    "loSigo": true,
-  },
-  {
-    "name": "Jamie Oliver",
-    "img": "https://robohash.org/jamie?set=set5",
-    "loSigo": true,
-  },
-  {
-    "name": "Carlos",
-    "img": "https://robohash.org/carlos?set=set5",
-    "loSigo": true,
-  },
-  {
-    "name": "Sofia",
-    "img": "https://robohash.org/sofia?set=set5",
-    "loSigo": true,
-  },
-];
-
-int numSeguidores = 6;
-int numSeguidos = 0;
-
-// ---------------------------------------------------------------------------
+import 'package:migaz/core/utils/responsive_helper.dart';
+import 'package:migaz/core/utils/responsive_breakpoints.dart';
+import 'package:migaz/core/config/api_config.dart';
+import 'package:provider/provider.dart';
+import 'package:migaz/viewmodels/user_viewmodel.dart';
+import 'package:migaz/viewmodels/auth_viewmodel.dart';
 
 class PantallaPerfilUser extends StatefulWidget {
   const PantallaPerfilUser({super.key});
@@ -93,305 +19,354 @@ class _PantallaPerfilUserState extends State<PantallaPerfilUser> {
   @override
   void initState() {
     super.initState();
-    numSeguidos = listaDerechaSeguidos.length;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _cargarDatos();
+    });
   }
 
-  // LÓGICA 1: ACCIÓN DESDE LA IZQUIERDA (Solo permite Seguir)
-  void _seguirDesdeIzquierda(int index) {
-    setState(() {
-      var usuarioIzquierda = listaIzquierdaSeguidores[index];
+  void _cargarDatos() {
+    final authViewModel = context.read<AuthViewModel>();
+    final userId = authViewModel.currentUserId;
+    if (userId.isNotEmpty) {
+      context.read<UserViewModel>().loadUserProfile(userId);
+    }
+  }
 
-      // Si ya lo sigo, no hacemos nada (o podríamos mostrar un mensaje)
-      if (usuarioIzquierda["loSigo"] == true) return;
+  // --- ACCIONES ---
 
-      // Empezar a seguir
-      usuarioIzquierda["loSigo"] = true;
-      listaDerechaSeguidos.add({
-        "name": usuarioIzquierda["name"],
-        "img": usuarioIzquierda["img"],
-        "loSigo": true,
-      });
+  // Seguir de vuelta a alguien que me sigue (lista izquierda)
+  Future<void> _seguirUsuario(String targetUserId, String targetName) async {
+    final authVM = context.read<AuthViewModel>();
+    final userVM = context.read<UserViewModel>();
 
+    final exito = await userVM.toggleFollow(authVM.currentUserId, targetUserId);
+    if (exito && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text("¡Ahora sigues a ${usuarioIzquierda["name"]}!"),
+          content: Text("¡Ahora sigues a $targetName!"),
           backgroundColor: Colors.green,
           duration: const Duration(milliseconds: 600),
         ),
       );
-
-      numSeguidos = listaDerechaSeguidos.length;
-    });
+    }
   }
 
-  // LÓGICA 2: ACCIÓN DESDE LA DERECHA (Solo Dejar de Seguir)
-  void _dejarDeSeguirDesdeDerecha(int index) {
-    setState(() {
-      var usuarioABorrar = listaDerechaSeguidos[index];
+  // Dejar de seguir (lista derecha)
+  Future<void> _dejarDeSeguir(String targetUserId, String targetName) async {
+    final authVM = context.read<AuthViewModel>();
+    final userVM = context.read<UserViewModel>();
 
-      // Sincronizamos con la izquierda para reactivar el botón de seguir
-      var coincidenciaEnIzquierda = listaIzquierdaSeguidores.indexWhere(
-        (u) => u["name"] == usuarioABorrar["name"],
-      );
-      if (coincidenciaEnIzquierda != -1) {
-        listaIzquierdaSeguidores[coincidenciaEnIzquierda]["loSigo"] = false;
-      }
-
-      // Borramos de la derecha
-      listaDerechaSeguidos.removeAt(index);
-      numSeguidos = listaDerechaSeguidos.length;
-
+    final exito = await userVM.toggleFollow(authVM.currentUserId, targetUserId);
+    if (exito && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text("Dejaste de seguir a ${usuarioABorrar["name"]}"),
+          content: Text("Dejaste de seguir a $targetName"),
           backgroundColor: Colors.redAccent,
           duration: const Duration(milliseconds: 600),
         ),
       );
-    });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    final responsive = ResponsiveHelper(context);
+    final isMobile = responsive.isMobile;
+
     return Scaffold(
-      body: Stack(
-        children: [
-          //Container(decoration: BoxDecoration(gradient: AppTheme.appGradient)),
-          SafeArea(
+      // backgroundColor: Colors.white, // Eliminado para usar el tema
+      body: Consumer2<UserViewModel, AuthViewModel>(
+        builder: (context, userVM, authVM, child) {
+          if (userVM.isLoading) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          final seguidores = userVM.followers; // List<dynamic> (Map)
+          final siguiendo = userVM.following; // List<dynamic> (Map)
+
+          return SafeArea(
             child: Column(
               children: [
-                const SizedBox(height: 10),
-                // HEADER
-                Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      SizedBox(
-                        child: IconButton(
-                          icon: const Icon(Icons.arrow_back),
-                          onPressed: () {
-                            Navigator.pushNamed(context, AppRoutes.home);
-                          },
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.only(left: 40.0),
-                        child: Column(
-                          children: [
-                            const SizedBox(width: 10),
-                            SizedBox(
-                              width: 200,
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  color: const Color(
-                                    0xFFEA7317,
-                                  ).withOpacity(0.5),
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                  vertical: 8,
-                                ),
-                                child: Text(
-                                  'Tu Perfil',
-                                  textAlign: TextAlign.center,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 20),
-                            ElevatedButton(
-                              onPressed: () {
-                                // Pasar la lista de recetas cuando navegues a biblioteca
-                                Navigator.pushNamed(
-                                  context,
-                                  AppRoutes.biblioteca,
-                                );
-                              },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Color(0xFF25CCAD),
-                                foregroundColor: Colors.black,
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 20,
-                                  vertical: 10,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                                elevation: 5,
-                              ),
-                              child: const FittedBox(
-                                fit: BoxFit.scaleDown,
-                                child: Text(
-                                  'Biblioteca',
-                                  style: TextStyle(fontWeight: FontWeight.bold),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.only(
-                              top: 30.0,
-                              right: 20.0,
-                            ),
-                            child: MouseRegion(
-                              cursor: SystemMouseCursors.click,
-                              onEnter: (_) {
-                                // Aquí podrías usar un StatefulWidget si quieres cambiar el estado
-                              },
-                              child: GestureDetector(
-                                onTap: () => Navigator.pushNamed(
-                                  context,
-                                  AppRoutes.configuracion,
-                                ),
-                                child: Container(
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.black.withOpacity(0),
-                                        blurRadius: 0,
-                                        spreadRadius: 0,
-                                      ),
-                                    ],
-                                  ),
-                                  child: const Icon(
-                                    Icons.settings_outlined,
-                                    size: 50,
-                                    color: Colors.black,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                          Column(
-                            children: [
-                              UserAvatar(
-                                imageUrl:
-                                    'https://raw.githubusercontent.com/FranMejiasGlez/TallerFlutter/main/sandbox_fran/imperativo/img/Logo.png',
-                                onTap: () {},
-                              ),
-                              const SizedBox(height: 5),
-                              const Text(
-                                "Nombre\nUsuario",
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.black,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
+                SizedBox(height: 10 * responsive.scale),
+                // HEADER RESPONSIVO
+                _buildHeader(
+                  context,
+                  responsive,
+                  authVM.currentUser,
+                  userVM.userProfile?['profile_image'],
                 ),
 
-                const SizedBox(height: 40),
+                SizedBox(height: 30 * responsive.scale),
 
                 // ZONA DE LISTAS
                 Expanded(
-                  child: Row(
-                    children: [
-                      // 1. COLUMNA IZQUIERDA: SEGUIDORES (Botón Seguir o Estado Siguiendo)
-                      Expanded(
-                        child: Column(
-                          children: [
-                            Text(
-                              "$numSeguidores Seguidores",
-                              style: const TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w500,
-                                color: Colors.black,
-                              ),
-                            ),
-                            const SizedBox(height: 20),
-                            Expanded(
-                              child: ListView.builder(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 10,
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: isMobile ? 10 : 20,
+                    ),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // 1. COLUMNA IZQUIERDA: SEGUIDORES
+                        Expanded(
+                          child: Column(
+                            children: [
+                              Text(
+                                "${seguidores.length} Seguidores",
+                                style: TextStyle(
+                                  fontSize:
+                                      ResponsiveBreakpoints.getScaledFontSize(
+                                        context,
+                                        18,
+                                      ) *
+                                      responsive.scale,
+                                  fontWeight: FontWeight.w500,
+                                  color: Colors.black,
                                 ),
-                                itemCount: listaIzquierdaSeguidores.length,
-                                itemBuilder: (context, index) {
-                                  final user = listaIzquierdaSeguidores[index];
-                                  // Sincronización visual
-                                  bool estaEnDerecha = listaDerechaSeguidos.any(
-                                    (u) => u['name'] == user['name'],
-                                  );
-
-                                  return UserCardIzquierdaStyle(
-                                    name: user["name"],
-                                    imageAsset: user["img"],
-                                    isFollowing: estaEnDerecha,
-                                    modoDerecha:
-                                        false, // ESTAMOS EN LA IZQUIERDA
-                                    onPressed: () =>
-                                        _seguirDesdeIzquierda(index),
-                                  );
-                                },
                               ),
-                            ),
-                          ],
+                              SizedBox(height: 20 * responsive.scale),
+                              Expanded(
+                                child: seguidores.isEmpty
+                                    ? Center(
+                                        child: Text(
+                                          "Aún no tienes seguidores",
+                                          style: TextStyle(
+                                            color: Colors.grey,
+                                            fontSize: 12 * responsive.scale,
+                                          ),
+                                        ),
+                                      )
+                                    : ListView.builder(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 4,
+                                        ),
+                                        itemCount: seguidores.length,
+                                        itemBuilder: (context, index) {
+                                          final user = seguidores[index];
+                                          final userId = user['_id'];
+                                          // Verifico si yo ya lo sigo
+                                          final loSigo = siguiendo.any(
+                                            (u) => u['_id'] == userId,
+                                          );
+
+                                          return UserCardIzquierdaStyle(
+                                            name: user["username"] ?? 'Usuario',
+                                            imageUrl:
+                                                user["profile_image"], // Puede ser null
+                                            isFollowing: loSigo,
+                                            modoDerecha: false,
+                                            responsive: responsive,
+                                            onPressed: () => _seguirUsuario(
+                                              userId,
+                                              user["username"] ?? 'Usuario',
+                                            ),
+                                          );
+                                        },
+                                      ),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
 
-                      Container(width: 1, color: Colors.black12),
+                        // Separador
+                        Container(
+                          width: 1,
+                          color: Colors.black12,
+                          margin: EdgeInsets.symmetric(
+                            horizontal: 8 * responsive.scale,
+                          ),
+                        ),
 
-                      // 2. COLUMNA DERECHA: SEGUIDOS (Botón Dejar de seguir)
-                      Expanded(
-                        child: Column(
-                          children: [
-                            Text(
-                              "$numSeguidos Seguidos",
-                              style: const TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w500,
-                                color: Colors.black,
-                              ),
-                            ),
-                            const SizedBox(height: 20),
-                            Expanded(
-                              child: ListView.builder(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 10,
+                        // 2. COLUMNA DERECHA: SEGUIDOS
+                        Expanded(
+                          child: Column(
+                            children: [
+                              Text(
+                                "${siguiendo.length} Seguidos",
+                                style: TextStyle(
+                                  fontSize:
+                                      ResponsiveBreakpoints.getScaledFontSize(
+                                        context,
+                                        18,
+                                      ) *
+                                      responsive.scale,
+                                  fontWeight: FontWeight.w500,
+                                  color: Colors.black,
                                 ),
-                                itemCount: listaDerechaSeguidos.length,
-                                itemBuilder: (context, index) {
-                                  final user = listaDerechaSeguidos[index];
-
-                                  return UserCardIzquierdaStyle(
-                                    name: user["name"],
-                                    imageAsset: user["img"],
-                                    isFollowing: true,
-                                    modoDerecha: true, // ESTAMOS EN LA DERECHA
-                                    onPressed: () =>
-                                        _dejarDeSeguirDesdeDerecha(index),
-                                  );
-                                },
                               ),
-                            ),
-                          ],
+                              SizedBox(height: 20 * responsive.scale),
+                              Expanded(
+                                child: siguiendo.isEmpty
+                                    ? Center(
+                                        child: Text(
+                                          "No sigues a nadie aún",
+                                          style: TextStyle(
+                                            color: Colors.grey,
+                                            fontSize: 12 * responsive.scale,
+                                          ),
+                                        ),
+                                      )
+                                    : ListView.builder(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 4,
+                                        ),
+                                        itemCount: siguiendo.length,
+                                        itemBuilder: (context, index) {
+                                          final user = siguiendo[index];
+                                          final userId = user['_id'];
+
+                                          return UserCardIzquierdaStyle(
+                                            name: user["username"] ?? 'Usuario',
+                                            imageUrl: user["profile_image"],
+                                            isFollowing: true,
+                                            modoDerecha: true,
+                                            responsive: responsive,
+                                            onPressed: () => _dejarDeSeguir(
+                                              userId,
+                                              user["username"] ?? 'Usuario',
+                                            ),
+                                          );
+                                        },
+                                      ),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ],
             ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildHeader(
+    BuildContext context,
+    ResponsiveHelper responsive,
+    String currentUserName,
+    String? userImage,
+  ) {
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 16.0 * responsive.scale),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          IconButton(
+            icon: Icon(Icons.arrow_back, size: 24 * responsive.scale),
+            onPressed: () => Navigator.pushNamed(context, AppRoutes.home),
+          ),
+
+          Expanded(
+            child: Column(
+              children: [
+                SizedBox(height: 10 * responsive.scale),
+                Container(
+                  width: responsive.isMobile ? 160 : 220,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFEA7317).withOpacity(0.5),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 16 * responsive.scale,
+                    vertical: 8 * responsive.scale,
+                  ),
+                  child: Text(
+                    'Tu Perfil',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize:
+                          ResponsiveBreakpoints.getScaledFontSize(context, 20) *
+                          responsive.scale,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                SizedBox(height: 20 * responsive.scale),
+                ElevatedButton(
+                  onPressed: () =>
+                      Navigator.pushNamed(context, AppRoutes.biblioteca),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF25CCAD),
+                    foregroundColor: Colors.black,
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 24 * responsive.scale,
+                      vertical: 12 * responsive.scale,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    elevation: 5,
+                  ),
+                  child: Text(
+                    'Biblioteca',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize:
+                          ResponsiveBreakpoints.getScaledFontSize(context, 14) *
+                          responsive.scale,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          Column(
+            children: [
+              SizedBox(height: 30 * responsive.scale),
+              Row(
+                crossAxisAlignment:
+                    CrossAxisAlignment.start, // Alineación corregida
+                children: [
+                  MouseRegion(
+                    cursor: SystemMouseCursors.click,
+                    child: GestureDetector(
+                      onTap: () =>
+                          Navigator.pushNamed(context, AppRoutes.configuracion),
+                      child: Icon(
+                        Icons.settings_outlined,
+                        size: 40 * responsive.scale,
+                        color: Colors.black,
+                      ),
+                    ),
+                  ),
+                  SizedBox(width: 12 * responsive.scale),
+                  Column(
+                    children: [
+                      UserAvatar(
+                        imageUrl:
+                            userImage ??
+                            'https://raw.githubusercontent.com/FranMejiasGlez/TallerFlutter/main/sandbox_fran/imperativo/img/Logo.png',
+                        onTap: () {},
+                        size: 45 * responsive.scale,
+                      ),
+                      SizedBox(height: 5 * responsive.scale),
+                      Text(
+                        currentUserName.isNotEmpty
+                            ? currentUserName
+                            : "Usuario",
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize:
+                              ResponsiveBreakpoints.getScaledFontSize(
+                                context,
+                                12,
+                              ) *
+                              responsive.scale,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.black,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ],
           ),
         ],
       ),
@@ -399,27 +374,26 @@ class _PantallaPerfilUserState extends State<PantallaPerfilUser> {
   }
 }
 
-// --- WIDGET TARJETA DE USUARIO INTELIGENTE ---
 class UserCardIzquierdaStyle extends StatelessWidget {
   final String name;
-  final String imageAsset;
-  final bool isFollowing; // ¿Lo sigo?
-  final bool
-  modoDerecha; // ¿Estoy en la lista derecha (para borrar) o izquierda (para añadir)?
+  final String? imageUrl;
+  final bool isFollowing;
+  final bool modoDerecha;
   final VoidCallback onPressed;
+  final ResponsiveHelper responsive;
 
   const UserCardIzquierdaStyle({
     super.key,
     required this.name,
-    required this.imageAsset,
+    this.imageUrl,
     required this.isFollowing,
     required this.modoDerecha,
     required this.onPressed,
+    required this.responsive,
   });
 
   @override
   Widget build(BuildContext context) {
-    // CONFIGURACIÓN DEL BOTÓN SEGÚN COLUMNA
     String textoBoton = "";
     Color colorFondo = Colors.grey[200]!;
     Color colorTexto = Colors.black;
@@ -427,23 +401,18 @@ class UserCardIzquierdaStyle extends StatelessWidget {
     VoidCallback? accionBoton = onPressed;
 
     if (modoDerecha) {
-      // --- MODO DERECHA: Siempre es "Dejar" (Rojo) ---
       textoBoton = "Dejar de seguir";
       colorFondo = const Color(0xFFFF6B6B);
       colorTexto = Colors.white;
       icono = Icons.remove;
     } else {
-      // --- MODO IZQUIERDA: Depende del estado ---
       if (isFollowing) {
-        // Ya lo sigo: Muestro estado "Siguiendo" (Verde, sin acción de borrar)
         textoBoton = "Siguiendo";
-        colorFondo = const Color(0xFF1CC4A8).withOpacity(0.2); // Verde suave
-        colorTexto = const Color(0xFF0E6B5C); // Verde oscuro
+        colorFondo = const Color(0xFF1CC4A8).withOpacity(0.2);
+        colorTexto = const Color(0xFF0E6B5C);
         icono = Icons.check;
-        accionBoton =
-            null; // DESHABILITADO: No se puede borrar desde la izquierda
+        accionBoton = null;
       } else {
-        // No lo sigo: Botón "Seguir" (Gris/Amarillo)
         textoBoton = "Seguir";
         colorFondo = Colors.grey[200]!;
         colorTexto = Colors.black;
@@ -452,57 +421,91 @@ class UserCardIzquierdaStyle extends StatelessWidget {
     }
 
     return Card(
-      color: Colors.white.withOpacity(0.6),
-      margin: const EdgeInsets.only(bottom: 10),
+      color: Colors.white.withOpacity(0.8),
+      margin: EdgeInsets.only(bottom: 10 * responsive.scale),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-      child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-        leading: CircleAvatar(
-          radius: 20,
-          backgroundColor: Colors.grey[200],
-          backgroundImage: NetworkImage(imageAsset),
+      child: Padding(
+        padding: EdgeInsets.symmetric(
+          horizontal: 8 * responsive.scale,
+          vertical: 8 * responsive.scale,
         ),
-        title: Text(
-          name,
-          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
-          overflow: TextOverflow.ellipsis,
-        ),
-        trailing: SizedBox(
-          width: 110,
-          height: 32,
-          child: ElevatedButton(
-            onPressed:
-                accionBoton, // Si es null, el botón se ve "desactivado" visualmente
-            style: ElevatedButton.styleFrom(
-              backgroundColor: colorFondo,
-              disabledBackgroundColor:
-                  colorFondo, // Para que mantenga color si está desactivado
-              disabledForegroundColor: colorTexto,
-              foregroundColor: colorTexto,
-              elevation: 0,
-              padding: const EdgeInsets.symmetric(horizontal: 8),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
+        child: Column(
+          children: [
+            Row(
               children: [
-                Icon(icono, size: 14),
-                const SizedBox(width: 4),
-                Flexible(
+                CircleAvatar(
+                  radius: 18 * responsive.scale,
+                  backgroundColor: Colors.grey[200],
+                  backgroundImage: imageUrl != null
+                      ? NetworkImage(ApiConfig.getImageUrl(imageUrl!))
+                      : null,
+                  child: imageUrl == null
+                      ? Icon(
+                          Icons.person,
+                          color: Colors.grey,
+                          size: 20 * responsive.scale,
+                        )
+                      : null,
+                ),
+                SizedBox(width: 8 * responsive.scale),
+                Expanded(
                   child: Text(
-                    textoBoton,
-                    style: const TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
+                    name,
+                    style: TextStyle(
+                      fontSize:
+                          ResponsiveBreakpoints.getScaledFontSize(context, 13) *
+                          responsive.scale,
+                      fontWeight: FontWeight.bold,
                     ),
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ],
             ),
-          ),
+            SizedBox(height: 8 * responsive.scale),
+            SizedBox(
+              width: double.infinity,
+              height: 32 * responsive.scale,
+              child: ElevatedButton(
+                onPressed: accionBoton,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: colorFondo,
+                  disabledBackgroundColor: colorFondo,
+                  disabledForegroundColor: colorTexto,
+                  foregroundColor: colorTexto,
+                  elevation: 0,
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 8 * responsive.scale,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(icono, size: 14 * responsive.scale),
+                    SizedBox(width: 4 * responsive.scale),
+                    Flexible(
+                      child: Text(
+                        textoBoton,
+                        style: TextStyle(
+                          fontSize:
+                              ResponsiveBreakpoints.getScaledFontSize(
+                                context,
+                                11,
+                              ) *
+                              responsive.scale,
+                          fontWeight: FontWeight.w600,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

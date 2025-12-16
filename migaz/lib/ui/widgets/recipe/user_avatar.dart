@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:migaz/core/config/api_config.dart';
 
 class UserAvatar extends StatelessWidget {
   final String imageUrl;
@@ -14,6 +15,7 @@ class UserAvatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final fullUrl = ApiConfig.getImageUrl(imageUrl);
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -23,7 +25,7 @@ class UserAvatar extends StatelessWidget {
           shape: BoxShape.circle,
           border: Border.all(color: Colors.white, width: 2),
           image: DecorationImage(
-            image: NetworkImage(imageUrl),
+            image: NetworkImage(fullUrl),
             fit: BoxFit.cover,
           ),
         ),

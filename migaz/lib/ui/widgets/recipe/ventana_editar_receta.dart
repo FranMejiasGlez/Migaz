@@ -677,6 +677,8 @@ class _DialogoEditarRecetaState extends State<DialogoEditarReceta> {
                   final idx = entry.key;
                   final rawUrl = entry.value;
 
+                  // DEBUG: Ver qué URL llega
+
                   // ✅ SOLUCIÓN: Usamos el método centralizado.
                   // Esto funcionará en Web (localhost) y Android (10.0.2.2) automáticamente.
                   final fullUrl = ApiConfig.getImageUrl(rawUrl);

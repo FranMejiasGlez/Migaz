@@ -136,10 +136,10 @@ class ApiService {
         }
       });
 
-      print('📤 DEBUG - Fields enviados: ');
-      request.fields.forEach((key, value) {
-        print('  $key: $value');
-      });
+      // print('📤 DEBUG - Fields enviados: ');
+      // request.fields.forEach((key, value) {
+      //   print('  $key: $value');
+      // });
 
       // ✅ Añadir archivos CON contentType explícito
       if (files != null && files is List && files.isNotEmpty) {
@@ -169,9 +169,9 @@ class ApiService {
               contentType: http.MediaType.parse(contentType), // ✅ AÑADIDO
             );
             request.files.add(multipartFile);
-            print(
-              '📎 DEBUG - Archivo añadido: ${file.path.split('/').last} (${contentType})',
-            );
+            // print(
+            //   '📎 DEBUG - Archivo añadido: ${file.path.split('/').last} (${contentType})',
+            // );
           }
         } else if (files.first is XFile) {
           // Web: List<XFile>
@@ -203,22 +203,22 @@ class ApiService {
               contentType: http.MediaType.parse(contentType), // ✅ AÑADIDO
             );
             request.files.add(multipartFile);
-            print('📎 DEBUG - Archivo añadido: ${xfile.name} (${contentType})');
+            // print('📎 DEBUG - Archivo añadido: ${xfile.name} (${contentType})');
           }
         }
       }
 
-      print('📤 DEBUG - Total archivos:  ${request.files.length}');
+      // print('📤 DEBUG - Total archivos:  ${request.files.length}');
 
       final streamedResponse = await _client.send(request);
       final response = await http.Response.fromStream(streamedResponse);
 
-      print('📥 DEBUG - Status: ${response.statusCode}');
-      print('📥 DEBUG - Body: ${response.body}');
+      // print('📥 DEBUG - Status: ${response.statusCode}');
+      // print('📥 DEBUG - Body: ${response.body}');
 
       return _handleResponse(response);
     } catch (e) {
-      print('❌ DEBUG - Error: $e');
+      // print('❌ DEBUG - Error: $e');
       throw _handleError(e);
     }
   }
@@ -344,9 +344,33 @@ class ApiService {
   dynamic _handleResponse(http.Response response) {
     if (response.statusCode >= 200 && response.statusCode < 300) {
       if (response.body.isEmpty) return null;
-      return jsonDecode(response.body);
+      try {
+        return jsonDecode(response.body);
+      } catch (e) {
+        // Si es 200 pero no es JSON (ej: string simple), devolver el body tal cual o mapa vacio
+        return response.body;
+      }
     } else {
-      throw HttpException('Error ${response.statusCode}: ${response.body}');
+      // Intentar parsear error como JSON
+      try {
+        final decoded = jsonDecode(response.body);
+        final msg = decoded['error'] ?? decoded['message'] ?? response.body;
+        throw HttpException('Error ${response.statusCode}: $msg');
+      } catch (e) {
+        // Si falla parseo (HTML o texto plano)
+        String errorMsg = response.body;
+
+        // Si es HTML de Express (Multer error)
+        if (errorMsg.contains('<!DOCTYPE html>')) {
+          if (errorMsg.contains('Solo se permiten imágenes')) {
+            errorMsg = 'Formato de imagen no válido (Solo JPG, PNG, WEBP)';
+          } else {
+            errorMsg = 'Error interno del servidor';
+          }
+        }
+
+        throw HttpException('Error ${response.statusCode}: $errorMsg');
+      }
     }
   }
 

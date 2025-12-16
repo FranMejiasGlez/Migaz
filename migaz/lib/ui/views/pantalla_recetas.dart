@@ -17,6 +17,7 @@ import 'package:migaz/viewmodels/recipe_list_viewmodel.dart';
 import 'package:migaz/viewmodels/home_viewmodel.dart';
 import 'package:provider/provider.dart';
 import '../widgets/recipe/recipe_carousel.dart';
+import 'package:migaz/viewmodels/auth_viewmodel.dart'; // Importar AuthViewModel
 
 class PantallaRecetas extends StatelessWidget {
   const PantallaRecetas({Key? key}) : super(key: key);
@@ -80,12 +81,11 @@ class _PantallaRecetasViewState extends State<_PantallaRecetasView> {
     return Consumer<RecipeListViewModel>(
       builder: (context, recipeListViewModel, child) {
         return Scaffold(
-          body: Container(
-            decoration: BoxDecoration(gradient: AppTheme.appGradient),
-            child: SafeArea(
+          body: SafeArea(
               child: Column(
                 children: [
-                  _buildHeader(context),
+                  // Obtener AuthViewModel para la imagen
+                  _buildHeader(context, context.watch<AuthViewModel>()),
                   _buildSearchSection(),
                   const SizedBox(height: 16),
                   Expanded(
@@ -97,13 +97,12 @@ class _PantallaRecetasViewState extends State<_PantallaRecetasView> {
                 ],
               ),
             ),
-          ),
         );
       },
     );
   }
 
-  Widget _buildHeader(BuildContext context) {
+  Widget _buildHeader(BuildContext context, AuthViewModel authVM) {
     // Usamos LayoutBuilder o simplemente confiamos en el Expanded
     return Padding(
       padding: const EdgeInsets.symmetric(
@@ -119,7 +118,7 @@ class _PantallaRecetasViewState extends State<_PantallaRecetasView> {
           Expanded(child: _buildUserNameDisplay()),
           const SizedBox(width: 8),
           UserAvatar(
-            imageUrl: RecipeConstants.defaultAvatarUrl,
+            imageUrl: authVM.currentUserImage ?? RecipeConstants.defaultAvatarUrl,
             onTap: () => Navigator.pushNamed(context, AppRoutes.perfilUser),
           ),
         ],

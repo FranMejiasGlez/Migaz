@@ -123,6 +123,19 @@ class _DialogoCrearRecetaState extends State<DialogoCrearReceta> {
       );
 
       if (image != null) {
+        final String extension = image.name.split('.').last.toLowerCase();
+        if (!['jpg', 'jpeg', 'png', 'webp'].contains(extension)) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Formato no soportado. Usa JPG, PNG o WEBP.'),
+                backgroundColor: Colors.orange,
+              ),
+            );
+          }
+          return;
+        }
+
         setState(() {
           _imagenesSeleccionadas.add(image);
         });
@@ -146,6 +159,19 @@ class _DialogoCrearRecetaState extends State<DialogoCrearReceta> {
       );
 
       if (image != null) {
+        final String extension = image.name.split('.').last.toLowerCase();
+        if (!['jpg', 'jpeg', 'png', 'webp'].contains(extension)) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Formato no soportado. Usa JPG, PNG o WEBP.'),
+                backgroundColor: Colors.orange,
+              ),
+            );
+          }
+          return;
+        }
+
         setState(() {
           _imagenesSeleccionadas.add(image);
         });
@@ -168,9 +194,34 @@ class _DialogoCrearRecetaState extends State<DialogoCrearReceta> {
       );
 
       if (images.isNotEmpty) {
-        setState(() {
-          _imagenesSeleccionadas.addAll(images);
-        });
+        final List<XFile> validImages = [];
+        bool someInvalid = false;
+
+        for (var image in images) {
+          final String extension = image.name.split('.').last.toLowerCase();
+          if (['jpg', 'jpeg', 'png', 'webp'].contains(extension)) {
+            validImages.add(image);
+          } else {
+            someInvalid = true;
+          }
+        }
+
+        if (someInvalid && mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                'Algunas imágenes no tenían formato válido (JPG, PNG, WEBP) y fueron descartadas.',
+              ),
+              backgroundColor: Colors.orange,
+            ),
+          );
+        }
+
+        if (validImages.isNotEmpty) {
+          setState(() {
+            _imagenesSeleccionadas.addAll(validImages);
+          });
+        }
       }
     } catch (e) {
       if (mounted) {

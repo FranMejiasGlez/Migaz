@@ -20,6 +20,7 @@ import 'package:migaz/viewmodels/home_viewmodel.dart';
 import 'package:migaz/viewmodels/recipe_list_viewmodel.dart';
 import 'package:provider/provider.dart';
 import 'package:migaz/core/utils/responsive_helper.dart';
+import 'package:migaz/viewmodels/auth_viewmodel.dart';
 
 class PantallaBiblioteca extends StatefulWidget {
   final List<Recipe>? listaRecetas;
@@ -119,23 +120,20 @@ class _PantallaBibliotecaState extends State<PantallaBiblioteca> {
       child: Consumer<RecipeListViewModel>(
         builder: (context, recipeListViewModel, child) {
           return Scaffold(
-            body: Container(
-              decoration: BoxDecoration(gradient: AppTheme.appGradient),
-              child: SafeArea(
-                child: Column(
-                  children: [
-                    _buildHeader(),
-                    _buildSearchSection(),
-                    const SizedBox(height: 16),
-                    _buildNavigationButtons(),
-                    const SizedBox(height: 16),
-                    Expanded(
-                      child: _hasActiveFilters
-                          ? _buildSearchResults()
-                          : _buildHomeContent(),
-                    ),
-                  ],
-                ),
+            body: SafeArea(
+              child: Column(
+                children: [
+                  _buildHeader(),
+                  _buildSearchSection(),
+                  const SizedBox(height: 16),
+                  _buildNavigationButtons(),
+                  const SizedBox(height: 16),
+                  Expanded(
+                    child: _hasActiveFilters
+                        ? _buildSearchResults()
+                        : _buildHomeContent(),
+                  ),
+                ],
               ),
             ),
           );
@@ -145,6 +143,7 @@ class _PantallaBibliotecaState extends State<PantallaBiblioteca> {
   }
 
   Widget _buildHeader() {
+    final authVM = context.watch<AuthViewModel>();
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
       child: Row(
@@ -156,7 +155,8 @@ class _PantallaBibliotecaState extends State<PantallaBiblioteca> {
           Expanded(child: _buildTitle()),
           const SizedBox(width: 8),
           UserAvatar(
-            imageUrl: RecipeConstants.defaultAvatarUrl,
+            imageUrl:
+                authVM.currentUserImage ?? RecipeConstants.defaultAvatarUrl,
             onTap: () => Navigator.pushNamed(context, AppRoutes.perfilUser),
           ),
         ],

@@ -4,10 +4,9 @@ import 'package:migaz/core/utils/responsive_breakpoints.dart';
 import 'package:provider/provider.dart';
 import 'package:migaz/ui/widgets/auth/auth_logo.dart';
 import 'package:migaz/ui/widgets/auth/auth_form_field.dart';
-import 'package:migaz/core/theme/gradient_scaffold.dart';
 import 'package:migaz/core/utils/responsive_helper.dart';
 import 'package:migaz/core/config/routes.dart';
-import 'package:migaz/ui/widgets/auth/user_credentials.dart';
+import 'package:migaz/viewmodels/auth_viewmodel.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({Key? key}) : super(key: key);
@@ -38,27 +37,32 @@ class _RegisterScreenState extends State<RegisterScreen> {
     if (_isSubmitting) return;
 
     if (!_formKey.currentState!.validate()) {
-      // Si el formulario no es válido, no seguimos
       return;
     }
 
     setState(() => _isSubmitting = true);
 
     try {
-      // Guardar credenciales en el Provider (ejemplo simple)
-      final credentials = Provider.of<UserCredentials>(context, listen: false);
-      credentials.setCredentials(
+      final authViewModel = context.read<AuthViewModel>();
+      final success = await authViewModel.register(
         _emailController.text.trim(),
         _passwordController.text.trim(),
+        _usernameController.text.trim(),
       );
-
-      // Simular proceso de registro (puedes llamar a un ViewModel/repo real)
-      await Future.delayed(const Duration(milliseconds: 300));
 
       if (!mounted) return;
 
-      // Navegar al login reemplazando la ruta
-      Navigator.pushReplacementNamed(context, AppRoutes.login);
+      if (success) {
+        // Registro exitoso y sesión iniciada -> Vamos al Home
+        Navigator.pushReplacementNamed(context, AppRoutes.home);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(authViewModel.errorMessage ?? 'Error al registrarse'),
+            backgroundColor: Colors.red,
+          )
+        );
+      }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(
@@ -90,8 +94,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
       textStyle: TextStyle(fontSize: 14 * responsive.scale),
     );
 
-    return GradientScaffold(
-      child: Center(
+    return Scaffold(
+      body: Center(
         child: LayoutBuilder(
           builder: (context, constraints) {
             final contentWidth = constraints.maxWidth > responsive.maxWidth

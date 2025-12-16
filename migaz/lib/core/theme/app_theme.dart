@@ -21,6 +21,43 @@ class AppTheme {
     return ThemeData(
       primaryColor: primaryYellow,
       scaffoldBackgroundColor: Colors.white,
+      brightness: Brightness.light,
+      appBarTheme: const AppBarTheme(
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black,
+        elevation: 0,
+      ),
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: primaryYellow,
+          foregroundColor: Colors.black,
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          elevation: 5,
+          textStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+        ),
+      ),
+    );
+  }
+
+  static ThemeData get darkTheme {
+    return ThemeData(
+      primaryColor: primaryYellow,
+      scaffoldBackgroundColor: const Color.fromARGB(
+        255,
+        116,
+        121,
+        160,
+      ), // Gris oscuro premium, no negro
+      brightness: Brightness.dark,
+      appBarTheme: const AppBarTheme(
+        backgroundColor: Color.fromARGB(255, 46, 46, 46),
+        foregroundColor: Colors.white,
+        elevation: 0,
+      ),
+      // Mantenemos colores consistentes pero adaptados
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: primaryYellow,

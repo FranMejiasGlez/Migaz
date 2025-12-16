@@ -61,18 +61,12 @@ class RecetaService {
 
   Future<List<dynamic>> obtenerPorUsuario(String usuario) async {
     try {
-      print('🔥 DEBUG - Obteniendo recetas del usuario: $usuario');
       final response = await _apiService.get(
         ApiConfig.recetasByUserEndPoint(usuario),
       );
-      print(
-        '✅ DEBUG - Recetas del usuario obtenidas: ${(response as List).length}',
-      );
+
       return response;
     } catch (e) {
-      print(
-        '⚠️ DEBUG - Endpoint de usuario no disponible, filtrando localmente',
-      );
       final response = await _apiService.get(ApiConfig.recetasEndpoint);
       final List<dynamic> recetas = response as List<dynamic>;
 
@@ -81,7 +75,6 @@ class RecetaService {
             usuario.toLowerCase();
       }).toList();
 
-      print('✅ DEBUG - Recetas filtradas localmente: ${recetasUsuario.length}');
       return recetasUsuario;
     }
   }
@@ -118,15 +111,43 @@ class RecetaService {
       if (youtube != null && youtube.isNotEmpty) 'youtube': youtube,
     };
 
-    print('📝 DEBUG - Datos a enviar: $datos');
-    print(
-      '📝 DEBUG - Imágenes: ${kIsWeb ? imagenesXFile?.length : imagenes?.length}',
-    );
+    // ✅ Validar extensiones antes de enviar para evitar crash del backend
+    final allowedExtensions = ['jpg', 'jpeg', 'png', 'webp'];
+
+    List<File>? imagenesValidas;
+    List<XFile>? imagenesXFileValidas;
+
+    if (imagenes != null) {
+      imagenesValidas = imagenes.where((file) {
+        final ext = file.path.split('.').last.toLowerCase();
+        if (!allowedExtensions.contains(ext)) {
+          // print('⚠️ DEBUG - Imagen descartada por extensión inválida: ${file.path}');
+          return false;
+        }
+        return true;
+      }).toList();
+    }
+
+    if (imagenesXFile != null) {
+      imagenesXFileValidas = imagenesXFile.where((file) {
+        final ext = file.name.split('.').last.toLowerCase();
+        if (!allowedExtensions.contains(ext)) {
+          // print('⚠️ DEBUG - Imagen XFile descartada por extensión inválida: ${file.name}');
+          return false;
+        }
+        return true;
+      }).toList();
+    }
+
+    // print('📝 DEBUG - Datos a enviar: $datos');
+    // print(
+    //   '📝 DEBUG - Imágenes: ${kIsWeb ? imagenesXFileValidas?.length : imagenesValidas?.length}',
+    // );
 
     final response = await _apiService.postMultipartWithJson(
       ApiConfig.recetasEndpoint,
       datos,
-      kIsWeb ? imagenesXFile : imagenes,
+      kIsWeb ? imagenesXFileValidas : imagenesValidas,
     );
 
     return response as Map<String, dynamic>;
@@ -148,7 +169,8 @@ class RecetaService {
     List<XFile>? imagenesXFile,
     List<String>? imagenesPrevias,
   }) async {
-    print('📝 DEBUG ACTUALIZAR - ID: $id');
+    // print('📝 DEBUG ACTUALIZAR - ID: $id');
+    // print('📸 DEBUG - imagenesPrevias recibidas: $imagenesPrevias');
 
     // 1. Preparamos los datos
     final datos = {
@@ -161,8 +183,11 @@ class RecetaService {
       'instrucciones': instrucciones, // En JSON se envía como array directo
       'ingredientes': ingredientes, // En JSON se envía como array directo
       if (youtube != null && youtube.isNotEmpty) 'youtube': youtube,
-      if (imagenesPrevias != null) 'imagenesPrevias': imagenesPrevias,
+      // ✅ SIEMPRE enviar imagenesPrevias (incluso si está vacía)
+      'imagenesPrevias': imagenesPrevias ?? [],
     };
+
+    // print('📤 DEBUG - Datos a enviar: $datos');
 
     // 2. Detectamos si hay imágenes NUEVAS para subir
     final bool hayImagenesNuevas = kIsWeb
@@ -173,7 +198,7 @@ class RecetaService {
 
     if (hayImagenesNuevas) {
       // CASO A: Hay fotos nuevas -> Usamos Multipart (tu lógica actual)
-      print('📸 Subiendo con imágenes nuevas (Multipart)...');
+      // print('📸 Subiendo con imágenes nuevas (Multipart)...');
       response = await _apiService.putMultipartWithJson(
         ApiConfig.recetaByIdEndpoint(id),
         datos,
@@ -182,11 +207,11 @@ class RecetaService {
     } else {
       // CASO B: Solo texto/borrado -> Usamos JSON normal (Solución 1)
       // Esto envía los arrays [instrucciones] y [imagenesPrevias] correctamente
-      print('📄 Actualizando solo datos (JSON simple)...');
+      // print('📄 Actualizando solo datos (JSON simple)...');
       response = await _apiService.put(ApiConfig.recetaByIdEndpoint(id), datos);
     }
 
-    print('✅ DEBUG ACTUALIZAR - Respuesta recibida');
+    // print('✅ DEBUG ACTUALIZAR - Respuesta recibida');
     return response as Map<String, dynamic>;
   }
 

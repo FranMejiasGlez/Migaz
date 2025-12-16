@@ -33,6 +33,10 @@ class ApiConfig {
       '/comentarios/receta/$recetaId';
   static String comentarioByIdEndpoint(String id) => '/comentarios/$id';
 
+  // Endpoints de Autenticación
+  static const String loginEndpoint = '/usuarios/login';
+  static const String registroEndpoint = '/usuarios/registro';
+
   // Headers
   static Map<String, String> get headers => {
     'Content-Type': 'application/json',
@@ -43,7 +47,9 @@ class ApiConfig {
     'Accept': 'application/json',
   };
 
-  static const String currentUser = "MojonPeinao";
+  // Usuario actual (Dinámico)
+  // Inicialmente vacío, se debe setear al hacer login
+  static String currentUser = "MojonPeinao"; // Valor por defecto temporal o cambiar a ""
 
   // ✅ MÉTODO CLAVE: Generador de URLs de imágenes centralizado
   static String getImageUrl(String imagePath) {
@@ -55,15 +61,15 @@ class ApiConfig {
     }
 
     // Tu JSON devuelve algo como: "img/693fd...jpeg"
-    // Tu API espera: "http://HOST:3000/api/img/693fd...jpeg"
-    // Por tanto, usamos baseUrl (que ya acaba en /api) + / + la ruta
-
+    // Las imágenes estáticas se sirven desde: "http://HOST:3000/img/693fd...jpeg"
+    // NO desde /api/img/...
+    
     // Limpieza: Aseguramos que no haya doble barra //
     final cleanPath = imagePath.startsWith('/')
         ? imagePath.substring(1)
         : imagePath;
 
-    // Resultado: http://10.0.2.2:3000/api/img/foto.jpg
-    return '$baseUrl/$cleanPath';
+    // Resultado: http://10.0.2.2:3000/img/foto.jpg (usando serverUrl, no baseUrl)
+    return '$serverUrl/$cleanPath';
   }
 }

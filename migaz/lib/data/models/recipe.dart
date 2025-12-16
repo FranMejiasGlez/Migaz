@@ -196,6 +196,7 @@ class Recipe {
     String? user,
     String? youtube,
     int? cantidadVotos,
+    bool? isGuardada,
   }) {
     return Recipe(
       id: id ?? this.id,
@@ -213,6 +214,7 @@ class Recipe {
       user: user ?? this.user,
       youtube: youtube ?? this.youtube,
       cantidadVotos: cantidadVotos ?? this.cantidadVotos,
+      isGuardada: isGuardada ?? this.isGuardada,
     );
   }
 }
