@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kReleaseMode;
 import 'package:device_preview/device_preview.dart';
+import 'package:migaz/core/config/api_config.dart';
 import 'package:migaz/core/config/routes.dart';
 import 'package:provider/provider.dart';
 import 'viewmodels/auth_viewmodel.dart';
@@ -12,24 +13,16 @@ import 'viewmodels/user_viewmodel.dart';
 import 'viewmodels/theme_viewmodel.dart';
 
 void main() {
+  // ✅ Configura la URL pública de DevTunnel
+  // IMPORTANTE: Actualiza esta URL cada vez que reinicies el túnel
+  ApiConfig.publicServerUrl = 'http://localhost:3000';
+
+  // ✅ Solo un runApp()
   runApp(
-    // 🎨 NUEVO: Envolver con DevicePreview
+    // 🎨 DevicePreview solo en modo desarrollo
     DevicePreview(
       enabled: !kReleaseMode, // ✅ Solo en desarrollo, no en producción
-      builder: (context) => MultiProvider(
-        providers: [
-          ChangeNotifierProvider(create: (_) => AuthViewModel()),
-          ChangeNotifierProvider(create: (_) => RecipeListViewModel()),
-          ChangeNotifierProvider(create: (_) => ComentarioViewModel()),
-          ChangeNotifierProvider(create: (_) => HomeViewModel()),
-          ChangeNotifierProvider(create: (_) => BibliotecaViewModel()),
-          ChangeNotifierProvider(create: (_) => UserViewModel()),
-          ChangeNotifierProvider(
-            create: (_) => ThemeViewModel(),
-          ), // ✅ Theme Provider
-        ],
-        child: const MyApp(),
-      ),
+      builder: (context) => const MyApp(),
     ),
   );
 }
@@ -39,19 +32,31 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final themeViewModel = Provider.of<ThemeViewModel>(context);
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => AuthViewModel()),
+        ChangeNotifierProvider(create: (_) => RecipeListViewModel()),
+        ChangeNotifierProvider(create: (_) => ComentarioViewModel()),
+        ChangeNotifierProvider(create: (_) => HomeViewModel()),
+        ChangeNotifierProvider(create: (_) => BibliotecaViewModel()),
+        ChangeNotifierProvider(create: (_) => UserViewModel()),
+        ChangeNotifierProvider(create: (_) => ThemeViewModel()),
+      ],
+      child: Consumer<ThemeViewModel>(
+        builder: (context, themeViewModel, _) {
+          return MaterialApp(
+            title: 'Migaz - App de Recetas',
+            debugShowCheckedModeBanner: false,
+            theme: themeViewModel.currentTheme, // ✅ Tema dinámico
+            // 🎨 Configuración para Device Preview (solo afecta en desarrollo)
+            locale: DevicePreview.locale(context),
+            builder: DevicePreview.appBuilder,
 
-    return MaterialApp(
-      title: 'Migaz - App de Recetas',
-      debugShowCheckedModeBanner: false,
-      theme: themeViewModel.currentTheme, // ✅ Tema dinámico
-      // 🎨 NUEVO: Configuración para Device Preview
-      useInheritedMediaQuery: true, // ✅ Necesario para Device Preview
-      locale: DevicePreview.locale(context), // ✅ Soporte de idiomas
-      builder: DevicePreview.appBuilder, // ✅ Wrapper de Device Preview
-
-      initialRoute: AppRoutes.login,
-      routes: AppRoutes.routes,
+            initialRoute: AppRoutes.login,
+            routes: AppRoutes.routes,
+          );
+        },
+      ),
     );
   }
 }

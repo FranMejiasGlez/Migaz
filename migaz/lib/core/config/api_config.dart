@@ -2,6 +2,14 @@ import 'dart:io';
 import 'package:flutter/foundation.dart'; // Necesario para kIsWeb
 
 class ApiConfig {
+  // Permite definir una URL pública (por ejemplo, devtunnels.ms)
+  static String? publicServerUrl;
+
+  // Regex para detectar URLs devtunnels.ms o ngrok
+  static final RegExp _devTunnelOrNgrokRegex = RegExp(
+    r'^(https:\/\/[\w-]+-3000\.\w+\.devtunnels\.ms|https:\/\/[\w-]+\.ngrok(-free)?\.dev)',
+  );
+
   // 1. Detectamos dinámicamente el host correcto
   static String get _host {
     if (kIsWeb) {
@@ -13,8 +21,14 @@ class ApiConfig {
     }
   }
 
-  // 2. Definimos la URL base del servidor usando el host dinámico
-  static String get serverUrl => 'http://$_host:3000';
+  // 2. Definimos la URL base del servidor usando el host dinámico o la pública
+  static String get serverUrl {
+    if (publicServerUrl != null &&
+        _devTunnelOrNgrokRegex.hasMatch(publicServerUrl!)) {
+      return publicServerUrl!;
+    }
+    return 'http://$_host:3000';
+  }
 
   // 3. URL de la API (Aquí es donde añadimos '/api')
   static String get baseUrl => '$serverUrl/api';
@@ -49,7 +63,8 @@ class ApiConfig {
 
   // Usuario actual (Dinámico)
   // Inicialmente vacío, se debe setear al hacer login
-  static String currentUser = "MojonPeinao"; // Valor por defecto temporal o cambiar a ""
+  static String currentUser =
+      ""; // Se actualiza dinámicamente desde AuthService
 
   // ✅ MÉTODO CLAVE: Generador de URLs de imágenes centralizado
   static String getImageUrl(String imagePath) {
@@ -63,7 +78,7 @@ class ApiConfig {
     // Tu JSON devuelve algo como: "img/693fd...jpeg"
     // Las imágenes estáticas se sirven desde: "http://HOST:3000/img/693fd...jpeg"
     // NO desde /api/img/...
-    
+
     // Limpieza: Aseguramos que no haya doble barra //
     final cleanPath = imagePath.startsWith('/')
         ? imagePath.substring(1)

@@ -4,7 +4,7 @@ import 'package:migaz/viewmodels/base_viewmodel.dart';
 /// ViewModel para autenticación (Login y Registro)
 class AuthViewModel extends BaseViewModel {
   final AuthService _authService = AuthService();
-  
+
   String _currentUser = '';
   String _currentUserId = '';
   String? _currentUserImage;
@@ -51,15 +51,17 @@ class AuthViewModel extends BaseViewModel {
 
   /// Realiza el registro
   Future<bool> register(String email, String password, String username) async {
-    if (email.trim().isEmpty || password.trim().isEmpty || username.trim().isEmpty) {
+    if (email.trim().isEmpty ||
+        password.trim().isEmpty ||
+        username.trim().isEmpty) {
       setError('Por favor completa todos los campos');
       return false;
     }
 
     final result = await runAsync(() async {
       final data = await _authService.register(
-        email: email, 
-        password: password, 
+        email: email,
+        password: password,
         username: username,
       );
       _currentUser = data['username'];
