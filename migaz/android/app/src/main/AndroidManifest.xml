@@ -51,5 +51,16 @@
             <action android:name="android.intent.action.PROCESS_TEXT" />
             <data android:mimeType="text/plain" />
         </intent>
+        <!-- 🔧 FIX: Permitir abrir URLs de YouTube y navegadores (Android 11+) -->
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="https" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="http" />
+        </intent>
+        <!-- Permitir lanzar la app de YouTube específicamente -->
+        <package android:name="com.google.android.youtube" />
     </queries>
 </manifest>

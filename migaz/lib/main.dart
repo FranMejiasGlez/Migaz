@@ -15,7 +15,8 @@ import 'viewmodels/theme_viewmodel.dart';
 void main() {
   // ✅ Configura la URL pública de DevTunnel
   // IMPORTANTE: Actualiza esta URL cada vez que reinicies el túnel
-  ApiConfig.publicServerUrl = 'http://localhost:3000';
+  // ⚠️ NO incluir barra diagonal final
+  ApiConfig.publicServerUrl = 'https://g107vtml-3000.uks1.devtunnels.ms';
 
   // ✅ Solo un runApp()
   runApp(

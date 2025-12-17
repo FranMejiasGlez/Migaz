@@ -98,6 +98,10 @@ class RecetaService {
     List<File>? imagenes,
     List<XFile>? imagenesXFile,
   }) async {
+    final cleanYoutube = youtube
+        ?.trim()
+        .replaceAll('\n', '')
+        .replaceAll('\r', '');
     final datos = {
       'nombre': nombre,
       'categoria': categoria.toLowerCase(),
@@ -108,7 +112,8 @@ class RecetaService {
       'instrucciones': instrucciones,
       'ingredientes': ingredientes,
       'user': user,
-      if (youtube != null && youtube.isNotEmpty) 'youtube': youtube,
+      if (cleanYoutube != null && cleanYoutube.isNotEmpty)
+        'youtube': cleanYoutube,
     };
 
     // ✅ Validar extensiones antes de enviar para evitar crash del backend
@@ -173,6 +178,10 @@ class RecetaService {
     // print('📸 DEBUG - imagenesPrevias recibidas: $imagenesPrevias');
 
     // 1. Preparamos los datos
+    final cleanYoutube = youtube
+        ?.trim()
+        .replaceAll('\n', '')
+        .replaceAll('\r', '');
     final datos = {
       'nombre': nombre,
       'categoria': categoria.toLowerCase(),
@@ -182,7 +191,8 @@ class RecetaService {
       'comensales': comensales,
       'instrucciones': instrucciones, // En JSON se envía como array directo
       'ingredientes': ingredientes, // En JSON se envía como array directo
-      if (youtube != null && youtube.isNotEmpty) 'youtube': youtube,
+      // Siempre enviar el campo youtube, aunque esté vacío
+      'youtube': cleanYoutube ?? '',
       // ✅ SIEMPRE enviar imagenesPrevias (incluso si está vacía)
       'imagenesPrevias': imagenesPrevias ?? [],
     };

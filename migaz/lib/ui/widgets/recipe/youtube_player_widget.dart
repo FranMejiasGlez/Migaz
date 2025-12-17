@@ -1,4 +1,6 @@
 // lib/ui/widgets/recipe/youtube_player_widget.dart
+import 'dart:io';
+
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:youtube_player_iframe/youtube_player_iframe.dart';
@@ -22,46 +24,44 @@ class _YoutubePlayerWidgetState extends State<YoutubePlayerWidget> {
 
   // 🎯 Detectar si es plataforma soportada para iframe player
   bool get _isIframePlatformSupported {
-    return kIsWeb ||
-        Theme.of(context).platform == TargetPlatform.android ||
-        Theme.of(context).platform == TargetPlatform.iOS;
+    // 🔧 FIX: Debido a problemas de WebView en Android (error 152-15 y crashes),
+    // usamos fallback (abrir en app externa) para Android
+    // El player embebido funciona bien en Web e iOS
+    return kIsWeb || Platform.isIOS;
   }
 
   @override
   void initState() {
     super.initState();
-    // Solo inicializar player en plataformas soportadas
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_isIframePlatformSupported) {
+    // Solo inicializar player en plataformas soportadas (Web, iOS)
+    // Android usará fallback (abrir en app externa)
+    if (_isIframePlatformSupported) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
         _initializePlayer();
-      } else {
-        setState(() {
-          _isPlayerReady = true; // Desktop usará fallback
-        });
-      }
-    });
+      });
+    } else {
+      // Android y Desktop: mostrar fallback inmediatamente
+      _isPlayerReady = true;
+    }
   }
 
   void _initializePlayer() {
     try {
-      // Extraer el ID del video de la URL
       final videoId = YoutubePlayerController.convertUrlToId(widget.youtubeUrl);
 
-      //print('🎬 URL recibida: ${widget.youtubeUrl}');
-      //print('🎬 Video ID extraído: $videoId');
-      //print('🎬 Plataforma:  ${Theme.of(context).platform}');
-      //print('🎬 Es Web: $kIsWeb');
+      print('🎬 URL recibida: ${widget.youtubeUrl}');
+      print('🎬 Video ID extraído: $videoId');
+      print('🎬 Es iOS: ${Platform.isIOS}');
+      print('🎬 Es Web: $kIsWeb');
 
       if (videoId == null || videoId.isEmpty) {
         setState(() {
           _hasError = true;
           _errorMessage = 'No se pudo extraer el ID del video de la URL';
         });
-        //print('❌ Video ID es null o vacío');
         return;
       }
 
-      // Inicializar el controlador
       _controller = YoutubePlayerController.fromVideoId(
         videoId: videoId,
         autoPlay: false,
@@ -72,6 +72,7 @@ class _YoutubePlayerWidgetState extends State<YoutubePlayerWidget> {
           loop: false,
           enableCaption: true,
           strictRelatedVideos: true,
+          origin: 'https://www.youtube-nocookie.com',
         ),
       );
 
@@ -79,13 +80,13 @@ class _YoutubePlayerWidgetState extends State<YoutubePlayerWidget> {
         _isPlayerReady = true;
       });
 
-      //print('✅ YouTube Player inicializado correctamente');
+      print('✅ YouTube Player inicializado correctamente');
     } catch (e) {
       setState(() {
         _hasError = true;
         _errorMessage = 'Error al cargar el video: $e';
       });
-      //print('❌ Error al inicializar YouTube Player: $e');
+      print('❌ Error al inicializar YouTube Player: $e');
     }
   }
 
@@ -94,9 +95,8 @@ class _YoutubePlayerWidgetState extends State<YoutubePlayerWidget> {
       final uri = Uri.parse(widget.youtubeUrl);
       if (await canLaunchUrl(uri)) {
         await launchUrl(uri, mode: LaunchMode.externalApplication);
-        //print('✅ Abriendo YouTube en navegador/app externa');
+        print('✅ Abriendo YouTube en app externa');
       } else {
-        //print('❌ No se puede abrir la URL:  ${widget.youtubeUrl}');
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -107,10 +107,10 @@ class _YoutubePlayerWidgetState extends State<YoutubePlayerWidget> {
         }
       }
     } catch (e) {
-      //print('❌ Error al abrir URL: $e');
+      print('❌ Error al abrir URL: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error:  $e'), backgroundColor: Colors.red),
+          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
         );
       }
     }

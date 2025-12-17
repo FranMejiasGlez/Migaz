@@ -1,14 +1,13 @@
 // lib/data/services/categoria_service.dart
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:migaz/core/config/api_config.dart';
 
 class CategoriaService {
-  static const String baseUrl = 'http://localhost:3000/api'; // Ajusta según tu configuración
-  
   Future<List<String>> obtenerCategorias() async {
     try {
       final response = await http.get(
-        Uri.parse('$baseUrl/categorias'),
+        Uri.parse('${ApiConfig.baseUrl}/categorias'),
       );
 
       if (response.statusCode == 200) {
