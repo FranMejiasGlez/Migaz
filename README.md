@@ -1,163 +1,148 @@
-# Migaz - App de Recetas
+# Migaz — App de Recetas (Flutter)
 
-Aplicación Flutter para gestión y búsqueda de recetas, refactorizada con arquitectura MVVM.
+Migaz es una aplicación móvil desarrollada con Flutter para gestionar recetas: autenticación (login/registro), CRUD de recetas (con subida de imágenes), comentarios, valoración de recetas y un tema dinámico. El proyecto está pensado para usarse junto a un backend REST (por defecto en el puerto 3000).
 
-## 📋 Descripción
+> Estado: Proyecto con estructura funcional. Contiene múltiples ViewModels, configuración de rutas, utilidades para conexión con backend y soporte para DevicePreview en desarrollo.
 
-Migaz es una aplicación móvil desarrollada en Flutter que permite a los usuarios:
-- Buscar y explorar recetas de diferentes categorías (Española, Italiana, Japonesa, Mexicana)
-- Crear y guardar sus propias recetas
-- Filtrar recetas por categoría y dificultad
-- Gestionar su biblioteca personal de recetas
-- Autenticación de usuarios (login/registro)
+---
 
-## 🏗️ Arquitectura MVVM
+## Características principales
 
-Este proyecto sigue el patrón arquitectónico **Model-View-ViewModel (MVVM)** para separar la lógica de negocio de la interfaz de usuario.
+- Autenticación: login / registro / sesión persistente.
+- Gestión de recetas: crear, leer, actualizar, eliminar (con imágenes).
+- Comentarios en recetas.
+- Valoración de recetas.
+- Biblioteca personal (guardados, mis recetas).
+- Tema dinámico (claro/oscuro) manejado por `ThemeViewModel`.
+- Soporte para DevicePreview en modo desarrollo (facilita probar diseños y localizaciones).
+- Soporte para subir imágenes usando `image_picker`.
 
-### Estructura del Proyecto
+---
 
-```
-lib/
-├── models/           # Clases de dominio (Recipe, etc.)
-├── viewmodels/       # ViewModels con lógica de negocio
-│   ├── base_viewmodel.dart
-│   ├── auth_viewmodel.dart
-│   └── recipe_list_viewmodel.dart
-├── views/            # Pantallas/Widgets de presentación
-│   ├── login_screen.dart
-│   ├── register_screen.dart
-│   ├── pantalla_recetas.dart
-│   └── ...
-├── widgets/          # Componentes reutilizables
-├── services/         # Servicios (API, BD, etc.)
-├── repositories/     # Abstracciones de datos
-├── utils/            # Utilidades y constantes
-├── config/           # Configuración (rutas, etc.)
-└── main.dart         # Punto de entrada
-```
+## Requisitos
 
-### Componentes Principales
+- Flutter (versión estable recomendada).
+- SDK de Dart (incluido con Flutter).
+- Un emulador o dispositivo físico (Android / iOS).
+- Backend REST corriendo en http://localhost:3000 o en una URL pública (p. ej. devtunnels / ngrok).
 
-#### BaseViewModel
-Clase base que proporciona funcionalidad común:
-- Gestión de estados de carga (`isLoading`)
-- Manejo de errores (`errorMessage`, `hasError`)
-- Método helper `runAsync` para operaciones asíncronas
+---
 
-#### ViewModels Implementados
-- **AuthViewModel**: Gestiona autenticación (login, registro, logout)
-- **RecipeListViewModel**: Gestiona lista de recetas, búsqueda y filtros
-
-#### Views
-Las vistas son widgets puros que:
-- Consumen ViewModels mediante `Provider` y `Consumer`
-- No contienen lógica de negocio
-- Se actualizan automáticamente cuando el ViewModel notifica cambios
-
-## 🚀 Comenzando
-
-### Prerequisitos
-
-- [Flutter SDK](https://flutter.dev/docs/get-started/install) (>= 3.9.2)
-- Dart SDK (incluido con Flutter)
-- Android Studio / Xcode (para emuladores)
-- Un editor de código (VS Code, Android Studio, etc.)
-
-### Instalación
+## Instalación y ejecución
 
 1. Clonar el repositorio:
-```bash
-git clone https://github.com/FranMejiasGlez/Migaz.git
-cd Migaz/migaz
-```
+   git clone https://github.com/FranMejiasGlez/Migaz.git
 
-2. Instalar dependencias:
-```bash
-flutter pub get
-```
+2. Abrir la carpeta de la app Flutter:
+   cd migaz
 
-3. Ejecutar la aplicación:
-```bash
-flutter run
-```
+3. Instalar dependencias:
+   flutter pub get
 
-### Ejecutar Tests
+4. Ejecutar en emulador/dispositivo:
+   flutter run
 
-```bash
-# Ejecutar todos los tests
-flutter test
+Nota: en la rama principal la app ya usa DevicePreview en desarrollo; para producción DevicePreview está deshabilitado automáticamente.
 
-# Ejecutar tests específicos
-flutter test test/viewmodels/recipe_list_viewmodel_test.dart
-flutter test test/viewmodels/auth_viewmodel_test.dart
-```
+---
 
-### Análisis de Código
+## Configuración del backend (URL pública / local)
 
-```bash
-# Ejecutar análisis estático
-flutter analyze
+La app incluye un helper central `ApiConfig` (migaz/lib/core/config/api_config.dart) que construye las URLs del servidor y de las imágenes:
 
-# Formatear código
-flutter format lib/ test/
-```
+- Por defecto, `ApiConfig` usa un host dinámico:
+  - En Android emulado usa `10.0.2.2` (mapeo a localhost).
+  - En iOS / otras plataformas usa `localhost`.
+  - En web usa `localhost`.
 
-## 📦 Dependencias Principales
+- Para usar una URL pública (p. ej. devtunnels o ngrok) se puede establecer `ApiConfig.publicServerUrl` en `main.dart`. Ejemplo (en `main()`):
+  ApiConfig.publicServerUrl = 'https://<tu-subdominio>-3000.uks1.devtunnels.ms';
 
-- **flutter**: SDK de Flutter
-- **provider**: ^6.1.2 - Gestión de estado (implementación de MVVM)
-- **http**: ^1.2.1 - Cliente HTTP para peticiones
-- **path_provider**: ^2.1.5 - Acceso a rutas del sistema de archivos
-- **cupertino_icons**: ^1.0.8 - Iconos iOS
+  - Importante: la app valida si la URL corresponde a devtunnels o ngrok usando una expresión regular.
+  - No incluir la barra final (`/`) en la URL pública.
 
-### Dependencias de Desarrollo
-- **flutter_test**: Testing framework
-- **flutter_lints**: ^5.0.0 - Reglas de linting
+- `ApiConfig.baseUrl` apunta a la API (p. ej. http://10.0.2.2:3000/api) y `getImageUrl` genera la URL completa para imágenes estáticas (p. ej. http://10.0.2.2:3000/img/foto.jpg). Si las imágenes no cargan, comprueba que el servidor sirva archivos estáticos en `/img` y que la URL pública / local esté bien configurada.
 
-## 📝 Notas de Migración
+---
 
-### Cambios desde PROYECTO_APP_RECETAS
+## Estructura relevante del repositorio
 
-1. **Arquitectura**: Migrado de código imperativo a MVVM
-2. **Gestión de Estado**: Centralizada mediante Provider y ViewModels
-3. **Package Name**: Actualizado de `app_recetas` a `migaz`
-4. **Estructura de Carpetas**: Reorganizada según principios MVVM
-5. **Testing**: Agregados tests unitarios para ViewModels
+- migaz/
+  - lib/
+    - main.dart — Punto de entrada. Configura `ApiConfig.publicServerUrl`, DevicePreview y `MultiProvider`.
+    - core/config/
+      - api_config.dart — Configuración central de URLs, endpoints y generación de URLs de imagen.
+      - routes.dart — Definición de rutas de la aplicación.
+    - data/ — Modelos, repositories y services que consumen la API (ej. `AuthService`, `RecetaRepository`).
+    - viewmodels/ — Lógica de negocio y estado (Provider / ChangeNotifier).
+      - auth_viewmodel.dart — Manejo de sesión, login/registro.
+      - recipe_list_viewmodel.dart — Carga, búsqueda, filtros, creación/actualización/eliminación y valoración de recetas.
+      - comentario_viewmodel.dart, home_viewmodel.dart, biblioteca_viewmodel.dart, user_viewmodel.dart, theme_viewmodel.dart, base_viewmodel.dart, ...
+    - ui/ — Vistas y widgets (pantallas: login, registro, biblioteca, perfil, recetas, configuración, etc).
+  - pubspec.yaml — Declaración de dependencias del proyecto.
+  - assets/ — Recursos estáticos de la app (iconos, imágenes, etc).
 
-### Breaking Changes
+---
 
-- Los StatefulWidgets que contenían lógica de negocio ahora son StatelessWidgets o usan ViewModels
-- Las importaciones deben usar `package:migaz/` en lugar de `package:app_recetas/`
-- La gestión de estado ahora requiere Provider en lugar de setState
+## Archivos clave (resumen)
 
-## 🧪 Testing
+- migaz/lib/main.dart
+  - Inicializa `ApiConfig.publicServerUrl` (opcional).
+  - Activa DevicePreview solo en modo desarrollo.
+  - Registra `MultiProvider` con los ViewModels:
+    AuthViewModel, RecipeListViewModel, ComentarioViewModel, HomeViewModel, BibliotecaViewModel, UserViewModel, ThemeViewModel.
 
-El proyecto incluye tests unitarios para los ViewModels principales:
+- migaz/lib/core/config/api_config.dart
+  - Genera `serverUrl` dinámicamente según plataforma.
+  - Proporciona `baseUrl`, endpoints (recetas, comentarios, autenticación) y headers.
+  - `getImageUrl(imagePath)` construye la URL completa para imágenes (usa `serverUrl` en vez de `baseUrl`).
 
-- ✅ RecipeListViewModel: 13 tests
-- ✅ AuthViewModel: 14 tests
+- migaz/lib/core/config/routes.dart
+  - Define rutas y las vistas asociadas (login, register, home, biblioteca, perfil, guardados, misrecetas, configuracion).
 
-Cobertura de tests para componentes críticos del patrón MVVM.
+- migaz/lib/viewmodels/*
+  - Contienen la lógica para interactuar con los repositories/services y actualizar la UI vía Provider.
 
-## 🤝 Contribuir
+---
 
-1. Fork el proyecto
-2. Crear una rama para tu feature (`git checkout -b feature/AmazingFeature`)
-3. Commit tus cambios (`git commit -m 'Add some AmazingFeature'`)
-4. Push a la rama (`git push origin feature/AmazingFeature`)
-5. Abrir un Pull Request
+## Cómo contribuir
 
-## 📄 Licencia
+- Reporta issues para bugs o mejoras en la sección de Issues de GitHub.
+- Para nuevas funcionalidades o correcciones:
+  - Crea una rama por feature: git checkout -b feat/nueva-funcionalidad
+  - Abre un Pull Request con descripción clara y pasos para probar.
+- Sigue el estilo del código existente (idioma: español en mensajes y comentarios).
 
-Este proyecto es de uso educativo.
+---
 
-## 👥 Autores
+## Buenas prácticas / recomendaciones
 
-- Francisco Mejías González - [@FranMejiasGlez](https://github.com/FranMejiasGlez)
+- Mantener actualizada la variable `ApiConfig.publicServerUrl` si usas túneles públicos (ngrok / devtunnels).
+- Si trabajas con Android Emulator recuerda que la app mapea `localhost` al host del emulador usando `10.0.2.2` (esto ya se gestiona en ApiConfig).
+- Separar la lógica de UI y de negocio: usar ViewModels y repositories como ya está estructurado.
+- Añadir pruebas unitarias y/o de integración para los ViewModels y servicios.
 
-## 🙏 Agradecimientos
+---
 
-- Proyecto original: [PROYECTO_APP_RECETAS](https://github.com/FranMejiasGlez/PROYECTO_APP_RECETAS)
-- Flutter Team por el excelente framework
-- Comunidad de Provider por la gestión de estado
+## Depuración y problemas comunes
+
+- Error al conectar con el backend:
+  - Asegúrate de que el backend está corriendo en el puerto 3000 o usa `ApiConfig.publicServerUrl`.
+  - Comprueba CORS y la ruta de los endpoints (la app usa `baseUrl = serverUrl/api`).
+- Imágenes que no aparecen:
+  - Verifica que el backend sirve las imágenes estáticas bajo la ruta que devuelve el JSON (por ejemplo `img/..`).
+  - `ApiConfig.getImageUrl` espera rutas relativas como `img/xx.jpg` y las transforma a `http://HOST:3000/img/xx.jpg`.
+- DevicePreview activo en desarrollo: si quieres deshabilitarlo para probar comportamiento de producción, comenta o cambia `enabled: !kReleaseMode` en `main.dart`.
+
+---
+
+## Changelog
+
+Consultar CHANGELOG.md en la raíz para versiones y cambios históricos.
+
+---
+
+## Licencia y contacto
+
+- Añade aquí la licencia del proyecto (si procede).
+- Autor / contacto: FranMejiasGlez, Andy Jan, Pablo Jimenez, Javier Fernandez.
