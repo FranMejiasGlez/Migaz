@@ -75,7 +75,7 @@ class _PantallaReporteState extends State<PantallaReporte> {
                         // LOGIC:
                         // Admin: New Users, Total Users, Recipes/Month, Categories, Global Recipes
                         // Normal: Recipes/Month, Followers, Global Recipes, Categories
-                        if (authVM.currentUser.toLowerCase() == 'uhhflame') ...[
+                        if (authVM.currentUser.toLowerCase() == 'admin') ...[
                           // ADMIN VIEW
                           // 1. Usuarios Totales + Usuarios Nuevos (Agrupado)
                           _buildAdminHeader(responsive),
