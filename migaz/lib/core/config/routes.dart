@@ -1,6 +1,7 @@
 import 'package:migaz/ui/views/pantalla_biblioteca.dart';
 import 'package:migaz/ui/views/pantalla_guardados.dart';
 import 'package:migaz/ui/views/pantalla_misrecetas.dart';
+import 'package:migaz/ui/views/pantalla_reporte.dart';
 import 'package:flutter/material.dart';
 import '../../ui/views/login_screen.dart';
 import '../../ui/views/register_screen.dart';
@@ -17,6 +18,7 @@ class AppRoutes {
   static const String guardados = '/biblioteca/guardados';
   static const String misrecetas = '/biblioteca/misrecetas';
   static const String configuracion = '/perfil/configuracion';
+  static const String reporte = '/perfil/reporte';
   static Map<String, WidgetBuilder> get routes {
     return {
       login: (context) => const LoginScreen(),
@@ -27,6 +29,7 @@ class AppRoutes {
       guardados: (context) => const PantallaGuardados(),
       misrecetas: (context) => const PantallaMisRecetas(),
       configuracion: (context) => const PantallaConfiguracion(),
+      reporte: (context) => const PantallaReporte(),
     };
   }
 }

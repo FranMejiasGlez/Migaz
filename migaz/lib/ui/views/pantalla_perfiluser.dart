@@ -315,7 +315,7 @@ class _PantallaPerfilUserState extends State<PantallaPerfilUser> {
                 SizedBox(height: 10 * responsive.scale),
                 ElevatedButton(
                   onPressed: () {
-                    // TODO: Implementar navegación o acción del reporte
+                    Navigator.pushNamed(context, AppRoutes.reporte);
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF5B8DEE),

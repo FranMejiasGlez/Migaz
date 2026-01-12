@@ -11,12 +11,13 @@ import 'viewmodels/home_viewmodel.dart';
 import 'viewmodels/biblioteca_viewmodel.dart';
 import 'viewmodels/user_viewmodel.dart';
 import 'viewmodels/theme_viewmodel.dart';
+import 'viewmodels/report_viewmodel.dart';
 
 void main() {
   // ✅ Configura la URL pública de DevTunnel
   // IMPORTANTE: Actualiza esta URL cada vez que reinicies el túnel
   // ⚠️ NO incluir barra diagonal final
-  ApiConfig.publicServerUrl = 'https://g107vtml-3000.uks1.devtunnels.ms';
+  ApiConfig.publicServerUrl = 'https://localhost:3000';
 
   // ✅ Solo un runApp()
   runApp(
@@ -42,6 +43,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => BibliotecaViewModel()),
         ChangeNotifierProvider(create: (_) => UserViewModel()),
         ChangeNotifierProvider(create: (_) => ThemeViewModel()),
+        ChangeNotifierProvider(create: (_) => ReportViewModel()),
       ],
       child: Consumer<ThemeViewModel>(
         builder: (context, themeViewModel, _) {
