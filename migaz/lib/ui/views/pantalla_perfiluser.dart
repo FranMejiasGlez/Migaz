@@ -312,6 +312,33 @@ class _PantallaPerfilUserState extends State<PantallaPerfilUser> {
                     ),
                   ),
                 ),
+                SizedBox(height: 10 * responsive.scale),
+                ElevatedButton(
+                  onPressed: () {
+                    // TODO: Implementar navegación o acción del reporte
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF5B8DEE),
+                    foregroundColor: Colors.white,
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 24 * responsive.scale,
+                      vertical: 12 * responsive.scale,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    elevation: 5,
+                  ),
+                  child: Text(
+                    'Reporte',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize:
+                          ResponsiveBreakpoints.getScaledFontSize(context, 14) *
+                          responsive.scale,
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
