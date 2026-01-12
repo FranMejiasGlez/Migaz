@@ -26,12 +26,11 @@ class _PantallaReporteState extends State<PantallaReporte> {
   void _cargarDatos() {
     final authVM = context.read<AuthViewModel>();
     final reportVM = context.read<ReportViewModel>();
-    
+
     if (authVM.currentUserId.isNotEmpty) {
-      // Detectar si es admin (puedes ajustar esta lógica según tu backend)
-      final isAdmin = authVM.currentUser.toLowerCase() == 'admin' || 
-                      authVM.currentUser.toLowerCase() == 'administrador';
-      
+      // Detectar si es admin (hardcoded "uhhFlame")
+      final isAdmin = authVM.currentUser.toLowerCase() == 'uhhflame';
+
       reportVM.cargarTodo(
         authVM.currentUserId,
         authVM.currentUser,
@@ -65,7 +64,7 @@ class _PantallaReporteState extends State<PantallaReporte> {
               children: [
                 // Header
                 _buildHeader(context, responsive),
-                
+
                 // Charts content
                 Expanded(
                   child: SingleChildScrollView(
@@ -73,49 +72,59 @@ class _PantallaReporteState extends State<PantallaReporte> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Row 1: Seguidores/Seguidos + Recetas Totales
-                        _buildResponsiveRow(
-                          responsive,
-                          [
+                        // LOGIC:
+                        // Admin: New Users, Total Users, Recipes/Month, Categories, Global Recipes
+                        // Normal: Recipes/Month, Followers, Global Recipes, Categories
+                        if (authVM.currentUser.toLowerCase() == 'uhhflame') ...[
+                          // ADMIN VIEW
+                          // 1. Usuarios Totales + Usuarios Nuevos (Agrupado)
+                          _buildAdminHeader(responsive),
+                          SizedBox(height: 20 * responsive.scale),
+
+                          _buildResponsiveRow(responsive, [
+                            _buildTotalUsersCard(reportVM, responsive),
+                            _buildUsersPerMonthChart(reportVM, responsive),
+                          ]),
+                          SizedBox(height: 20 * responsive.scale),
+
+                          // 2. Global Recipes + Categories
+                          _buildResponsiveRow(responsive, [
+                            _buildTotalRecipesCard(
+                              reportVM,
+                              responsive,
+                            ), // Recetas globales
+                            _buildCategoriesChart(
+                              reportVM,
+                              responsive,
+                            ), // Categorias
+                          ]),
+                          SizedBox(height: 20 * responsive.scale),
+
+                          // 3. Cookbook (Added per request)
+                          _buildCookbookChart(reportVM, responsive),
+                          SizedBox(height: 20 * responsive.scale),
+
+                          // 4. Recipes per Month
+                          _buildRecipesPerMonthChart(reportVM, responsive),
+                        ] else ...[
+                          // NORMAL VIEW
+                          // 1. Followers + Global Recipes
+                          _buildResponsiveRow(responsive, [
                             _buildFollowersChart(reportVM, responsive),
                             _buildTotalRecipesCard(reportVM, responsive),
-                          ],
-                        ),
-                        
-                        SizedBox(height: 20 * responsive.scale),
-                        
-                        // Libro de Cocina Personal
-                        _buildCookbookChart(reportVM, responsive),
-                        
-                        SizedBox(height: 20 * responsive.scale),
-                        
-                        // Categorías Populares
-                        _buildCategoriesChart(reportVM, responsive),
-                        
-                        SizedBox(height: 20 * responsive.scale),
-                        
-                        // Recetas por Mes
-                        _buildRecipesPerMonthChart(reportVM, responsive),
-                        
-                        SizedBox(height: 20 * responsive.scale),
-                        
-                        // Gráficos de Admin (solo si es admin)
-                        if (authVM.currentUser.toLowerCase() == 'admin' || 
-                            authVM.currentUser.toLowerCase() == 'administrador') ...[
-                          _buildAdminHeader(responsive),
-                          
+                          ]),
                           SizedBox(height: 20 * responsive.scale),
-                          
-                          // Row: Usuarios Totales + Usuarios por Mes
-                          _buildResponsiveRow(
-                            responsive,
-                            [
-                              _buildTotalUsersCard(reportVM, responsive),
-                              _buildUsersPerMonthChart(reportVM, responsive),
-                            ],
-                          ),
-                          
+
+                          // 2. Cookbook (Added per request)
+                          _buildCookbookChart(reportVM, responsive),
                           SizedBox(height: 20 * responsive.scale),
+
+                          // 3. Categories
+                          _buildCategoriesChart(reportVM, responsive),
+                          SizedBox(height: 20 * responsive.scale),
+
+                          // 4. Recipes per Month
+                          _buildRecipesPerMonthChart(reportVM, responsive),
                         ],
                       ],
                     ),
@@ -155,7 +164,9 @@ class _PantallaReporteState extends State<PantallaReporte> {
                 child: Text(
                   'Reporte de Estadísticas',
                   style: TextStyle(
-                    fontSize: ResponsiveBreakpoints.getScaledFontSize(context, 20) * responsive.scale,
+                    fontSize:
+                        ResponsiveBreakpoints.getScaledFontSize(context, 20) *
+                        responsive.scale,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -168,21 +179,34 @@ class _PantallaReporteState extends State<PantallaReporte> {
     );
   }
 
-  Widget _buildResponsiveRow(ResponsiveHelper responsive, List<Widget> children) {
+  Widget _buildResponsiveRow(
+    ResponsiveHelper responsive,
+    List<Widget> children,
+  ) {
     if (responsive.isMobile) {
-      return Column(children: children.map((c) => Padding(
-        padding: EdgeInsets.only(bottom: 16 * responsive.scale),
-        child: c,
-      )).toList());
+      return Column(
+        children: children
+            .map(
+              (c) => Padding(
+                padding: EdgeInsets.only(bottom: 16 * responsive.scale),
+                child: c,
+              ),
+            )
+            .toList(),
+      );
     }
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: children.map((c) => Expanded(
-        child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: 8 * responsive.scale),
-          child: c,
-        ),
-      )).toList(),
+      children: children
+          .map(
+            (c) => Expanded(
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: 8 * responsive.scale),
+                child: c,
+              ),
+            ),
+          )
+          .toList(),
     );
   }
 
@@ -190,7 +214,7 @@ class _PantallaReporteState extends State<PantallaReporte> {
 
   Widget _buildFollowersChart(ReportViewModel vm, ResponsiveHelper responsive) {
     final total = vm.seguidores + vm.seguidos;
-    
+
     return _buildChartCard(
       title: 'Seguidores vs Seguidos',
       icon: Icons.people,
@@ -201,7 +225,10 @@ class _PantallaReporteState extends State<PantallaReporte> {
             ? Center(
                 child: Text(
                   'Sin datos de seguidores',
-                  style: TextStyle(color: Colors.grey, fontSize: 14 * responsive.scale),
+                  style: TextStyle(
+                    color: Colors.grey,
+                    fontSize: 14 * responsive.scale,
+                  ),
                 ),
               )
             : Row(
@@ -244,9 +271,17 @@ class _PantallaReporteState extends State<PantallaReporte> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _buildLegendItem('Seguidores', const Color(0xFF25CCAD), responsive),
+                        _buildLegendItem(
+                          'Seguidores',
+                          const Color(0xFF25CCAD),
+                          responsive,
+                        ),
                         SizedBox(height: 8 * responsive.scale),
-                        _buildLegendItem('Seguidos', const Color(0xFF5B8DEE), responsive),
+                        _buildLegendItem(
+                          'Seguidos',
+                          const Color(0xFF5B8DEE),
+                          responsive,
+                        ),
                       ],
                     ),
                   ),
@@ -256,7 +291,10 @@ class _PantallaReporteState extends State<PantallaReporte> {
     );
   }
 
-  Widget _buildTotalRecipesCard(ReportViewModel vm, ResponsiveHelper responsive) {
+  Widget _buildTotalRecipesCard(
+    ReportViewModel vm,
+    ResponsiveHelper responsive,
+  ) {
     return _buildChartCard(
       title: 'Recetas Globales',
       icon: Icons.restaurant_menu,
@@ -290,8 +328,12 @@ class _PantallaReporteState extends State<PantallaReporte> {
   }
 
   Widget _buildCookbookChart(ReportViewModel vm, ResponsiveHelper responsive) {
-    final maxY = (vm.misRecetas > vm.recetasGuardadas ? vm.misRecetas : vm.recetasGuardadas).toDouble();
-    
+    final maxY =
+        (vm.misRecetas > vm.recetasGuardadas
+                ? vm.misRecetas
+                : vm.recetasGuardadas)
+            .toDouble();
+
     return _buildChartCard(
       title: 'Mi Libro de Cocina',
       icon: Icons.menu_book,
@@ -302,11 +344,17 @@ class _PantallaReporteState extends State<PantallaReporte> {
             ? Center(
                 child: Text(
                   'Sin recetas propias ni guardadas',
-                  style: TextStyle(color: Colors.grey, fontSize: 14 * responsive.scale),
+                  style: TextStyle(
+                    color: Colors.grey,
+                    fontSize: 14 * responsive.scale,
+                  ),
                 ),
               )
             : Padding(
-                padding: EdgeInsets.only(top: 20 * responsive.scale, right: 20 * responsive.scale),
+                padding: EdgeInsets.only(
+                  top: 20 * responsive.scale,
+                  right: 20 * responsive.scale,
+                ),
                 child: BarChart(
                   BarChartData(
                     alignment: BarChartAlignment.spaceAround,
@@ -346,7 +394,9 @@ class _PantallaReporteState extends State<PantallaReporte> {
                               padding: const EdgeInsets.only(top: 8),
                               child: Text(
                                 titles[value.toInt()],
-                                style: TextStyle(fontSize: 12 * responsive.scale),
+                                style: TextStyle(
+                                  fontSize: 12 * responsive.scale,
+                                ),
                               ),
                             );
                           },
@@ -358,11 +408,18 @@ class _PantallaReporteState extends State<PantallaReporte> {
                           reservedSize: 30 * responsive.scale,
                         ),
                       ),
-                      topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                      rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                      topTitles: const AxisTitles(
+                        sideTitles: SideTitles(showTitles: false),
+                      ),
+                      rightTitles: const AxisTitles(
+                        sideTitles: SideTitles(showTitles: false),
+                      ),
                     ),
                     borderData: FlBorderData(show: false),
-                    gridData: const FlGridData(show: true, drawVerticalLine: false),
+                    gridData: const FlGridData(
+                      show: true,
+                      drawVerticalLine: false,
+                    ),
                   ),
                 ),
               ),
@@ -370,10 +427,13 @@ class _PantallaReporteState extends State<PantallaReporte> {
     );
   }
 
-  Widget _buildCategoriesChart(ReportViewModel vm, ResponsiveHelper responsive) {
+  Widget _buildCategoriesChart(
+    ReportViewModel vm,
+    ResponsiveHelper responsive,
+  ) {
     final top5 = vm.categoriasPopulares.entries.take(5).toList();
     final maxValue = top5.isNotEmpty ? top5.first.value.toDouble() : 1.0;
-    
+
     return _buildChartCard(
       title: 'Categorías Más Populares',
       icon: Icons.category,
@@ -384,11 +444,18 @@ class _PantallaReporteState extends State<PantallaReporte> {
             ? Center(
                 child: Text(
                   'Sin datos de categorías',
-                  style: TextStyle(color: Colors.grey, fontSize: 14 * responsive.scale),
+                  style: TextStyle(
+                    color: Colors.grey,
+                    fontSize: 14 * responsive.scale,
+                  ),
                 ),
               )
             : Padding(
-                padding: EdgeInsets.only(top: 16 * responsive.scale, right: 16 * responsive.scale, left: 8 * responsive.scale),
+                padding: EdgeInsets.only(
+                  top: 16 * responsive.scale,
+                  right: 16 * responsive.scale,
+                  left: 8 * responsive.scale,
+                ),
                 child: BarChart(
                   BarChartData(
                     alignment: BarChartAlignment.spaceAround,
@@ -419,13 +486,18 @@ class _PantallaReporteState extends State<PantallaReporte> {
                         sideTitles: SideTitles(
                           showTitles: true,
                           getTitlesWidget: (value, meta) {
-                            if (value.toInt() >= top5.length) return const SizedBox();
+                            if (value.toInt() >= top5.length)
+                              return const SizedBox();
                             final name = top5[value.toInt()].key;
                             return Padding(
                               padding: const EdgeInsets.only(top: 8),
                               child: Text(
-                                name.length > 8 ? '${name.substring(0, 8)}...' : name,
-                                style: TextStyle(fontSize: 10 * responsive.scale),
+                                name.length > 8
+                                    ? '${name.substring(0, 8)}...'
+                                    : name,
+                                style: TextStyle(
+                                  fontSize: 10 * responsive.scale,
+                                ),
                               ),
                             );
                           },
@@ -437,11 +509,18 @@ class _PantallaReporteState extends State<PantallaReporte> {
                           reservedSize: 30 * responsive.scale,
                         ),
                       ),
-                      topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                      rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                      topTitles: const AxisTitles(
+                        sideTitles: SideTitles(showTitles: false),
+                      ),
+                      rightTitles: const AxisTitles(
+                        sideTitles: SideTitles(showTitles: false),
+                      ),
                     ),
                     borderData: FlBorderData(show: false),
-                    gridData: const FlGridData(show: true, drawVerticalLine: false),
+                    gridData: const FlGridData(
+                      show: true,
+                      drawVerticalLine: false,
+                    ),
                   ),
                 ),
               ),
@@ -449,12 +528,15 @@ class _PantallaReporteState extends State<PantallaReporte> {
     );
   }
 
-  Widget _buildRecipesPerMonthChart(ReportViewModel vm, ResponsiveHelper responsive) {
+  Widget _buildRecipesPerMonthChart(
+    ReportViewModel vm,
+    ResponsiveHelper responsive,
+  ) {
     final entries = vm.recetasPorMes.entries.toList();
-    final maxY = entries.isNotEmpty 
+    final maxY = entries.isNotEmpty
         ? entries.map((e) => e.value).reduce((a, b) => a > b ? a : b).toDouble()
         : 1.0;
-    
+
     return _buildChartCard(
       title: 'Recetas Subidas por Mes',
       icon: Icons.trending_up,
@@ -465,11 +547,18 @@ class _PantallaReporteState extends State<PantallaReporte> {
             ? Center(
                 child: Text(
                   'Sin datos de recetas por mes',
-                  style: TextStyle(color: Colors.grey, fontSize: 14 * responsive.scale),
+                  style: TextStyle(
+                    color: Colors.grey,
+                    fontSize: 14 * responsive.scale,
+                  ),
                 ),
               )
             : Padding(
-                padding: EdgeInsets.only(top: 20 * responsive.scale, right: 20 * responsive.scale, bottom: 10 * responsive.scale),
+                padding: EdgeInsets.only(
+                  top: 20 * responsive.scale,
+                  right: 20 * responsive.scale,
+                  bottom: 10 * responsive.scale,
+                ),
                 child: LineChart(
                   LineChartData(
                     minY: 0,
@@ -477,7 +566,10 @@ class _PantallaReporteState extends State<PantallaReporte> {
                     lineBarsData: [
                       LineChartBarData(
                         spots: entries.asMap().entries.map((entry) {
-                          return FlSpot(entry.key.toDouble(), entry.value.value.toDouble());
+                          return FlSpot(
+                            entry.key.toDouble(),
+                            entry.value.value.toDouble(),
+                          );
                         }).toList(),
                         isCurved: true,
                         color: const Color(0xFF5B8DEE),
@@ -507,13 +599,16 @@ class _PantallaReporteState extends State<PantallaReporte> {
                           interval: 1,
                           getTitlesWidget: (value, meta) {
                             final idx = value.toInt();
-                            if (idx >= entries.length || idx < 0) return const SizedBox();
+                            if (idx >= entries.length || idx < 0)
+                              return const SizedBox();
                             final month = entries[idx].key.split('-').last;
                             return Padding(
                               padding: const EdgeInsets.only(top: 8),
                               child: Text(
                                 _getMonthName(int.parse(month)),
-                                style: TextStyle(fontSize: 10 * responsive.scale),
+                                style: TextStyle(
+                                  fontSize: 10 * responsive.scale,
+                                ),
                               ),
                             );
                           },
@@ -525,8 +620,12 @@ class _PantallaReporteState extends State<PantallaReporte> {
                           reservedSize: 30 * responsive.scale,
                         ),
                       ),
-                      topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                      rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                      topTitles: const AxisTitles(
+                        sideTitles: SideTitles(showTitles: false),
+                      ),
+                      rightTitles: const AxisTitles(
+                        sideTitles: SideTitles(showTitles: false),
+                      ),
                     ),
                     borderData: FlBorderData(
                       show: true,
@@ -535,7 +634,10 @@ class _PantallaReporteState extends State<PantallaReporte> {
                         left: BorderSide(color: Colors.grey),
                       ),
                     ),
-                    gridData: const FlGridData(show: true, drawVerticalLine: false),
+                    gridData: const FlGridData(
+                      show: true,
+                      drawVerticalLine: false,
+                    ),
                   ),
                 ),
               ),
@@ -561,7 +663,11 @@ class _PantallaReporteState extends State<PantallaReporte> {
           children: [
             Row(
               children: [
-                Icon(icon, color: const Color(0xFF5B8DEE), size: 24 * responsive.scale),
+                Icon(
+                  icon,
+                  color: const Color(0xFF5B8DEE),
+                  size: 24 * responsive.scale,
+                ),
                 SizedBox(width: 8 * responsive.scale),
                 Text(
                   title,
@@ -580,7 +686,11 @@ class _PantallaReporteState extends State<PantallaReporte> {
     );
   }
 
-  Widget _buildLegendItem(String label, Color color, ResponsiveHelper responsive) {
+  Widget _buildLegendItem(
+    String label,
+    Color color,
+    ResponsiveHelper responsive,
+  ) {
     return Row(
       children: [
         Container(
@@ -592,16 +702,26 @@ class _PantallaReporteState extends State<PantallaReporte> {
           ),
         ),
         SizedBox(width: 8 * responsive.scale),
-        Text(
-          label,
-          style: TextStyle(fontSize: 12 * responsive.scale),
-        ),
+        Text(label, style: TextStyle(fontSize: 12 * responsive.scale)),
       ],
     );
   }
 
   String _getMonthName(int month) {
-    const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+    const months = [
+      'Ene',
+      'Feb',
+      'Mar',
+      'Abr',
+      'May',
+      'Jun',
+      'Jul',
+      'Ago',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dic',
+    ];
     return months[(month - 1) % 12];
   }
 
@@ -681,12 +801,15 @@ class _PantallaReporteState extends State<PantallaReporte> {
     );
   }
 
-  Widget _buildUsersPerMonthChart(ReportViewModel vm, ResponsiveHelper responsive) {
+  Widget _buildUsersPerMonthChart(
+    ReportViewModel vm,
+    ResponsiveHelper responsive,
+  ) {
     final entries = vm.usuariosPorMes.entries.toList();
-    final maxY = entries.isNotEmpty 
+    final maxY = entries.isNotEmpty
         ? entries.map((e) => e.value).reduce((a, b) => a > b ? a : b).toDouble()
         : 1.0;
-    
+
     return _buildChartCard(
       title: 'Usuarios Nuevos por Mes',
       icon: Icons.trending_up,
@@ -697,11 +820,18 @@ class _PantallaReporteState extends State<PantallaReporte> {
             ? Center(
                 child: Text(
                   'Sin datos de usuarios por mes',
-                  style: TextStyle(color: Colors.grey, fontSize: 14 * responsive.scale),
+                  style: TextStyle(
+                    color: Colors.grey,
+                    fontSize: 14 * responsive.scale,
+                  ),
                 ),
               )
             : Padding(
-                padding: EdgeInsets.only(top: 20 * responsive.scale, right: 20 * responsive.scale, bottom: 10 * responsive.scale),
+                padding: EdgeInsets.only(
+                  top: 20 * responsive.scale,
+                  right: 20 * responsive.scale,
+                  bottom: 10 * responsive.scale,
+                ),
                 child: LineChart(
                   LineChartData(
                     minY: 0,
@@ -709,7 +839,10 @@ class _PantallaReporteState extends State<PantallaReporte> {
                     lineBarsData: [
                       LineChartBarData(
                         spots: entries.asMap().entries.map((entry) {
-                          return FlSpot(entry.key.toDouble(), entry.value.value.toDouble());
+                          return FlSpot(
+                            entry.key.toDouble(),
+                            entry.value.value.toDouble(),
+                          );
                         }).toList(),
                         isCurved: true,
                         color: const Color(0xFF25CCAD),
@@ -739,13 +872,16 @@ class _PantallaReporteState extends State<PantallaReporte> {
                           interval: 1,
                           getTitlesWidget: (value, meta) {
                             final idx = value.toInt();
-                            if (idx >= entries.length || idx < 0) return const SizedBox();
+                            if (idx >= entries.length || idx < 0)
+                              return const SizedBox();
                             final month = entries[idx].key.split('-').last;
                             return Padding(
                               padding: const EdgeInsets.only(top: 8),
                               child: Text(
                                 _getMonthName(int.parse(month)),
-                                style: TextStyle(fontSize: 10 * responsive.scale),
+                                style: TextStyle(
+                                  fontSize: 10 * responsive.scale,
+                                ),
                               ),
                             );
                           },
@@ -757,8 +893,12 @@ class _PantallaReporteState extends State<PantallaReporte> {
                           reservedSize: 30 * responsive.scale,
                         ),
                       ),
-                      topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                      rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                      topTitles: const AxisTitles(
+                        sideTitles: SideTitles(showTitles: false),
+                      ),
+                      rightTitles: const AxisTitles(
+                        sideTitles: SideTitles(showTitles: false),
+                      ),
                     ),
                     borderData: FlBorderData(
                       show: true,
@@ -767,7 +907,10 @@ class _PantallaReporteState extends State<PantallaReporte> {
                         left: BorderSide(color: Colors.grey),
                       ),
                     ),
-                    gridData: const FlGridData(show: true, drawVerticalLine: false),
+                    gridData: const FlGridData(
+                      show: true,
+                      drawVerticalLine: false,
+                    ),
                   ),
                 ),
               ),
