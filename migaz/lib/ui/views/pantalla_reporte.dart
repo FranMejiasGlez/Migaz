@@ -28,10 +28,14 @@ class _PantallaReporteState extends State<PantallaReporte> {
     final reportVM = context.read<ReportViewModel>();
     
     if (authVM.currentUserId.isNotEmpty) {
+      // Detectar si es admin (puedes ajustar esta lógica según tu backend)
+      final isAdmin = authVM.currentUser.toLowerCase() == 'admin' || 
+                      authVM.currentUser.toLowerCase() == 'administrador';
+      
       reportVM.cargarTodo(
         authVM.currentUserId,
         authVM.currentUser,
-        isAdmin: false, // Cambiar a true si el usuario es admin
+        isAdmin: isAdmin,
       );
     }
   }
@@ -94,6 +98,25 @@ class _PantallaReporteState extends State<PantallaReporte> {
                         _buildRecipesPerMonthChart(reportVM, responsive),
                         
                         SizedBox(height: 20 * responsive.scale),
+                        
+                        // Gráficos de Admin (solo si es admin)
+                        if (authVM.currentUser.toLowerCase() == 'admin' || 
+                            authVM.currentUser.toLowerCase() == 'administrador') ...[
+                          _buildAdminHeader(responsive),
+                          
+                          SizedBox(height: 20 * responsive.scale),
+                          
+                          // Row: Usuarios Totales + Usuarios por Mes
+                          _buildResponsiveRow(
+                            responsive,
+                            [
+                              _buildTotalUsersCard(reportVM, responsive),
+                              _buildUsersPerMonthChart(reportVM, responsive),
+                            ],
+                          ),
+                          
+                          SizedBox(height: 20 * responsive.scale),
+                        ],
                       ],
                     ),
                   ),
@@ -580,5 +603,175 @@ class _PantallaReporteState extends State<PantallaReporte> {
   String _getMonthName(int month) {
     const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
     return months[(month - 1) % 12];
+  }
+
+  // ==================== ADMIN WIDGETS ====================
+
+  Widget _buildAdminHeader(ResponsiveHelper responsive) {
+    return Container(
+      padding: EdgeInsets.symmetric(
+        horizontal: 16 * responsive.scale,
+        vertical: 12 * responsive.scale,
+      ),
+      decoration: BoxDecoration(
+        color: const Color(0xFFEA7317).withOpacity(0.15),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: const Color(0xFFEA7317).withOpacity(0.5),
+          width: 2,
+        ),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            Icons.admin_panel_settings,
+            color: const Color(0xFFEA7317),
+            size: 28 * responsive.scale,
+          ),
+          SizedBox(width: 12 * responsive.scale),
+          Text(
+            'Estadísticas de Administrador',
+            style: TextStyle(
+              fontSize: 18 * responsive.scale,
+              fontWeight: FontWeight.bold,
+              color: const Color(0xFFEA7317),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTotalUsersCard(ReportViewModel vm, ResponsiveHelper responsive) {
+    return _buildChartCard(
+      title: 'Usuarios Totales',
+      icon: Icons.people_alt,
+      responsive: responsive,
+      child: SizedBox(
+        height: 200 * responsive.scale,
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.people,
+                size: 80 * responsive.scale,
+                color: const Color(0xFF5B8DEE).withOpacity(0.3),
+              ),
+              SizedBox(height: 16 * responsive.scale),
+              Text(
+                '${vm.usuariosTotales}',
+                style: TextStyle(
+                  fontSize: 48 * responsive.scale,
+                  fontWeight: FontWeight.bold,
+                  color: const Color(0xFF5B8DEE),
+                ),
+              ),
+              Text(
+                'usuarios registrados',
+                style: TextStyle(
+                  fontSize: 14 * responsive.scale,
+                  color: Colors.grey[600],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildUsersPerMonthChart(ReportViewModel vm, ResponsiveHelper responsive) {
+    final entries = vm.usuariosPorMes.entries.toList();
+    final maxY = entries.isNotEmpty 
+        ? entries.map((e) => e.value).reduce((a, b) => a > b ? a : b).toDouble()
+        : 1.0;
+    
+    return _buildChartCard(
+      title: 'Usuarios Nuevos por Mes',
+      icon: Icons.trending_up,
+      responsive: responsive,
+      child: SizedBox(
+        height: 200 * responsive.scale,
+        child: entries.isEmpty
+            ? Center(
+                child: Text(
+                  'Sin datos de usuarios por mes',
+                  style: TextStyle(color: Colors.grey, fontSize: 14 * responsive.scale),
+                ),
+              )
+            : Padding(
+                padding: EdgeInsets.only(top: 20 * responsive.scale, right: 20 * responsive.scale, bottom: 10 * responsive.scale),
+                child: LineChart(
+                  LineChartData(
+                    minY: 0,
+                    maxY: maxY + 2,
+                    lineBarsData: [
+                      LineChartBarData(
+                        spots: entries.asMap().entries.map((entry) {
+                          return FlSpot(entry.key.toDouble(), entry.value.value.toDouble());
+                        }).toList(),
+                        isCurved: true,
+                        color: const Color(0xFF25CCAD),
+                        barWidth: 3,
+                        dotData: FlDotData(
+                          show: true,
+                          getDotPainter: (spot, percent, barData, index) {
+                            return FlDotCirclePainter(
+                              radius: 4 * responsive.scale,
+                              color: const Color(0xFF25CCAD),
+                              strokeWidth: 2,
+                              strokeColor: Colors.white,
+                            );
+                          },
+                        ),
+                        belowBarData: BarAreaData(
+                          show: true,
+                          color: const Color(0xFF25CCAD).withOpacity(0.2),
+                        ),
+                      ),
+                    ],
+                    titlesData: FlTitlesData(
+                      show: true,
+                      bottomTitles: AxisTitles(
+                        sideTitles: SideTitles(
+                          showTitles: true,
+                          interval: 1,
+                          getTitlesWidget: (value, meta) {
+                            final idx = value.toInt();
+                            if (idx >= entries.length || idx < 0) return const SizedBox();
+                            final month = entries[idx].key.split('-').last;
+                            return Padding(
+                              padding: const EdgeInsets.only(top: 8),
+                              child: Text(
+                                _getMonthName(int.parse(month)),
+                                style: TextStyle(fontSize: 10 * responsive.scale),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                      leftTitles: AxisTitles(
+                        sideTitles: SideTitles(
+                          showTitles: true,
+                          reservedSize: 30 * responsive.scale,
+                        ),
+                      ),
+                      topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                      rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                    ),
+                    borderData: FlBorderData(
+                      show: true,
+                      border: const Border(
+                        bottom: BorderSide(color: Colors.grey),
+                        left: BorderSide(color: Colors.grey),
+                      ),
+                    ),
+                    gridData: const FlGridData(show: true, drawVerticalLine: false),
+                  ),
+                ),
+              ),
+      ),
+    );
   }
 }
