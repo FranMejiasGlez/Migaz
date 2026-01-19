@@ -70,9 +70,13 @@ class _PantallaBibliotecaState extends State<PantallaBiblioteca> {
       );
 
       if (mounted) {
+        // Obtenemos el ID real del usuario desde AuthViewModel
+        final authVM = context.read<AuthViewModel>();
+        final currentUserId = authVM.currentUserId;
+
         final homeViewModel = context.read<HomeViewModel>();
         await homeViewModel.cargarHome();
-        await homeViewModel.cargarGuardadas(_currentUser);
+        await homeViewModel.cargarGuardadas(_currentUser, userId: currentUserId);
 
         final recetasGuardadas = homeViewModel.recetasGuardadas;
 

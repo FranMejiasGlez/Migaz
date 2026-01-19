@@ -48,8 +48,9 @@ class _PantallaRecetasViewState extends State<_PantallaRecetasView> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final homeViewModel = context.read<HomeViewModel>();
+      final authViewModel = context.read<AuthViewModel>();
       await homeViewModel.cargarHome();
-      await homeViewModel.cargarGuardadas(ApiConfig.currentUser);
+      await homeViewModel.cargarGuardadas(ApiConfig.currentUser, userId: authViewModel.currentUserId);
     });
   }
 

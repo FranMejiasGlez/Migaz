@@ -35,25 +35,31 @@ class HomeViewModel extends BaseViewModel {
       _recetasMasNuevas.isNotEmpty ||
       _todasLasRecetas.isNotEmpty;
 
-  /// ✅ NUEVO: Cargar recetas guardadas
-  Future<void> cargarGuardadas(String usuario) async {
+  /// ✅ NUEVO: Cargar recetas guardadas (Sync Backend)
+  Future<void> cargarGuardadas(String usuario, {String? userId}) async {
+    // 1. Intentar sincronizar desde backend si tenemos ID
+    if (userId != null && userId.isNotEmpty) {
+      await _guardadosService.sincronizarDesdeBackend(usuario, userId);
+    }
+    
+    // 2. Cargar localmente (ahora actualizado)
     _recetasGuardadasIds = await _guardadosService.obtenerGuardadas(usuario);
     _actualizarEstadoGuardadas();
     notifyListeners();
   }
 
   /// ✅ NUEVO: Guardar/Quitar receta
-  Future<bool> toggleGuardarReceta(String recetaId, String usuario) async {
+  Future<bool> toggleGuardarReceta(String recetaId, String usuario, {String? userId}) async {
     final estaGuardada = _recetasGuardadasIds.contains(recetaId);
 
     bool exito;
     if (estaGuardada) {
-      exito = await _guardadosService.quitarGuardada(usuario, recetaId);
+      exito = await _guardadosService.quitarGuardada(usuario, recetaId, userId: userId);
       if (exito) {
         _recetasGuardadasIds.remove(recetaId);
       }
     } else {
-      exito = await _guardadosService.guardarReceta(usuario, recetaId);
+      exito = await _guardadosService.guardarReceta(usuario, recetaId, userId: userId);
       if (exito) {
         _recetasGuardadasIds.add(recetaId);
       }

@@ -68,6 +68,24 @@ class ReportService {
     }
   }
 
+  /// Obtener estadísticas de guardados (mapa ID -> cantidad)
+  Future<Map<String, int>> obtenerEstadisticasGuardados() async {
+    try {
+      final uri = Uri.parse('${ApiConfig.baseUrl}/recetas/estadisticas/guardados');
+      final response = await http.get(uri, headers: ApiConfig.headers);
+      
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> data = jsonDecode(response.body);
+        // Convertir dynamic values a int
+        return data.map((key, value) => MapEntry(key, value as int));
+      }
+      return {};
+    } catch (e) {
+      print('❌ Error obtenerEstadisticasGuardados: $e');
+      return {};
+    }
+  }
+
   /// Calcular recetas por mes a partir de lista de recetas
   Map<String, int> calcularRecetasPorMes(List<dynamic> recetas) {
     final Map<String, int> porMes = {};

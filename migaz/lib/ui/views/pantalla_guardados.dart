@@ -46,9 +46,10 @@ class _PantallaGuardadosState extends State<PantallaGuardados> {
     setState(() => _isLoading = true);
 
     try {
+      final authVM = context.read<AuthViewModel>(); // Obtener AuthViewModel
       final homeViewModel = context.read<HomeViewModel>();
       await homeViewModel.cargarHome();
-      await homeViewModel.cargarGuardadas(_currentUser);
+      await homeViewModel.cargarGuardadas(_currentUser, userId: authVM.currentUserId);
 
       setState(() => _isLoading = false);
 

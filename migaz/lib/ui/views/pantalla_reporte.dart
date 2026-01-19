@@ -6,6 +6,8 @@ import 'package:migaz/viewmodels/auth_viewmodel.dart';
 import 'package:migaz/core/config/routes.dart';
 import 'package:migaz/core/utils/responsive_helper.dart';
 import 'package:migaz/core/utils/responsive_breakpoints.dart';
+import 'package:migaz/ui/widgets/categories_detail_report.dart';
+import 'package:migaz/ui/widgets/cookbook_detail_report.dart';
 
 class PantallaReporte extends StatefulWidget {
   const PantallaReporte({super.key});
@@ -43,97 +45,97 @@ class _PantallaReporteState extends State<PantallaReporte> {
   Widget build(BuildContext context) {
     final responsive = ResponsiveHelper(context);
 
+    // Common ExpansionTile Style
+    final theme = Theme.of(context).copyWith(dividerColor: Colors.transparent);
+
     return Scaffold(
+      backgroundColor: const Color(0xFFF7FAFC),
       body: Consumer2<ReportViewModel, AuthViewModel>(
         builder: (context, reportVM, authVM, child) {
           if (reportVM.isLoading) {
-            return const Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  CircularProgressIndicator(),
-                  SizedBox(height: 16),
-                  Text('Cargando estadísticas...'),
-                ],
-              ),
-            );
+            return const Center(child: CircularProgressIndicator());
           }
 
           return SafeArea(
             child: Column(
               children: [
-                // Header
                 _buildHeader(context, responsive),
-
-                // Charts content
                 Expanded(
-                  child: SingleChildScrollView(
+                  child: ListView(
                     padding: EdgeInsets.all(16 * responsive.scale),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // LOGIC:
-                        // Admin: New Users, Total Users, Recipes/Month, Categories, Global Recipes
-                        // Normal: Recipes/Month, Followers, Global Recipes, Categories
-                        if (authVM.currentUser.toLowerCase() == 'admin') ...[
-                          // ADMIN VIEW
-                          // 1. Usuarios Totales + Usuarios Nuevos (Agrupado)
-                          _buildAdminHeader(responsive),
-                          SizedBox(height: 20 * responsive.scale),
+                    children: [
+                      // REPORT 1: CATEGORIES
+                      _buildReportPanel(
+                        context,
+                        title: '1. Categorías Populares',
+                        icon: Icons.bar_chart_rounded,
+                        color: const Color(0xFF5B8DEE),
+                        child: CategoriesDetailReport(responsive: responsive),
+                        responsive: responsive,
+                      ),
+                      
+                      SizedBox(height: 16 * responsive.scale),
 
-                          _buildResponsiveRow(responsive, [
-                            _buildTotalUsersCard(reportVM, responsive),
-                            _buildUsersPerMonthChart(reportVM, responsive),
-                          ]),
-                          SizedBox(height: 20 * responsive.scale),
-
-                          // 2. Global Recipes + Categories
-                          _buildResponsiveRow(responsive, [
-                            _buildTotalRecipesCard(
-                              reportVM,
-                              responsive,
-                            ), // Recetas globales
-                            _buildCategoriesChart(
-                              reportVM,
-                              responsive,
-                            ), // Categorias
-                          ]),
-                          SizedBox(height: 20 * responsive.scale),
-
-                          // 3. Cookbook (Added per request)
-                          _buildCookbookChart(reportVM, responsive),
-                          SizedBox(height: 20 * responsive.scale),
-
-                          // 4. Recipes per Month
-                          _buildRecipesPerMonthChart(reportVM, responsive),
-                        ] else ...[
-                          // NORMAL VIEW
-                          // 1. Followers + Global Recipes
-                          _buildResponsiveRow(responsive, [
-                            _buildFollowersChart(reportVM, responsive),
-                            _buildTotalRecipesCard(reportVM, responsive),
-                          ]),
-                          SizedBox(height: 20 * responsive.scale),
-
-                          // 2. Cookbook (Added per request)
-                          _buildCookbookChart(reportVM, responsive),
-                          SizedBox(height: 20 * responsive.scale),
-
-                          // 3. Categories
-                          _buildCategoriesChart(reportVM, responsive),
-                          SizedBox(height: 20 * responsive.scale),
-
-                          // 4. Recipes per Month
-                          _buildRecipesPerMonthChart(reportVM, responsive),
-                        ],
-                      ],
-                    ),
+                      // REPORT 2: COOKBOOK
+                      _buildReportPanel(
+                        context,
+                        title: '2. Libro de Recetas',
+                        icon: Icons.menu_book_rounded,
+                        color: const Color(0xFFEA7317),
+                        child: CookbookDetailReport(responsive: responsive), // Need to import this
+                        responsive: responsive,
+                      ),
+                    ],
                   ),
                 ),
               ],
             ),
           );
         },
+      ),
+    );
+  }
+
+  Widget _buildReportPanel(
+    BuildContext context, {
+    required String title,
+    required IconData icon,
+    required Color color,
+    required Widget child,
+    required ResponsiveHelper responsive,
+  }) {
+    return Card(
+      elevation: 0,
+      color: Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: Colors.grey.withOpacity(0.1)),
+      ),
+      child: Theme(
+        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+        child: ExpansionTile(
+          initiallyExpanded: false, // Start collapsed or expanded? Let's say collapsed
+          tilePadding: EdgeInsets.all(16 * responsive.scale),
+          leading: Container(
+            padding: EdgeInsets.all(10 * responsive.scale),
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(icon, color: color, size: 24 * responsive.scale),
+          ),
+          title: Text(
+            title,
+            style: TextStyle(
+              fontSize: 18 * responsive.scale,
+              fontWeight: FontWeight.bold,
+              color: const Color(0xFF2D3748),
+            ),
+          ),
+          children: [
+            child, // The report widget itself
+          ],
+        ),
       ),
     );
   }
@@ -179,36 +181,7 @@ class _PantallaReporteState extends State<PantallaReporte> {
     );
   }
 
-  Widget _buildResponsiveRow(
-    ResponsiveHelper responsive,
-    List<Widget> children,
-  ) {
-    if (responsive.isMobile) {
-      return Column(
-        children: children
-            .map(
-              (c) => Padding(
-                padding: EdgeInsets.only(bottom: 16 * responsive.scale),
-                child: c,
-              ),
-            )
-            .toList(),
-      );
-    }
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: children
-          .map(
-            (c) => Expanded(
-              child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: 8 * responsive.scale),
-                child: c,
-              ),
-            ),
-          )
-          .toList(),
-    );
-  }
+
 
   // ==================== CHART WIDGETS ====================
 
@@ -427,106 +400,7 @@ class _PantallaReporteState extends State<PantallaReporte> {
     );
   }
 
-  Widget _buildCategoriesChart(
-    ReportViewModel vm,
-    ResponsiveHelper responsive,
-  ) {
-    final top5 = vm.categoriasPopulares.entries.take(5).toList();
-    final maxValue = top5.isNotEmpty ? top5.first.value.toDouble() : 1.0;
 
-    return _buildChartCard(
-      title: 'Categorías Más Populares',
-      icon: Icons.category,
-      responsive: responsive,
-      child: SizedBox(
-        height: 220 * responsive.scale,
-        child: top5.isEmpty
-            ? Center(
-                child: Text(
-                  'Sin datos de categorías',
-                  style: TextStyle(
-                    color: Colors.grey,
-                    fontSize: 14 * responsive.scale,
-                  ),
-                ),
-              )
-            : Padding(
-                padding: EdgeInsets.only(
-                  top: 16 * responsive.scale,
-                  right: 16 * responsive.scale,
-                  left: 8 * responsive.scale,
-                ),
-                child: BarChart(
-                  BarChartData(
-                    alignment: BarChartAlignment.spaceAround,
-                    maxY: maxValue + 2,
-                    barGroups: top5.asMap().entries.map((entry) {
-                      final colors = [
-                        const Color(0xFF25CCAD),
-                        const Color(0xFF5B8DEE),
-                        const Color(0xFFEA7317),
-                        const Color(0xFFFF6B6B),
-                        const Color(0xFF9B59B6),
-                      ];
-                      return BarChartGroupData(
-                        x: entry.key,
-                        barRods: [
-                          BarChartRodData(
-                            toY: entry.value.value.toDouble(),
-                            color: colors[entry.key % colors.length],
-                            width: 24 * responsive.scale,
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                        ],
-                      );
-                    }).toList(),
-                    titlesData: FlTitlesData(
-                      show: true,
-                      bottomTitles: AxisTitles(
-                        sideTitles: SideTitles(
-                          showTitles: true,
-                          getTitlesWidget: (value, meta) {
-                            if (value.toInt() >= top5.length)
-                              return const SizedBox();
-                            final name = top5[value.toInt()].key;
-                            return Padding(
-                              padding: const EdgeInsets.only(top: 8),
-                              child: Text(
-                                name.length > 8
-                                    ? '${name.substring(0, 8)}...'
-                                    : name,
-                                style: TextStyle(
-                                  fontSize: 10 * responsive.scale,
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                      leftTitles: AxisTitles(
-                        sideTitles: SideTitles(
-                          showTitles: true,
-                          reservedSize: 30 * responsive.scale,
-                        ),
-                      ),
-                      topTitles: const AxisTitles(
-                        sideTitles: SideTitles(showTitles: false),
-                      ),
-                      rightTitles: const AxisTitles(
-                        sideTitles: SideTitles(showTitles: false),
-                      ),
-                    ),
-                    borderData: FlBorderData(show: false),
-                    gridData: const FlGridData(
-                      show: true,
-                      drawVerticalLine: false,
-                    ),
-                  ),
-                ),
-              ),
-      ),
-    );
-  }
 
   Widget _buildRecipesPerMonthChart(
     ReportViewModel vm,

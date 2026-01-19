@@ -19,6 +19,7 @@ import 'package:migaz/ui/widgets/recipe/ventana_editar_receta.dart';
 import 'package:migaz/ui/widgets/recipe/youtube_player_widget.dart';
 import 'package:migaz/viewmodels/biblioteca_viewmodel.dart';
 import 'package:migaz/viewmodels/home_viewmodel.dart';
+import 'package:migaz/viewmodels/auth_viewmodel.dart'; // Added
 import 'package:migaz/viewmodels/recipe_list_viewmodel.dart';
 import 'package:provider/provider.dart';
 import 'package:migaz/ui/widgets/auth/user_credentials.dart';
@@ -158,9 +159,13 @@ class _RecipeDetailDialogContentState
 
     final wasGuardada = _recipe.isGuardada;
 
+    final authVM = context.read<AuthViewModel>(); // Get AuthViewModel
+    final userId = authVM.currentUserId; // Get ID
+
     final exito = await homeViewModel.toggleGuardarReceta(
       _recipe.id!,
       _currentUser,
+      userId: userId, // Pass userId
     );
 
     if (mounted && exito) {
