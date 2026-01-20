@@ -91,7 +91,7 @@ class _PantallaGuardadosState extends State<PantallaGuardados> {
           Expanded(child: _buildTitle()),
           const SizedBox(width: 8),
           UserAvatar(
-            imageUrl: authVM.currentUserImage ?? RecipeConstants.defaultAvatarUrl,
+            imageUrl: authVM.currentUserImage,
             onTap: () => Navigator.pushNamed(context, AppRoutes.perfilUser),
           ),
         ],

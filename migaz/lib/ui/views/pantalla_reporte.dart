@@ -8,6 +8,7 @@ import 'package:migaz/core/utils/responsive_helper.dart';
 import 'package:migaz/core/utils/responsive_breakpoints.dart';
 import 'package:migaz/ui/widgets/categories_detail_report.dart';
 import 'package:migaz/ui/widgets/cookbook_detail_report.dart';
+import 'package:migaz/ui/widgets/network_detail_report.dart';
 
 class PantallaReporte extends StatefulWidget {
   const PantallaReporte({super.key});
@@ -82,7 +83,19 @@ class _PantallaReporteState extends State<PantallaReporte> {
                         title: '2. Libro de Recetas',
                         icon: Icons.menu_book_rounded,
                         color: const Color(0xFFEA7317),
-                        child: CookbookDetailReport(responsive: responsive), // Need to import this
+                        child: CookbookDetailReport(responsive: responsive),
+                        responsive: responsive,
+                      ),
+
+                      SizedBox(height: 16 * responsive.scale),
+
+                      // REPORT 3: NETWORK
+                      _buildReportPanel(
+                        context,
+                        title: '3. Mi Red de Contactos',
+                        icon: Icons.hub_rounded, // or share, or people
+                        color: const Color(0xFF2B6CB0),
+                        child: NetworkDetailReport(responsive: responsive),
                         responsive: responsive,
                       ),
                     ],

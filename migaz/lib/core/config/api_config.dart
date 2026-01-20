@@ -2,6 +2,9 @@ import 'dart:io';
 import 'package:flutter/foundation.dart'; // Necesario para kIsWeb
 
 class ApiConfig {
+  // Imagen por defecto para perfiles
+  static const String defaultProfileImage = 'https://raw.githubusercontent.com/FranMejiasGlez/TallerFlutter/main/sandbox_fran/imperativo/img/Logo.png';
+
   // Permite definir una URL pública (por ejemplo, devtunnels.ms)
   static String? publicServerUrl;
 
@@ -68,7 +71,7 @@ class ApiConfig {
 
   // ✅ MÉTODO CLAVE: Generador de URLs de imágenes centralizado
   static String getImageUrl(String imagePath) {
-    if (imagePath.isEmpty) return '';
+    if (imagePath.isEmpty) return defaultProfileImage;
 
     // Si ya viene con http (imágenes externas), se devuelve tal cual
     if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {

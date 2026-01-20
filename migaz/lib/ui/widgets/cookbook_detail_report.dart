@@ -34,7 +34,7 @@ class _CookbookDetailReportState extends State<CookbookDetailReport> {
       child: Column(
         children: [
           // Header
-          _buildReportHeader(r),
+          _buildReportHeader(reportVM, r),
           
           SizedBox(height: 20 * r.scale),
           
@@ -55,7 +55,7 @@ class _CookbookDetailReportState extends State<CookbookDetailReport> {
     );
   }
 
-  Widget _buildReportHeader(ResponsiveHelper r) {
+  Widget _buildReportHeader(ReportViewModel reportVM, ResponsiveHelper r) {
     final now = DateTime.now();
     final formattedDate = DateFormat('dd/MM/yyyy').format(now);
 
@@ -117,7 +117,7 @@ class _CookbookDetailReportState extends State<CookbookDetailReport> {
                     ),
                   ),
                   Text(
-                    'De: @uhhFlame', // Should ideally be user name
+                    'De: @${reportVM.currentUserName}',
                     style: TextStyle(
                       color: Colors.white.withOpacity(0.7),
                       fontSize: 10 * r.scale,

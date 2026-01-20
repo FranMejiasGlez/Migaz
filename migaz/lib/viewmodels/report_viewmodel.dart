@@ -12,6 +12,11 @@ class ReportViewModel extends BaseViewModel {
   int _seguidos = 0;
   int _misRecetas = 0;
   int _recetasGuardadas = 0;
+  String _currentUserName = '';
+
+  // Datos de red (Listas completas)
+  List<dynamic> _listaSeguidores = [];
+  List<dynamic> _listaSeguidos = [];
 
   // Datos globales
   int _recetasTotales = 0;
@@ -30,6 +35,9 @@ class ReportViewModel extends BaseViewModel {
   int get seguidos => _seguidos;
   int get misRecetas => _misRecetas;
   int get recetasGuardadas => _recetasGuardadas;
+  List<dynamic> get listaSeguidores => _listaSeguidores;
+  List<dynamic> get listaSeguidos => _listaSeguidos;
+  String get currentUserName => _currentUserName;
   int get recetasTotales => _recetasTotales;
   int get usuariosTotales => _usuariosTotales;
   Map<String, int> get recetasPorMes => _recetasPorMes;
@@ -49,12 +57,17 @@ class ReportViewModel extends BaseViewModel {
 
   /// Cargar todas las estadísticas del usuario
   Future<void> cargarEstadisticasUsuario(String userId, String username) async {
+    _currentUserName = username;
     await runAsync(() async {
       // 1. Cargar perfil del usuario (seguidores/seguidos)
       final perfil = await _reportService.obtenerPerfilUsuario(userId);
       if (perfil != null) {
         _seguidores = (perfil['seguidores'] as List?)?.length ?? 0;
         _seguidos = (perfil['siguiendo'] as List?)?.length ?? 0;
+        
+        // Guardar listas completas
+        _listaSeguidores = (perfil['seguidores'] as List?) ?? [];
+        _listaSeguidos = (perfil['siguiendo'] as List?) ?? [];
       }
 
       // 2. Cargar todas las recetas para estadísticas

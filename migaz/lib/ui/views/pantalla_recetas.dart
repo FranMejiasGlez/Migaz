@@ -119,7 +119,7 @@ class _PantallaRecetasViewState extends State<_PantallaRecetasView> {
           Expanded(child: _buildUserNameDisplay()),
           const SizedBox(width: 8),
           UserAvatar(
-            imageUrl: authVM.currentUserImage ?? RecipeConstants.defaultAvatarUrl,
+            imageUrl: authVM.currentUserImage,
             onTap: () => Navigator.pushNamed(context, AppRoutes.perfilUser),
           ),
         ],

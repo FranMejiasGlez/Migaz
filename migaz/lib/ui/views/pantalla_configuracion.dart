@@ -9,6 +9,7 @@ import '../../viewmodels/user_viewmodel.dart';
 import '../../viewmodels/theme_viewmodel.dart';
 import '../../core/config/routes.dart';
 import '../../core/config/api_config.dart';
+import '../../core/utils/responsive_helper.dart';
 
 class PantallaConfiguracion extends StatelessWidget {
   const PantallaConfiguracion({Key? key}) : super(key: key);
@@ -138,220 +139,200 @@ class _PantallaConfiguracionViewState
 
   @override
   Widget build(BuildContext context) {
+    final responsive = ResponsiveHelper(context);
+    
     return Scaffold(
       appBar: AppBar(
         title: const Text('Configuracion'),
         centerTitle: true,
         elevation: 0,
-        // Eliminamos backgroundColor fijo para usar el del tema
       ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            children: [
-              // --- HEADER CON NOMBRE Y AVATAR ---
-              Consumer2<AuthViewModel, UserViewModel>(
-                builder: (context, authVM, userVM, _) {
-                  // Obtener URL de la imagen actual del perfil cargado
-                  String? currentImageUrl =
-                      userVM.userProfile?['profile_image'];
-
-                  // URL por defecto
-                  const defaultImage =
-                      'https://raw.githubusercontent.com/FranMejiasGlez/TallerFlutter/main/sandbox_fran/imperativo/img/Logo.png';
-
-                  return Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        authVM.currentUser.isNotEmpty
-                            ? authVM.currentUser
-                            : 'Usuario',
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-
-                      // AVATAR CLICKABLE
-                      GestureDetector(
-                        onTap: _seleccionarFoto,
-                        child: Stack(
-                          alignment: Alignment.center,
-                          children: [
-                            Container(
-                              width: 80,
-                              height: 80,
-                              decoration: BoxDecoration(
-                                color: const Color(0xFF25CCAD),
-                                shape: BoxShape.circle,
-                                border: Border.all(
-                                  color: Colors.white,
-                                  width: 2,
-                                ),
-                                boxShadow: [
-                                  BoxShadow(
-                                    blurRadius: 5,
-                                    color: Colors.black26,
-                                  ),
-                                ],
-                                image: DecorationImage(
-                                  image: _imageFile != null
-                                      ? (kIsWeb
-                                            ? NetworkImage(_imageFile!.path)
-                                            : FileImage(File(_imageFile!.path))
-                                                  as ImageProvider)
-                                      : NetworkImage(
-                                          currentImageUrl != null
-                                              ? ApiConfig.getImageUrl(
-                                                  currentImageUrl,
-                                                )
-                                              : defaultImage,
+      body: Align(
+        alignment: Alignment.topCenter,
+        child: ConstrainedBox(
+          constraints: BoxConstraints(maxWidth: responsive.maxWidth),
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: EdgeInsets.symmetric(
+                horizontal: responsive.horizontalPadding,
+                vertical: 12.0, // Reducido para que empiece más arriba
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  // --- HEADER CON NOMBRE Y AVATAR EN LA ESQUINA SUPERIOR DERECHA ---
+                  Consumer2<AuthViewModel, UserViewModel>(
+                    builder: (context, authVM, userVM, _) {
+                      String? currentImageUrl = userVM.userProfile?['profile_image'];
+    
+                      return Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              // AVATAR CLICKABLE
+                              MouseRegion(
+                                cursor: SystemMouseCursors.click,
+                                child: GestureDetector(
+                                  onTap: _seleccionarFoto,
+                                  child: Stack(
+                                    alignment: Alignment.center,
+                                    children: [
+                                      Container(
+                                        width: 80 * responsive.scale,
+                                        height: 80 * responsive.scale,
+                                        decoration: BoxDecoration(
+                                          color: const Color(0xFF25CCAD),
+                                          shape: BoxShape.circle,
+                                          border: Border.all(color: Colors.white, width: 2),
+                                          boxShadow: [
+                                            BoxShadow(blurRadius: 5, color: Colors.black26),
+                                          ],
+                                          image: DecorationImage(
+                                            image: _imageFile != null
+                                                ? (kIsWeb
+                                                    ? NetworkImage(_imageFile!.path)
+                                                    : FileImage(File(_imageFile!.path)) as ImageProvider)
+                                                : NetworkImage(
+                                                    ApiConfig.getImageUrl(currentImageUrl ?? ""),
+                                                  ),
+                                            fit: BoxFit.cover,
+                                          ),
                                         ),
-                                  fit: BoxFit.cover,
+                                      ),
+                                      if (_isUploading)
+                                        CircularProgressIndicator(
+                                          color: Colors.white,
+                                          strokeWidth: 2 * responsive.scale,
+                                        ),
+        
+                                      if (!_isUploading)
+                                        Positioned(
+                                          bottom: 0,
+                                          right: 0,
+                                          child: Container(
+                                            padding: const EdgeInsets.all(4),
+                                            decoration: const BoxDecoration(
+                                              color: Colors.white,
+                                              shape: BoxShape.circle,
+                                            ),
+                                            child: Icon(
+                                              Icons.camera_alt,
+                                              size: 14 * responsive.scale,
+                                              color: Colors.grey[700],
+                                            ),
+                                          ),
+                                        ),
+                                    ],
+                                  ),
                                 ),
                               ),
+                              SizedBox(height: 8 * responsive.scale),
+                              Text(
+                                authVM.currentUser.isNotEmpty ? authVM.currentUser : 'Usuario',
+                                style: TextStyle(
+                                  fontSize: 14 * responsive.scale,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ],
+                          ),
+                        ],
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 20),
+    
+                  // --- TOGGLE MODO OSCURO ---
+                  Consumer<ThemeViewModel>(
+                    builder: (context, themeVM, _) {
+                      return Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF25CCAD),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              themeVM.isDarkMode ? 'Modo Oscuro' : 'Modo Claro',
+                              style: const TextStyle(fontWeight: FontWeight.bold),
                             ),
-                            if (_isUploading)
-                              const CircularProgressIndicator(
-                                color: Colors.white,
-                              ),
-
-                            // Icono de cámara pequeño
-                            if (!_isUploading)
-                              Positioned(
-                                bottom: 0,
-                                right: 0,
-                                child: Container(
-                                  padding: const EdgeInsets.all(4),
-                                  decoration: const BoxDecoration(
-                                    color: Colors.white,
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: const Icon(
-                                    Icons.camera_alt,
-                                    size: 16,
-                                    color: Colors.grey,
-                                  ),
-                                ),
-                              ),
+                            Switch(
+                              value: themeVM.isDarkMode,
+                              onChanged: (value) => themeVM.toggleTheme(value),
+                              activeColor: const Color(0xFFFFC107),
+                            ),
                           ],
                         ),
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 32),
+    
+                  // --- SECCIÓN EDITAR PERFIL ---
+                  _buildExpandableSection(
+                    title: 'Editar perfil',
+                    children: [
+                      ListTile(
+                        leading: const Icon(Icons.photo_camera),
+                        title: const Text('Cambiar Foto de Perfil'),
+                        onTap: _seleccionarFoto,
+                      ),
+                      const ListTile(
+                        leading: Icon(Icons.email),
+                        title: Text('Cambiar Correo (Próximamente)'),
+                      ),
+                      const ListTile(
+                        leading: Icon(Icons.lock),
+                        title: Text('Cambiar Contraseña (Próximamente)'),
                       ),
                     ],
-                  );
-                },
-              ),
-              const SizedBox(height: 24),
-
-              // --- TOGGLE MODO CLARO/OSCURO ---
-              // --- TOGGLE MODO OSCURO ---
-              Consumer<ThemeViewModel>(
-                builder: (context, themeVM, _) {
-                  return Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 12,
-                    ),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF25CCAD),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          themeVM.isDarkMode ? 'Modo Oscuro' : 'Modo Claro',
-                          style: const TextStyle(
-                            fontWeight: FontWeight.w500,
-                            color: Colors.black,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Switch(
-                          value: themeVM.isDarkMode,
-                          onChanged: (value) {
-                            themeVM.toggleTheme(value);
-                          },
-                          activeColor: const Color(0xFFFFC107),
-                          inactiveThumbColor: Colors.white,
-                          activeTrackColor: Colors.black38,
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              ),
-              const SizedBox(height: 32),
-
-              // --- SECCIÓN EDITAR PERFIL ---
-              _buildExpandableSection(
-                title: 'Editar perfil',
-                // Aquí podríamos poner inputs reales, pero por ahora mantenemos el estilo
-                // y añadimos la opción explícita de cambiar foto también en lista
-                children: [
-                  ListTile(
-                    leading: const Icon(Icons.photo_camera),
-                    title: const Text('Cambiar Foto de Perfil'),
-                    onTap: _seleccionarFoto,
+                    backgroundColor: const Color(0xFFD4C5F9),
                   ),
-                  const ListTile(
-                    leading: Icon(Icons.email),
-                    title: Text('Cambiar Correo (Próximamente)'),
+                  const SizedBox(height: 24),
+    
+                  // --- SECCIÓN CONTACTANOS ---
+                  _buildExpandableSection(
+                    title: 'Contactanos',
+                    children: [
+                      const ListTile(
+                        leading: Icon(Icons.email),
+                        title: Text('fran.mejias.glez98@gmail.com'),
+                      ),
+                      const ListTile(
+                        leading: Icon(Icons.code),
+                        title: Text('Github Project'),
+                        subtitle: Text('https://github.com/franmejiasglez/Migaz'),
+                      ),
+                    ],
+                    backgroundColor: const Color(0xFFFFD9B3),
                   ),
-                  const ListTile(
-                    leading: Icon(Icons.lock),
-                    title: Text('Cambiar Contraseña (Próximamente)'),
+                  const SizedBox(height: 32),
+    
+                  // --- BOTÓN CERRAR SESIÓN ---
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: () => _showLogoutDialog(context),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF3A4A5C),
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                      child: const Text(
+                        'Cerrar Sesión',
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+                      ),
+                    ),
                   ),
                 ],
-                backgroundColor: const Color(0xFFD4C5F9),
               ),
-              const SizedBox(height: 24),
-
-              // --- SECCIÓN CONTACTANOS ---
-              _buildExpandableSection(
-                title: 'Contactanos',
-                children: [
-                  const ListTile(
-                    leading: Icon(Icons.email),
-                    title: Text('fran.mejias.glez98@gmail.com'),
-                  ),
-                  const ListTile(
-                    leading: Icon(Icons.code),
-                    title: Text('Github Project'),
-                    subtitle: Text('https://github.com/franmejiasglez/Migaz'),
-                  ),
-                ],
-                backgroundColor: const Color(0xFFFFD9B3),
-              ),
-              const SizedBox(height: 32),
-
-              // --- BOTÓN CERRAR SESIÓN ---
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () {
-                    _showLogoutDialog(context);
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF3A4A5C),
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                  child: const Text(
-                    'Cerrar Sesión',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-              ),
-            ],
+            ),
           ),
         ),
       ),

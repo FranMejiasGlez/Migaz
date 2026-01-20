@@ -251,151 +251,172 @@ class _PantallaPerfilUserState extends State<PantallaPerfilUser> {
     String? userImage,
   ) {
     return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 16.0 * responsive.scale),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        crossAxisAlignment: CrossAxisAlignment.start,
+      padding: EdgeInsets.symmetric(horizontal: 24.0 * responsive.scale, vertical: 8.0),
+      child: Column(
         children: [
-          IconButton(
-            icon: Icon(Icons.arrow_back, size: 24 * responsive.scale),
-            onPressed: () => Navigator.pushNamed(context, AppRoutes.home),
-          ),
-
-          Expanded(
-            child: Column(
-              children: [
-                SizedBox(height: 10 * responsive.scale),
-                Container(
-                  width: responsive.isMobile ? 160 : 220,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFEA7317).withOpacity(0.5),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  padding: EdgeInsets.symmetric(
-                    horizontal: 16 * responsive.scale,
-                    vertical: 8 * responsive.scale,
-                  ),
-                  child: Text(
-                    'Tu Perfil',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize:
-                          ResponsiveBreakpoints.getScaledFontSize(context, 20) *
-                          responsive.scale,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-                SizedBox(height: 20 * responsive.scale),
-                ElevatedButton(
-                  onPressed: () =>
-                      Navigator.pushNamed(context, AppRoutes.biblioteca),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF25CCAD),
-                    foregroundColor: Colors.black,
-                    padding: EdgeInsets.symmetric(
-                      horizontal: 24 * responsive.scale,
-                      vertical: 12 * responsive.scale,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    elevation: 5,
-                  ),
-                  child: Text(
-                    'Biblioteca',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize:
-                          ResponsiveBreakpoints.getScaledFontSize(context, 14) *
-                          responsive.scale,
-                    ),
-                  ),
-                ),
-                SizedBox(height: 10 * responsive.scale),
-                ElevatedButton(
-                  onPressed: () {
-                    Navigator.pushNamed(context, AppRoutes.reporte);
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF5B8DEE),
-                    foregroundColor: Colors.white,
-                    padding: EdgeInsets.symmetric(
-                      horizontal: 24 * responsive.scale,
-                      vertical: 12 * responsive.scale,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    elevation: 5,
-                  ),
-                  child: Text(
-                    'Reporte',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize:
-                          ResponsiveBreakpoints.getScaledFontSize(context, 14) *
-                          responsive.scale,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          Column(
+          // Fila superior: Atrás y Ajustes
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              SizedBox(height: 30 * responsive.scale),
-              Row(
-                crossAxisAlignment:
-                    CrossAxisAlignment.start, // Alineación corregida
-                children: [
-                  MouseRegion(
-                    cursor: SystemMouseCursors.click,
-                    child: GestureDetector(
-                      onTap: () =>
-                          Navigator.pushNamed(context, AppRoutes.configuracion),
-                      child: Icon(
-                        Icons.settings_outlined,
-                        size: 40 * responsive.scale,
-                        color: Colors.black,
-                      ),
-                    ),
+              IconButton(
+                icon: Icon(Icons.arrow_back, size: 28 * responsive.scale),
+                onPressed: () => Navigator.pushNamed(context, AppRoutes.home),
+                tooltip: 'Volver',
+              ),
+              MouseRegion(
+                cursor: SystemMouseCursors.click,
+                child: GestureDetector(
+                  onTap: () => Navigator.pushNamed(context, AppRoutes.configuracion),
+                  child: Icon(
+                    Icons.settings_outlined,
+                    size: 32 * responsive.scale,
+                    color: Colors.black,
                   ),
-                  SizedBox(width: 12 * responsive.scale),
-                  Column(
-                    children: [
-                      UserAvatar(
-                        imageUrl:
-                            userImage ??
-                            'https://raw.githubusercontent.com/FranMejiasGlez/TallerFlutter/main/sandbox_fran/imperativo/img/Logo.png',
-                        onTap: () {},
-                        size: 45 * responsive.scale,
-                      ),
-                      SizedBox(height: 5 * responsive.scale),
-                      Text(
-                        currentUserName.isNotEmpty
-                            ? currentUserName
-                            : "Usuario",
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize:
-                              ResponsiveBreakpoints.getScaledFontSize(
-                                context,
-                                12,
-                              ) *
-                              responsive.scale,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.black,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
+                ),
               ),
             ],
           ),
+          
+          // Centro: Avatar, Nombre y Acciones (Adaptable y Perfectamente centrado)
+          Builder(
+            builder: (context) {
+              final isWide = !responsive.isMobile;
+              
+              Widget avatarBlock = Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  UserAvatar(
+                    imageUrl: userImage,
+                    onTap: () {},
+                    size: 70 * responsive.scale,
+                  ),
+                  SizedBox(height: 8 * responsive.scale),
+                  Text(
+                    currentUserName.isNotEmpty ? currentUserName : "Usuario",
+                    style: TextStyle(
+                      fontSize: 16 * responsive.scale,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black,
+                    ),
+                  ),
+                ],
+              );
+
+              Widget titleBlock = Container(
+                constraints: BoxConstraints(minWidth: 150 * responsive.scale),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFEA7317).withOpacity(0.5),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                padding: EdgeInsets.symmetric(
+                  horizontal: 24 * responsive.scale,
+                  vertical: 12 * responsive.scale,
+                ),
+                child: Text(
+                  'Mi Perfil',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 20 * responsive.scale,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              );
+
+              Widget buttonsBlock = Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _buildHeaderButton(
+                    context: context,
+                    label: 'Biblioteca',
+                    color: const Color(0xFF25CCAD),
+                    icon: Icons.auto_stories,
+                    onPressed: () => Navigator.pushNamed(context, AppRoutes.biblioteca),
+                    responsive: responsive,
+                  ),
+                  SizedBox(height: 12 * responsive.scale),
+                  _buildHeaderButton(
+                    context: context,
+                    label: 'Reportes',
+                    color: const Color(0xFF5B8DEE),
+                    icon: Icons.bar_chart,
+                    onPressed: () => Navigator.pushNamed(context, AppRoutes.reporte),
+                    responsive: responsive,
+                    isPrimary: true,
+                  ),
+                ],
+              );
+
+              if (isWide) {
+                // Modo Escritorio/Tablet: Simetría para centrado perfecto
+                return Row(
+                  children: [
+                    Expanded(
+                      child: Align(
+                        alignment: Alignment.centerRight,
+                        child: avatarBlock,
+                      ),
+                    ),
+                    SizedBox(width: 48 * responsive.scale),
+                    titleBlock,
+                    SizedBox(width: 48 * responsive.scale),
+                    Expanded(
+                      child: Align(
+                        alignment: Alignment.centerLeft,
+                        child: buttonsBlock,
+                      ),
+                    ),
+                  ],
+                );
+              } else {
+                // Modo Móvil: Stacking vertical
+                return Column(
+                  children: [
+                    avatarBlock,
+                    SizedBox(height: 24 * responsive.scale),
+                    titleBlock,
+                    SizedBox(height: 24 * responsive.scale),
+                    buttonsBlock,
+                  ],
+                );
+              }
+            },
+          ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildHeaderButton({
+    required BuildContext context,
+    required String label,
+    required Color color,
+    required IconData icon,
+    required VoidCallback onPressed,
+    required ResponsiveHelper responsive,
+    bool isPrimary = false,
+  }) {
+    return ElevatedButton.icon(
+      onPressed: onPressed,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: color,
+        foregroundColor: isPrimary ? Colors.white : Colors.black,
+        padding: EdgeInsets.symmetric(
+          horizontal: 20 * responsive.scale,
+          vertical: 10 * responsive.scale,
+        ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(15),
+        ),
+        elevation: 3,
+        minimumSize: Size(140 * responsive.scale, 40 * responsive.scale),
+      ),
+      icon: Icon(icon, size: 18 * responsive.scale),
+      label: Text(
+        label,
+        style: TextStyle(
+          fontWeight: FontWeight.bold,
+          fontSize: 13 * responsive.scale,
+        ),
       ),
     );
   }
@@ -463,16 +484,9 @@ class UserCardIzquierdaStyle extends StatelessWidget {
                 CircleAvatar(
                   radius: 18 * responsive.scale,
                   backgroundColor: Colors.grey[200],
-                  backgroundImage: imageUrl != null
-                      ? NetworkImage(ApiConfig.getImageUrl(imageUrl!))
-                      : null,
-                  child: imageUrl == null
-                      ? Icon(
-                          Icons.person,
-                          color: Colors.grey,
-                          size: 20 * responsive.scale,
-                        )
-                      : null,
+                  backgroundImage: NetworkImage(
+                    ApiConfig.getImageUrl(imageUrl ?? ApiConfig.defaultProfileImage),
+                  ),
                 ),
                 SizedBox(width: 8 * responsive.scale),
                 Expanded(
