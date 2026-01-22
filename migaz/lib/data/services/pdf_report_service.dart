@@ -34,12 +34,13 @@ class PdfReportService {
         pdf.addPage(_buildPageNetwork(vm));
       }
 
-      print('DEBUG: PDF building finished, launching layout');
-      await Printing.layoutPdf(
-        onLayout: (PdfPageFormat format) async => pdf.save(),
-        name: 'Reporte_Migaz_${isAdmin ? "Admin" : vm.currentUserName}.pdf',
+      print('DEBUG: PDF building finished, launching share/download');
+      final bytes = await pdf.save();
+      await Printing.sharePdf(
+        bytes: bytes,
+        filename: 'Reporte_Migaz_${isAdmin ? "Admin" : vm.currentUserName}.pdf',
       );
-      print('DEBUG: Printing.layoutPdf completed');
+      print('DEBUG: Printing.sharePdf completed');
     } catch (e, stack) {
       print('DEBUG: ERROR generating PDF: $e');
       print('DEBUG: STACKTRACE: $stack');
