@@ -246,7 +246,18 @@ class _PantallaReporteState extends State<PantallaReporte> {
               ),
             ),
           ),
-          SizedBox(width: 48 * responsive.scale), // Balance the back button
+          Consumer2<ReportViewModel, AuthViewModel>(
+            builder: (context, reportVM, authVM, child) {
+              final isAdmin = AdminConfig.isAdmin(authVM.currentUser);
+              return IconButton(
+                icon: Icon(Icons.picture_as_pdf, color: const Color(0xFF5B8DEE), size: 28 * responsive.scale),
+                onPressed: () {
+                  print('DEBUG: PDF Button pressed. isAdmin=$isAdmin');
+                  reportVM.exportToPdf(isAdmin: isAdmin);
+                },
+              );
+            },
+          ),
         ],
       ),
     );

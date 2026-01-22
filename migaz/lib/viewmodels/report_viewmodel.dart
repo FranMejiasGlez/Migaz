@@ -1,11 +1,13 @@
 // lib/viewmodels/report_viewmodel.dart
 import 'package:migaz/data/services/report_service.dart';
 import 'package:migaz/data/services/guardados_service.dart';
+import 'package:migaz/data/services/pdf_report_service.dart';
 import 'package:migaz/viewmodels/base_viewmodel.dart';
 
 class ReportViewModel extends BaseViewModel {
   final ReportService _reportService = ReportService();
   final GuardadosService _guardadosService = GuardadosService();
+  final PdfReportService _pdfService = PdfReportService();
 
   // Datos del usuario
   int _seguidores = 0;
@@ -126,6 +128,15 @@ class ReportViewModel extends BaseViewModel {
     if (isAdmin) {
       await cargarEstadisticasAdmin();
     }
+  }
+
+  /// Exportar las estadísticas actuales a PDF
+  Future<void> exportToPdf({bool isAdmin = false}) async {
+    print('DEBUG: ReportViewModel.exportToPdf called, isAdmin=$isAdmin');
+    await runAsync(() async {
+      await _pdfService.generateAndDisplayReport(this, isAdmin: isAdmin);
+      return true;
+    });
   }
   
   void _calcularReporteDetallado(List<dynamic> todasRecetas) {
