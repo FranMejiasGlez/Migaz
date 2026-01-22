@@ -17,7 +17,7 @@ void main() {
   // ✅ Configura la URL pública de DevTunnel
   // IMPORTANTE: Actualiza esta URL cada vez que reinicies el túnel
   // ⚠️ NO incluir barra diagonal final
-  ApiConfig.publicServerUrl = 'https://localhost:3000';
+  ApiConfig.publicServerUrl = 'http://localhost:3000';
 
   // ✅ Solo un runApp()
   runApp(
