@@ -9,6 +9,11 @@ import 'package:migaz/core/utils/responsive_breakpoints.dart';
 import 'package:migaz/ui/widgets/categories_detail_report.dart';
 import 'package:migaz/ui/widgets/cookbook_detail_report.dart';
 import 'package:migaz/ui/widgets/network_detail_report.dart';
+import 'package:migaz/ui/widgets/admin_total_users_report.dart';
+import 'package:migaz/ui/widgets/admin_users_month_report.dart';
+import 'package:migaz/ui/widgets/admin_peak_recipes_report.dart';
+import 'package:migaz/ui/widgets/admin_categories_report.dart';
+import 'package:migaz/core/config/admin_config.dart';
 
 class PantallaReporte extends StatefulWidget {
   const PantallaReporte({super.key});
@@ -31,8 +36,8 @@ class _PantallaReporteState extends State<PantallaReporte> {
     final reportVM = context.read<ReportViewModel>();
 
     if (authVM.currentUserId.isNotEmpty) {
-      // Detectar si es admin (hardcoded "uhhFlame")
-      final isAdmin = authVM.currentUser.toLowerCase() == 'uhhflame';
+      // Detectar si es admin usando AdminConfig
+      final isAdmin = AdminConfig.isAdmin(authVM.currentUser);
 
       reportVM.cargarTodo(
         authVM.currentUserId,
@@ -56,6 +61,8 @@ class _PantallaReporteState extends State<PantallaReporte> {
           if (reportVM.isLoading) {
             return const Center(child: CircularProgressIndicator());
           }
+
+          final isAdmin = AdminConfig.isAdmin(authVM.currentUser);
 
           return SafeArea(
             child: Column(
@@ -93,11 +100,62 @@ class _PantallaReporteState extends State<PantallaReporte> {
                       _buildReportPanel(
                         context,
                         title: '3. Mi Red de Contactos',
-                        icon: Icons.hub_rounded, // or share, or people
+                        icon: Icons.hub_rounded,
                         color: const Color(0xFF2B6CB0),
                         child: NetworkDetailReport(responsive: responsive),
                         responsive: responsive,
                       ),
+
+                      // ADMIN REPORTS (only for admin users)
+                      if (isAdmin) ...[
+                        SizedBox(height: 16 * responsive.scale),
+                        
+                        // ADMIN REPORT 4: TOTAL USERS
+                        _buildReportPanel(
+                          context,
+                          title: '4. Usuarios Totales',
+                          icon: Icons.people_alt_rounded,
+                          color: const Color(0xFFEA7317),
+                          child: AdminTotalUsersReport(responsive: responsive),
+                          responsive: responsive,
+                        ),
+
+                        SizedBox(height: 16 * responsive.scale),
+
+                        // ADMIN REPORT 5: USERS PER MONTH
+                        _buildReportPanel(
+                          context,
+                          title: '5. Usuarios Nuevos por Mes',
+                          icon: Icons.person_add_alt_1_rounded,
+                          color: const Color(0xFF25CCAD),
+                          child: AdminUsersPerMonthReport(responsive: responsive),
+                          responsive: responsive,
+                        ),
+
+                        SizedBox(height: 16 * responsive.scale),
+
+                        // ADMIN REPORT 6: PEAK RECIPES MONTH
+                        _buildReportPanel(
+                          context,
+                          title: '6. Recetas Subidas por Mes',
+                          icon: Icons.trending_up_rounded,
+                          color: const Color(0xFF5B8DEE),
+                          child: AdminPeakRecipesReport(responsive: responsive),
+                          responsive: responsive,
+                        ),
+
+                        SizedBox(height: 16 * responsive.scale),
+
+                        // ADMIN REPORT 7: POPULAR CATEGORIES
+                        _buildReportPanel(
+                          context,
+                          title: '7. Categorías Más Populares (Admin)',
+                          icon: Icons.category_rounded,
+                          color: const Color(0xFF9F7AEA),
+                          child: AdminCategoriesReport(responsive: responsive),
+                          responsive: responsive,
+                        ),
+                      ],
                     ],
                   ),
                 ),
